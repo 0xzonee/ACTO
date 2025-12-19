@@ -298,7 +298,7 @@ function switchTab(tabName) {
         loadStatsKeys();
     } else if (tabName === 'playground') {
         // Always call initPlayground when playground tab is opened
-        // Use a longer timeout to ensure DOM is ready
+        // Use a longer timeout to ensure DOM and scripts are ready
         setTimeout(() => {
             console.log('Initializing playground from switchTab');
             const endpointSelect = document.getElementById('playgroundEndpoint');
@@ -307,14 +307,27 @@ function switchTab(tabName) {
                 return;
             }
             
-            // Check if API_ENDPOINTS is available (should always be)
-            const endpoints = window.API_ENDPOINTS;
+            // Check if API_ENDPOINTS is available - try multiple times if needed
+            let endpoints = window.API_ENDPOINTS;
             if (!endpoints) {
-                console.error('API_ENDPOINTS not found in window scope - playground.js may not be loaded');
-                endpointSelect.innerHTML = '<option value="">Error: Endpoints not loaded</option>';
+                console.warn('API_ENDPOINTS not found in window scope, retrying...');
+                // Retry after a short delay in case script is still loading
+                setTimeout(() => {
+                    endpoints = window.API_ENDPOINTS;
+                    if (!endpoints) {
+                        console.error('API_ENDPOINTS still not found - playground.js may not be loaded');
+                        endpointSelect.innerHTML = '<option value="">Error: Endpoints not loaded. Please refresh the page.</option>';
+                        return;
+                    }
+                    // Try to initialize now
+                    if (typeof window.initPlayground === 'function') {
+                        window.initPlayground();
+                    }
+                }, 300);
                 return;
             }
             
+            // API_ENDPOINTS is available, proceed with initialization
             if (typeof window.initPlayground === 'function') {
                 window.initPlayground();
             } else if (typeof initPlayground === 'function') {
