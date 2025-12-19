@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import os
 from fastapi.testclient import TestClient
 
 from acto.crypto.keys import KeyPair
 from acto.proof.engine import create_proof
 from acto.telemetry.models import TelemetryBundle, TelemetryEvent
-from acto_server.app import create_app
 
 
-def test_api_submit_and_get() -> None:
+def test_api_submit_and_get(tmp_path, monkeypatch) -> None:
+    # Set a temporary database path for the test before importing create_app
+    monkeypatch.setenv("ACTO_DB_URL", f"sqlite:///{tmp_path}/test.sqlite")
+    
+    # Import after setting environment variable
+    from acto_server.app import create_app
     app = create_app()
     client = TestClient(app)
 
