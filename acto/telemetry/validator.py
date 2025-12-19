@@ -63,7 +63,7 @@ class TelemetrySchema(BaseModel):
         """Create a Pydantic model from a schema dict."""
         # Simplified implementation: dynamically create a Pydantic model
         # In a full implementation, one would use JSON Schema
-        from typing import get_origin, get_args
+        from typing import get_origin
 
         fields: dict[str, Any] = {}
         for key, value in schema.items():

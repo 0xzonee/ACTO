@@ -43,7 +43,7 @@ def install(
         raise typer.Exit(code=1) from e
     except FileNotFoundError:
         print("[red]typer-cli not found. Install it with: pip install typer-cli[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
 
 @completion_app.command("show")
@@ -79,5 +79,5 @@ def show(
         raise typer.Exit(code=1) from e
     except FileNotFoundError:
         print("[red]typer-cli not found. Install it with: pip install typer-cli[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
