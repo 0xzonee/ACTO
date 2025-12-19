@@ -18,7 +18,6 @@ from acto.security import (
     ApiKeyStore,
     AuditAction,
     AuditLogger,
-    EncryptionManager,
     JWTManager,
     OAuth2TokenResponse,
     Permission,
@@ -83,17 +82,7 @@ def create_app() -> FastAPI:
             backend = MemoryAuditBackend()
         audit_logger = AuditLogger(backend=backend)
 
-    # Encryption at rest (available for future use)
-    encryption_manager: EncryptionManager | None = None
-    if settings.encryption_enabled:
-        if settings.encryption_key:
-            key = base64.b64decode(settings.encryption_key.encode())
-            encryption_manager = EncryptionManager(key=key)
-        elif settings.encryption_password and settings.encryption_salt:
-            salt = base64.b64decode(settings.encryption_salt.encode())
-            encryption_manager = EncryptionManager(password=settings.encryption_password, salt=salt)
-
-    # TLS, Secrets management, and PII masking are available via settings
+    # Encryption at rest, TLS, Secrets management, and PII masking are available via settings
     # but not actively used in current implementation
     # They can be enabled when needed in the future
 
