@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import Depends, Header, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from acto.errors import AccessError
 from acto.security.api_keys import ApiKeyStore
