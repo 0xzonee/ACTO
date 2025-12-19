@@ -12,6 +12,6 @@
       "dest": "api/index.py"
     }
   ],
-  "installCommand": "pip install -r requirements.txt"
+  "installCommand": "mv pyproject.toml pyproject.toml.bak && pip install -r requirements.txt && mv pyproject.toml.bak pyproject.toml"
 }
 
