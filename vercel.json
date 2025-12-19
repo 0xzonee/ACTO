@@ -1,17 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
   ],
-  "installCommand": "mv pyproject.toml pyproject.toml.bak && pip install -r requirements.txt && mv pyproject.toml.bak pyproject.toml"
+  "installCommand": "mv pyproject.toml pyproject.toml.bak 2>/dev/null || true && pip install -r requirements.txt && mv pyproject.toml.bak pyproject.toml 2>/dev/null || true"
 }
 
