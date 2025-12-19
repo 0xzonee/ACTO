@@ -22,17 +22,13 @@ from acto.security import (
     JWTManager,
     OAuth2TokenResponse,
     Permission,
-    ProofEncryption,
     RBACManager,
-    TLSManager,
     TokenBucketRateLimiter,
     create_jwt_dependency_optional,
     get_current_user_optional,
-    get_secrets_manager,
     require_api_key,
 )
 from acto.security.audit import FileAuditBackend, MemoryAuditBackend
-from acto.telemetry.pii import PIIMasker
 
 from .schemas import (
     AccessCheckRequest,
@@ -87,9 +83,8 @@ def create_app() -> FastAPI:
             backend = MemoryAuditBackend()
         audit_logger = AuditLogger(backend=backend)
 
-    # Encryption at rest
+    # Encryption at rest (available for future use)
     encryption_manager: EncryptionManager | None = None
-    _proof_encryption: ProofEncryption | None = None
     if settings.encryption_enabled:
         if settings.encryption_key:
             key = base64.b64decode(settings.encryption_key.encode())
@@ -97,37 +92,10 @@ def create_app() -> FastAPI:
         elif settings.encryption_password and settings.encryption_salt:
             salt = base64.b64decode(settings.encryption_salt.encode())
             encryption_manager = EncryptionManager(password=settings.encryption_password, salt=salt)
-        if encryption_manager:
-            _proof_encryption = ProofEncryption(encryption_manager)
 
-    # TLS (available for future use)
-    _tls_manager: TLSManager | None = None
-    if settings.tls_enabled:
-        _tls_manager = TLSManager(
-            cert_file=settings.tls_cert_file,
-            key_file=settings.tls_key_file,
-            ca_cert_file=settings.tls_ca_cert_file,
-        )
-
-    # Secrets management (available for future use)
-    _secrets_manager = get_secrets_manager(
-        backend=settings.secrets_backend,
-        vault_url=settings.vault_url,
-        vault_token=settings.vault_token,
-        vault_path=settings.vault_path,
-        region_name=settings.aws_secrets_region,
-        profile_name=settings.aws_secrets_profile,
-    )
-
-    # PII masking (available for future use)
-    _pii_masker = (
-        PIIMasker(
-            mask_char=settings.pii_mask_char,
-            preserve_length=settings.pii_preserve_length,
-        )
-        if settings.pii_masking_enabled
-        else None
-    )
+    # TLS, Secrets management, and PII masking are available via settings
+    # but not actively used in current implementation
+    # They can be enabled when needed in the future
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):
