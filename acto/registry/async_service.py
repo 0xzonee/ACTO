@@ -19,10 +19,9 @@ import asyncio
 from typing import Any
 
 from acto.config.settings import Settings
-from acto.errors import RegistryError
 from acto.proof.models import ProofEnvelope
-from acto.registry.service import ProofRegistry
 from acto.registry.search import SearchFilter, SortField, SortOrder
+from acto.registry.service import ProofRegistry
 
 
 class AsyncProofRegistry:
@@ -49,7 +48,7 @@ class AsyncProofRegistry:
         self.settings = settings or Settings()
         self._registry: ProofRegistry | None = None
 
-    async def __aenter__(self) -> "AsyncProofRegistry":
+    async def __aenter__(self) -> AsyncProofRegistry:
         """Enter async context manager."""
         loop = asyncio.get_event_loop()
         self._registry = await loop.run_in_executor(None, ProofRegistry, self.settings)

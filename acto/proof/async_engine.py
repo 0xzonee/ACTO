@@ -21,20 +21,15 @@ from __future__ import annotations
 
 from typing import Any
 
-import orjson
-
 from acto.config.settings import Settings
-from acto.errors import ProofError
 from acto.proof.engine import (
-    _hash_bytes,
-    compute_payload_hash,
     create_proof as create_proof_sync,
+)
+from acto.proof.engine import (
     verify_proof as verify_proof_sync,
 )
-from acto.proof.models import ProofEnvelope, ProofPayload, ProofSubject
+from acto.proof.models import ProofEnvelope
 from acto.telemetry.models import TelemetryBundle
-from acto.telemetry.normalizer import normalize_bundle
-from acto.utils.time import now_utc_iso
 
 
 async def create_proof_async(

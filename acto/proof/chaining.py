@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from acto.errors import ProofError
-from acto.proof.models import ProofEnvelope, ProofPayload
+from acto.proof.models import ProofEnvelope
 
 
 class ProofChain:
@@ -31,11 +30,7 @@ class ProofChain:
             return False
 
         # Verify all dependencies
-        for dep in self.dependencies:
-            if not verify_proof(dep):
-                return False
-
-        return True
+        return all(verify_proof(dep) for dep in self.dependencies)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to a dict."""

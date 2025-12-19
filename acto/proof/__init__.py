@@ -1,5 +1,5 @@
 from .async_engine import create_proof_async, verify_proof_async
-from .batch import create_batch_proofs, create_batch_proof_with_links
+from .batch import create_batch_proof_with_links, create_batch_proofs
 from .chaining import (
     ProofChain,
     build_chain_from_proof,

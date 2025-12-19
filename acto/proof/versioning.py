@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from acto.errors import ProofError
 from acto.proof.models import ProofEnvelope, ProofPayload
 

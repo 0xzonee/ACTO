@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any
 
 import orjson
 from sqlalchemy import select
@@ -65,7 +64,7 @@ class ProofRegistry:
         self.cache = get_cache_backend(self.settings)
         Base.metadata.create_all(self.engine)
 
-    def __enter__(self) -> "ProofRegistry":
+    def __enter__(self) -> ProofRegistry:
         """Enter context manager."""
         return self
 

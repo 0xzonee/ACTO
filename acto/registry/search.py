@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import orjson
-from sqlalchemy import and_, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_
 
 from acto.registry.models import ProofRecord
 
@@ -100,7 +99,7 @@ def extract_searchable_metadata(envelope_json: str) -> str:
         # Create a searchable string
         searchable_parts = [task_id, robot_id]
         if isinstance(meta, dict):
-            for key, value in meta.items():
+            for _key, value in meta.items():
                 if isinstance(value, (str, int, float)):
                     searchable_parts.append(str(value))
 
