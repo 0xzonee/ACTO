@@ -5,7 +5,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import String
+from sqlalchemy import String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from acto.errors import AccessError
@@ -50,8 +50,78 @@ class ApiKeyStore:
         self._ensure_tables()
 
     def _ensure_tables(self) -> None:
-        """Ensure database tables exist."""
+        """Ensure database tables exist and migrate schema if needed."""
         Base.metadata.create_all(self.engine)
+        
+        # Migration: Add user_id column if it doesn't exist
+        try:
+            with self.engine.begin() as conn:
+                # First check if table exists
+                table_exists = False
+                if self.engine.url.drivername == "postgresql":
+                    result = conn.execute(text("""
+                        SELECT table_name 
+                        FROM information_schema.tables 
+                        WHERE table_name='api_keys'
+                    """))
+                    table_exists = result.fetchone() is not None
+                elif self.engine.url.drivername.startswith("sqlite"):
+                    result = conn.execute(text("""
+                        SELECT name FROM sqlite_master 
+                        WHERE type='table' AND name='api_keys'
+                    """))
+                    table_exists = result.fetchone() is not None
+                else:
+                    # For other databases, try to query the table
+                    try:
+                        conn.execute(text("SELECT 1 FROM api_keys LIMIT 1"))
+                        table_exists = True
+                    except Exception:
+                        table_exists = False
+                
+                if not table_exists:
+                    # Table doesn't exist, create_all should have created it
+                    return
+                
+                # Check if user_id column exists
+                column_exists = False
+                if self.engine.url.drivername == "postgresql":
+                    result = conn.execute(text("""
+                        SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name='api_keys' AND column_name='user_id'
+                    """))
+                    column_exists = result.fetchone() is not None
+                elif self.engine.url.drivername.startswith("sqlite"):
+                    result = conn.execute(text("PRAGMA table_info(api_keys)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    column_exists = "user_id" in columns
+                else:
+                    # For other databases, try to query the column
+                    try:
+                        conn.execute(text("SELECT user_id FROM api_keys LIMIT 1"))
+                        column_exists = True
+                    except Exception:
+                        column_exists = False
+                
+                if not column_exists:
+                    # Add user_id column
+                    if self.engine.url.drivername == "postgresql":
+                        conn.execute(text("ALTER TABLE api_keys ADD COLUMN user_id VARCHAR(64)"))
+                        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_api_keys_user_id ON api_keys(user_id)"))
+                    elif self.engine.url.drivername.startswith("sqlite"):
+                        # SQLite supports ALTER TABLE ADD COLUMN since version 3.1.11
+                        conn.execute(text("ALTER TABLE api_keys ADD COLUMN user_id VARCHAR(64)"))
+                        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_api_keys_user_id ON api_keys(user_id)"))
+                    else:
+                        # For other databases, try ALTER TABLE
+                        conn.execute(text("ALTER TABLE api_keys ADD COLUMN user_id VARCHAR(64)"))
+        except Exception as e:
+            # If migration fails, log but don't crash - table might already have the column
+            # or the database might not support the operation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not migrate api_keys table: {e}")
 
     def create_key(self, name: str, user_id: str | None = None, created_by: str | None = None) -> dict[str, Any]:
         """Create a new API key and return both the key and its metadata."""
