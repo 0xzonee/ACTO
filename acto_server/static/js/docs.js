@@ -285,15 +285,13 @@ function showDocumentation(section = 'overview') {
     console.log('showDocumentation called with section:', section);
     currentDocSection = section;
     
-    const docContent = document.getElementById('docContent');
+    // Try to find docContent, with retry logic
+    let docContent = document.getElementById('docContent');
     if (!docContent) {
-        console.error('docContent element not found');
+        console.warn('docContent element not found, retrying...');
         // Try to find it again after a short delay
         setTimeout(() => {
-            const retryContent = document.getElementById('docContent');
-            if (retryContent) {
-                showDocumentation(section);
-            }
+            showDocumentation(section);
         }, 100);
         return;
     }
@@ -305,9 +303,18 @@ function showDocumentation(section = 'overview') {
         return;
     }
     
-    console.log('Setting content for section:', section);
-    // Set the content
+    console.log('Setting content for section:', section, 'Content length:', doc.content.length);
+    
+    // Set the content - ensure it's actually set
     docContent.innerHTML = doc.content;
+    
+    // Verify content was set
+    if (!docContent.innerHTML || docContent.innerHTML.trim() === '') {
+        console.error('Failed to set content, retrying...');
+        setTimeout(() => {
+            docContent.innerHTML = doc.content;
+        }, 50);
+    }
     
     // Update active menu item
     document.querySelectorAll('.doc-menu-item').forEach(item => {
@@ -322,30 +329,25 @@ function showDocumentation(section = 'overview') {
         updateDocumentationWithConfig();
     }, 100);
     
-    console.log('Documentation section displayed:', section);
+    console.log('Documentation section displayed:', section, 'Content set:', docContent.innerHTML.length > 0);
 }
 
 // Make showDocumentation globally available immediately
 window.showDocumentation = showDocumentation;
 
 function initDocumentation() {
-    // Wait a bit to ensure DOM is ready
+    // Use a small delay to ensure DOM is ready
     setTimeout(() => {
         const docContent = document.getElementById('docContent');
-        const docTab = document.getElementById('tab-docs');
-        
-        // Check if docs tab is visible
-        if (!docTab || !docTab.classList.contains('active')) {
-            console.log('Docs tab is not active, skipping initialization');
-            return;
-        }
         
         if (!docContent) {
-            console.error('docContent element not found');
+            console.error('docContent element not found, retrying...');
             // Try again after a short delay
             setTimeout(initDocumentation, 100);
             return;
         }
+        
+        console.log('Initializing documentation, current content:', docContent.innerHTML ? 'has content' : 'empty');
         
         // Reset the flag to allow re-setting listeners when tab is opened
         menuListenersSetup = false;
@@ -353,10 +355,10 @@ function initDocumentation() {
         // Set up event listeners for documentation menu items
         setupDocumentationMenuListeners();
         
-        // Show overview section by default if no content is shown
-        if (!docContent.innerHTML || docContent.innerHTML.trim() === '') {
-            showDocumentation('overview');
-        }
+        // Always show overview section when initializing
+        // This ensures content is displayed even if the tab was just opened
+        // Force display even if content seems to exist (might be stale)
+        showDocumentation('overview');
         
         // Load token gating configuration
         loadTokenGatingConfig();

@@ -291,9 +291,14 @@ function switchTab(tabName) {
     if (tabName === 'stats') {
         loadStatsKeys();
     } else if (tabName === 'docs') {
-        if (typeof initDocumentation === 'function') {
-            initDocumentation();
-        }
+        // Use setTimeout to ensure DOM is updated after tab switch
+        setTimeout(() => {
+            if (typeof initDocumentation === 'function') {
+                initDocumentation();
+            } else {
+                console.error('initDocumentation function not found');
+            }
+        }, 10);
     }
 }
 
