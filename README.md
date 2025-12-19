@@ -222,6 +222,63 @@ acto access check   --rpc https://api.mainnet-beta.solana.com   --owner <WALLET_
 
 MIT. See `LICENSE`.
 
+## Security Features (v0.3.1)
+
+ACTO now includes comprehensive security enhancements for production deployments:
+
+### Authentication & Authorization
+- **OAuth2/JWT Support**: Full JWT-based authentication with access and refresh tokens
+- **Role-Based Access Control (RBAC)**: Fine-grained permission system with predefined roles (VIEWER, USER, ADMIN, AUDITOR)
+- **API Key Authentication**: Optional API key-based authentication (existing feature)
+- **Audit Logging**: Comprehensive audit logging for all operations with multiple backends (memory, file, database)
+
+### Data Protection
+- **Encryption at Rest**: AES-128 encryption for proof data using Fernet
+- **TLS/SSL Support**: TLS certificate management for encryption in transit
+- **Secrets Management**: Integration with HashiCorp Vault, AWS Secrets Manager, or environment variables
+- **PII Detection & Masking**: Automatic detection and masking of personally identifiable information in telemetry data
+
+### Key Management
+- **Signing Key Rotation**: Support for rotating signing keys with multiple active keys
+- **Key Lifecycle Management**: Automatic management of active and retired keys
+
+### Configuration
+
+Security features can be configured via environment variables or config file:
+
+```toml
+# JWT/OAuth2
+jwt_enabled = true
+jwt_secret_key = "your-secret-key"
+jwt_access_token_expire_minutes = 30
+jwt_refresh_token_expire_days = 7
+
+# RBAC
+rbac_enabled = true
+
+# Audit Logging
+audit_log_enabled = true
+audit_log_backend = "file"  # "memory", "file", or "database"
+audit_log_file = "./data/audit.log"
+
+# Encryption at Rest
+encryption_enabled = true
+encryption_key = "base64-encoded-key"
+
+# TLS/SSL
+tls_enabled = true
+tls_cert_file = "./certs/cert.pem"
+tls_key_file = "./certs/key.pem"
+
+# Secrets Management
+secrets_backend = "vault"  # "env", "vault", or "aws"
+vault_url = "http://localhost:8200"
+
+# PII Detection & Masking
+pii_detection_enabled = true
+pii_masking_enabled = true
+```
+
 ## New in this expanded build
 
 ### Core Features

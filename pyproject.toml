@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "acto"
-version = "0.3.0"
+version = "0.3.1"
 description = "Robotics proof-of-execution SDK with optional verification API and token gating."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,6 +26,8 @@ dependencies = [
   "blake3>=0.4.1",
   "pynacl>=1.5.0",
   "tenacity>=8.2",
+  "pyjwt>=2.8",
+  "cryptography>=42.0",
 ]
 
 [project.optional-dependencies]
@@ -37,13 +39,16 @@ mysql = ["mysqlclient>=2.2"]
 ros = ["rosbag2>=0.24.0", "rclpy>=3.3.0"]
 protobuf = ["protobuf>=5.0.0"]
 parquet = ["pyarrow>=15.0.0", "pandas>=2.0.0"]
+vault = ["hvac>=1.2.0"]
+aws = ["boto3>=1.34.0"]
+security = ["acto[vault,aws]"]
 dev = [
   "pytest>=8.2",
   "pytest-asyncio>=0.23",
   "ruff>=0.6.9",
   "mypy>=1.11",
 ]
-all = ["acto[solana,redis,ros,protobuf,parquet,dev]"]
+all = ["acto[solana,redis,ros,protobuf,parquet,security,dev]"]
 
 [project.scripts]
 acto = "acto_cli.main:app"

@@ -8,6 +8,7 @@ from .parsers import (
     StreamTelemetryParser,
     TelemetryParser,
 )
+from .pii import PIIDetector, PIIMasker, detect_pii_in_bundle
 from .validator import TelemetrySchema, validate_telemetry
 
 __all__ = [
@@ -23,4 +24,7 @@ __all__ = [
     "validate_telemetry",
     "normalize_bundle",
     "normalize_event",
+    "PIIDetector",
+    "PIIMasker",
+    "detect_pii_in_bundle",
 ]

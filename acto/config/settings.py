@@ -47,6 +47,47 @@ class Settings(BaseSettings):
     # API security
     api_auth_enabled: bool = False
 
+    # JWT/OAuth2
+    jwt_enabled: bool = False
+    jwt_secret_key: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
+    jwt_refresh_token_expire_days: int = 7
+
+    # RBAC
+    rbac_enabled: bool = False
+
+    # Audit logging
+    audit_log_enabled: bool = False
+    audit_log_backend: str = "memory"  # "memory", "file", or "database"
+    audit_log_file: str = "./data/audit.log"
+
+    # Encryption at rest
+    encryption_enabled: bool = False
+    encryption_key: str | None = None
+    encryption_password: str | None = None
+    encryption_salt: str | None = None
+
+    # TLS/SSL
+    tls_enabled: bool = False
+    tls_cert_file: str | None = None
+    tls_key_file: str | None = None
+    tls_ca_cert_file: str | None = None
+
+    # Secrets management
+    secrets_backend: str = "env"  # "env", "vault", or "aws"
+    vault_url: str = "http://localhost:8200"
+    vault_token: str | None = None
+    vault_path: str = "secret"
+    aws_secrets_region: str = "us-east-1"
+    aws_secrets_profile: str | None = None
+
+    # PII detection and masking
+    pii_detection_enabled: bool = False
+    pii_masking_enabled: bool = False
+    pii_mask_char: str = "*"
+    pii_preserve_length: bool = True
+
     # Rate limiting
     rate_limit_enabled: bool = True
     rate_limit_rps: float = 5.0

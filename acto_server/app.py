@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import uuid
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
@@ -13,7 +14,27 @@ from acto.metrics import MetricsRegistry
 from acto.proof import verify_proof
 from acto.registry import ProofRegistry
 from acto.reputation import ReputationScorer
-from acto.security import ApiKeyStore, TokenBucketRateLimiter, require_api_key
+from acto.security import (
+    ApiKeyStore,
+    AuditAction,
+    AuditLogger,
+    AuditResult,
+    EncryptionManager,
+    JWTManager,
+    OAuth2TokenResponse,
+    Permission,
+    ProofEncryption,
+    RBACManager,
+    TLSManager,
+    TokenBucketRateLimiter,
+    create_jwt_dependency,
+    get_current_user,
+    get_secrets_manager,
+    require_api_key,
+    require_jwt,
+)
+from acto.security.audit import FileAuditBackend, MemoryAuditBackend
+from acto.telemetry.pii import PIIMasker
 
 from .schemas import (
     AccessCheckRequest,
@@ -42,8 +63,69 @@ def create_app() -> FastAPI:
     metrics = MetricsRegistry()
     scorer = ReputationScorer(settings=settings)
 
+    # Security components initialization
     api_key_store = ApiKeyStore.from_plaintext(keys=[])
     limiter = TokenBucketRateLimiter.create(rps=settings.rate_limit_rps, burst=settings.rate_limit_burst)
+
+    # JWT/OAuth2
+    jwt_manager: JWTManager | None = None
+    if settings.jwt_enabled and settings.jwt_secret_key:
+        jwt_manager = JWTManager(
+            secret_key=settings.jwt_secret_key,
+            algorithm=settings.jwt_algorithm,
+            access_token_expire_minutes=settings.jwt_access_token_expire_minutes,
+            refresh_token_expire_days=settings.jwt_refresh_token_expire_days,
+        )
+
+    # RBAC
+    rbac_manager = RBACManager() if settings.rbac_enabled else None
+
+    # Audit logging
+    audit_logger: AuditLogger | None = None
+    if settings.audit_log_enabled:
+        if settings.audit_log_backend == "file":
+            backend = FileAuditBackend(settings.audit_log_file)
+        else:
+            backend = MemoryAuditBackend()
+        audit_logger = AuditLogger(backend=backend)
+
+    # Encryption at rest
+    encryption_manager: EncryptionManager | None = None
+    proof_encryption: ProofEncryption | None = None
+    if settings.encryption_enabled:
+        if settings.encryption_key:
+            key = base64.b64decode(settings.encryption_key.encode())
+            encryption_manager = EncryptionManager(key=key)
+        elif settings.encryption_password and settings.encryption_salt:
+            salt = base64.b64decode(settings.encryption_salt.encode())
+            encryption_manager = EncryptionManager(password=settings.encryption_password, salt=salt)
+        if encryption_manager:
+            proof_encryption = ProofEncryption(encryption_manager)
+
+    # TLS
+    tls_manager: TLSManager | None = None
+    if settings.tls_enabled:
+        tls_manager = TLSManager(
+            cert_file=settings.tls_cert_file,
+            key_file=settings.tls_key_file,
+            ca_cert_file=settings.tls_ca_cert_file,
+        )
+
+    # Secrets management
+    secrets_manager = get_secrets_manager(
+        backend=settings.secrets_backend,
+        vault_url=settings.vault_url,
+        vault_token=settings.vault_token,
+        vault_path=settings.vault_path,
+        region_name=settings.aws_secrets_region,
+        profile_name=settings.aws_secrets_profile,
+    )
+
+    # PII masking
+    pii_masker = PIIMasker(
+        mask_char=settings.pii_mask_char,
+        preserve_length=settings.pii_preserve_length,
+    ) if settings.pii_masking_enabled else None
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):
@@ -66,10 +148,60 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=429, detail=str(e)) from e
         return await call_next(request)
 
+    @app.middleware("http")
+    async def audit_middleware(request: Request, call_next):
+        """Middleware for audit logging."""
+        if not audit_logger:
+            return await call_next(request)
+
+        user_id = getattr(request.state, "user_id", None)
+        ip_address = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else None)
+        user_agent = request.headers.get("User-Agent")
+
+        try:
+            response = await call_next(request)
+            if response.status_code < 400:
+                audit_logger.log_success(
+                    AuditAction.ADMIN_ACTION,
+                    user_id=user_id,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    request_id=request.state.request_id,
+                    details={"method": request.method, "path": request.url.path},
+                )
+            else:
+                audit_logger.log_failure(
+                    AuditAction.ADMIN_ACTION,
+                    error_message=f"HTTP {response.status_code}",
+                    user_id=user_id,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    request_id=request.state.request_id,
+                    details={"method": request.method, "path": request.url.path},
+                )
+            return response
+        except Exception as e:
+            audit_logger.log_failure(
+                AuditAction.ADMIN_ACTION,
+                error_message=str(e),
+                user_id=user_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                request_id=request.state.request_id,
+                details={"method": request.method, "path": request.url.path},
+            )
+            raise
+
     def auth_dependency():
+        """Create authentication dependency based on settings."""
+        deps = []
         if settings.api_auth_enabled:
-            return Depends(require_api_key(api_key_store))
-        return None
+            deps.append(Depends(require_api_key(api_key_store)))
+        if jwt_manager:
+            jwt_dep = create_jwt_dependency(jwt_manager)
+            if jwt_dep:
+                deps.append(jwt_dep)
+        return deps if deps else None
 
     @app.get("/health")
     def health() -> dict:
@@ -85,40 +217,120 @@ def create_app() -> FastAPI:
         metrics.inc("acto.proofs.list")
         return {"items": registry.list(limit=limit)}
 
-    @app.post("/v1/proofs", response_model=ProofSubmitResponse, dependencies=[d for d in [auth_dependency()] if d])
-    def submit(req: ProofSubmitRequest) -> ProofSubmitResponse:
+    @app.post("/v1/proofs", response_model=ProofSubmitResponse, dependencies=auth_dependency() or [])
+    def submit(
+        req: ProofSubmitRequest,
+        request: Request,
+        current_user: dict | None = Depends(get_current_user) if jwt_manager else None,
+    ) -> ProofSubmitResponse:
         try:
+            # RBAC check
+            if rbac_manager and current_user:
+                rbac_manager.require_permission(current_user.get("roles", []), Permission.PROOF_WRITE)
+
             verify_proof(req.envelope)
             proof_id = registry.upsert(req.envelope)
             metrics.inc("acto.proofs.submit")
+
+            # Audit log
+            if audit_logger:
+                audit_logger.log_success(
+                    AuditAction.PROOF_CREATE,
+                    user_id=current_user.get("user_id") if current_user else None,
+                    resource_type="proof",
+                    resource_id=proof_id,
+                    request_id=getattr(request.state, "request_id", None),
+                )
+
             return ProofSubmitResponse(proof_id=proof_id)
         except ProofError as e:
             metrics.inc("acto.proofs.submit.invalid")
+            if audit_logger:
+                audit_logger.log_failure(
+                    AuditAction.PROOF_CREATE,
+                    error_message=str(e),
+                    user_id=current_user.get("user_id") if current_user else None,
+                    request_id=getattr(request.state, "request_id", None),
+                )
             raise HTTPException(status_code=400, detail=str(e)) from e
         except RegistryError as e:
+            if audit_logger:
+                audit_logger.log_failure(
+                    AuditAction.PROOF_CREATE,
+                    error_message=str(e),
+                    user_id=current_user.get("user_id") if current_user else None,
+                    request_id=getattr(request.state, "request_id", None),
+                )
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @app.get("/v1/proofs/{proof_id}", dependencies=[d for d in [auth_dependency()] if d])
-    def get_proof(proof_id: str) -> dict:
+    @app.get("/v1/proofs/{proof_id}", dependencies=auth_dependency() or [])
+    def get_proof(
+        proof_id: str,
+        request: Request,
+        current_user: dict | None = Depends(get_current_user) if jwt_manager else None,
+    ) -> dict:
         try:
+            # RBAC check
+            if rbac_manager and current_user:
+                rbac_manager.require_permission(current_user.get("roles", []), Permission.PROOF_READ)
+
             metrics.inc("acto.proofs.get")
             env = registry.get(proof_id)
+
+            # Audit log
+            if audit_logger:
+                audit_logger.log_success(
+                    AuditAction.PROOF_READ,
+                    user_id=current_user.get("user_id") if current_user else None,
+                    resource_type="proof",
+                    resource_id=proof_id,
+                    request_id=getattr(request.state, "request_id", None),
+                )
+
             return {"proof_id": proof_id, "envelope": env.model_dump()}
         except RegistryError as e:
+            if audit_logger:
+                audit_logger.log_failure(
+                    AuditAction.PROOF_READ,
+                    error_message=str(e),
+                    user_id=current_user.get("user_id") if current_user else None,
+                    resource_id=proof_id,
+                    request_id=getattr(request.state, "request_id", None),
+                )
             raise HTTPException(status_code=404, detail=str(e)) from e
 
-    @app.post("/v1/verify", response_model=VerifyResponse, dependencies=[d for d in [auth_dependency()] if d])
-    def verify(req: VerifyRequest) -> VerifyResponse:
+    @app.post("/v1/verify", response_model=VerifyResponse, dependencies=auth_dependency() or [])
+    def verify(
+        req: VerifyRequest,
+        request: Request,
+        current_user: dict | None = Depends(get_current_user) if jwt_manager else None,
+    ) -> VerifyResponse:
         try:
             verify_proof(req.envelope)
             metrics.inc("acto.verify.ok")
+
+            # Audit log
+            if audit_logger:
+                audit_logger.log_success(
+                    AuditAction.PROOF_VERIFY,
+                    user_id=current_user.get("user_id") if current_user else None,
+                    request_id=getattr(request.state, "request_id", None),
+                )
+
             return VerifyResponse(valid=True, reason="ok")
         except ProofError as e:
             metrics.inc("acto.verify.fail")
+            if audit_logger:
+                audit_logger.log_failure(
+                    AuditAction.PROOF_VERIFY,
+                    error_message=str(e),
+                    user_id=current_user.get("user_id") if current_user else None,
+                    request_id=getattr(request.state, "request_id", None),
+                )
             return VerifyResponse(valid=False, reason=str(e))
 
-    @app.post("/v1/score", dependencies=[d for d in [auth_dependency()] if d])
-    def score(req: VerifyRequest) -> dict:
+    @app.post("/v1/score", dependencies=auth_dependency() or [])
+    def score(req: VerifyRequest, current_user: dict | None = Depends(get_current_user) if jwt_manager else None) -> dict:
         try:
             verify_proof(req.envelope)
             result = scorer.score(req.envelope)
@@ -127,6 +339,32 @@ def create_app() -> FastAPI:
         except ProofError as e:
             metrics.inc("acto.score.fail")
             raise HTTPException(status_code=400, detail=str(e)) from e
+
+    # OAuth2/JWT endpoints
+    if jwt_manager:
+
+        @app.post("/v1/auth/token")
+        def create_token(username: str, password: str, roles: list[str] | None = None) -> dict:
+            """Create access token (simplified - in production, verify credentials properly)."""
+            # In production, verify username/password against user database
+            access_token = jwt_manager.create_access_token(subject=username, roles=roles or ["user"])
+            refresh_token = jwt_manager.create_refresh_token(subject=username)
+            token_response = OAuth2TokenResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expires_in=settings.jwt_access_token_expire_minutes * 60,
+            )
+            return token_response.to_dict()
+
+        @app.post("/v1/auth/refresh")
+        def refresh_token(refresh_token: str) -> dict:
+            """Refresh access token."""
+            new_access_token = jwt_manager.refresh_access_token(refresh_token)
+            token_response = OAuth2TokenResponse(
+                access_token=new_access_token,
+                expires_in=settings.jwt_access_token_expire_minutes * 60,
+            )
+            return token_response.to_dict()
 
     @app.post("/v1/access/check", response_model=AccessCheckResponse)
     def access_check(req: AccessCheckRequest) -> AccessCheckResponse:
