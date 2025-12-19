@@ -47,10 +47,41 @@ def require_jwt(jwt_manager: JWTManager):
     return _dep
 
 
+def require_jwt_optional(jwt_manager: JWTManager):
+    """Optional JWT dependency that sets request.state but doesn't raise errors if missing."""
+
+    async def _dep(
+        request: Request,
+        credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    ) -> dict | None:
+        if not credentials:
+            return None
+
+        token = credentials.credentials
+        try:
+            payload = jwt_manager.verify_token(token, required_type="access")
+            request.state.user_id = payload.get("sub")
+            request.state.user_roles = extract_roles_from_token(payload)
+            request.state.user_scopes = extract_scopes_from_token(payload)
+            request.state.token_payload = payload
+            return payload
+        except AccessError:
+            return None
+
+    return _dep
+
+
 def create_jwt_dependency(jwt_manager: JWTManager | None):
     """Create JWT dependency if JWT is enabled."""
     if jwt_manager:
         return Depends(require_jwt(jwt_manager))
+    return None
+
+
+def create_jwt_dependency_optional(jwt_manager: JWTManager | None):
+    """Create optional JWT dependency if JWT is enabled (doesn't raise errors if missing)."""
+    if jwt_manager:
+        return Depends(require_jwt_optional(jwt_manager))
     return None
 
 

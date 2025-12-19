@@ -2,10 +2,12 @@ from .api_keys import ApiKeyStore, generate_api_key, hash_api_key
 from .audit import AuditAction, AuditLogger, AuditResult
 from .auth import (
     create_jwt_dependency,
+    create_jwt_dependency_optional,
     get_current_user,
     get_current_user_optional,
     require_api_key,
     require_jwt,
+    require_jwt_optional,
     require_permission,
     require_scope,
 )
@@ -33,8 +35,10 @@ __all__ = [
     "OAuth2TokenResponse",
     "require_jwt",
     "create_jwt_dependency",
+    "create_jwt_dependency_optional",
     "get_current_user",
     "get_current_user_optional",
+    "require_jwt_optional",
     "require_permission",
     "require_scope",
     "RBACManager",

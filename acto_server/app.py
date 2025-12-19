@@ -28,6 +28,7 @@ from acto.security import (
     TLSManager,
     TokenBucketRateLimiter,
     create_jwt_dependency,
+    create_jwt_dependency_optional,
     get_current_user_optional,
     get_secrets_manager,
     require_api_key,
@@ -198,7 +199,8 @@ def create_app() -> FastAPI:
         if settings.api_auth_enabled:
             deps.append(Depends(require_api_key(api_key_store)))
         if jwt_manager:
-            jwt_dep = create_jwt_dependency(jwt_manager)
+            # Use optional JWT dependency so it doesn't raise errors if token is missing
+            jwt_dep = create_jwt_dependency_optional(jwt_manager)
             if jwt_dep:
                 deps.append(jwt_dep)
         return deps if deps else None
