@@ -221,8 +221,9 @@ def create_app() -> FastAPI:
     def submit(
         req: ProofSubmitRequest,
         request: Request,
-        current_user: dict | None = Depends(get_current_user_optional),
     ) -> ProofSubmitResponse:
+        # Get current user from request state (set by JWT middleware if authenticated)
+        current_user = get_current_user_optional(request)
         try:
             # RBAC check
             if rbac_manager and current_user:
@@ -267,8 +268,9 @@ def create_app() -> FastAPI:
     def get_proof(
         proof_id: str,
         request: Request,
-        current_user: dict | None = Depends(get_current_user_optional),
     ) -> dict:
+        # Get current user from request state (set by JWT middleware if authenticated)
+        current_user = get_current_user_optional(request)
         try:
             # RBAC check
             if rbac_manager and current_user:
@@ -303,8 +305,9 @@ def create_app() -> FastAPI:
     def verify(
         req: VerifyRequest,
         request: Request,
-        current_user: dict | None = Depends(get_current_user_optional),
     ) -> VerifyResponse:
+        # Get current user from request state (set by JWT middleware if authenticated)
+        current_user = get_current_user_optional(request)
         try:
             verify_proof(req.envelope)
             metrics.inc("acto.verify.ok")
@@ -333,8 +336,9 @@ def create_app() -> FastAPI:
     def score(
         req: VerifyRequest,
         request: Request,
-        current_user: dict | None = Depends(get_current_user_optional),
     ) -> dict:
+        # Get current user from request state (set by JWT middleware if authenticated)
+        current_user = get_current_user_optional(request)
         try:
             verify_proof(req.envelope)
             result = scorer.score(req.envelope)
