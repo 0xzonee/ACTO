@@ -302,3 +302,69 @@ pii_masking_enabled = true
 - **Type Hints**: Complete type annotations throughout the SDK
 - **Comprehensive Docstrings**: Function documentation with code examples
 - **Jupyter Notebooks**: Interactive examples for SDK usage
+
+## Testing & Quality Assurance
+
+ACTO includes comprehensive testing and quality assurance tools:
+
+### Test Coverage
+- **Unit Tests**: Comprehensive unit test suite with pytest
+- **Integration Tests**: End-to-end workflow tests
+- **Property-Based Tests**: Hypothesis-based property testing
+- **Fuzzing Tests**: Parser fuzzing for edge case detection
+- **Load Testing**: Locust and k6 configurations for performance testing
+
+### Code Quality
+- **Pre-commit Hooks**: Automated code quality checks before commit
+- **Code Coverage Reports**: HTML, XML, and JSON coverage reports (target: 80%+)
+- **Linting**: Ruff for code style and quality
+- **Type Checking**: MyPy for static type analysis
+- **Security Scanning**: Bandit for security vulnerabilities
+- **Dependency Scanning**: Safety for known vulnerabilities
+- **CI/CD**: GitHub Actions workflow with automated testing
+
+### Running Tests
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=acto --cov=acto_cli --cov=acto_server --cov-report=html
+
+# Run specific test categories
+pytest -m unit          # Unit tests
+pytest -m integration    # Integration tests
+pytest -m property      # Property-based tests
+pytest -m fuzz          # Fuzzing tests
+
+# Run load tests
+locust -f tests/load/locustfile.py --host=http://localhost:8080
+k6 run tests/load/k6_load_test.js
+
+# Run security scans
+bandit -c .bandit -r acto acto_cli acto_server
+safety check
+```
+
+### Pre-commit Hooks
+
+Install and use pre-commit hooks for automatic code quality checks:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Hooks will run automatically on commit, checking:
+- Code formatting (Ruff)
+- Linting (Ruff)
+- Type checking (MyPy)
+- Security scanning (Bandit)
+- Dependency scanning (Safety)
+- Test execution
+
+See `CONTRIBUTING.md` for more details on development and testing.

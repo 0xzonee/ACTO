@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "acto"
-version = "0.3.1"
+version = "0.4.0"
 description = "Robotics proof-of-execution SDK"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,8 +45,17 @@ security = ["acto[vault,aws]"]
 dev = [
   "pytest>=8.2",
   "pytest-asyncio>=0.23",
+  "pytest-cov>=5.0",
+  "pytest-xdist>=3.5",
+  "pytest-timeout>=2.2",
+  "hypothesis>=6.100",
+  "locust>=2.24",
+  "bandit>=1.7",
+  "safety>=3.0",
   "ruff>=0.6.9",
   "mypy>=1.11",
+  "pre-commit>=3.6",
+  "coverage>=7.5",
 ]
 all = ["acto[solana,redis,ros,protobuf,parquet,security,dev]"]
 
@@ -71,3 +80,27 @@ quote-style = "double"
 python_version = "3.10"
 strict = true
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["acto", "acto_cli", "acto_server"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv", "htmlcov", ".git", "migrations"]
+skips = ["B101", "B601"]
