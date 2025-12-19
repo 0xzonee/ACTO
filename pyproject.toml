@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling>=1.24.2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "acto"
+version = "0.2.0"
+description = "Robotics proof-of-execution SDK with optional verification API and token gating."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "ACTO Contributors" }]
+keywords = ["robotics", "telemetry", "proof", "verification", "solana", "web3"]
+dependencies = [
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "python-json-logger>=2.0.7",
+  "rich>=13.7",
+  "typer>=0.12",
+  "httpx>=0.27",
+  "fastapi>=0.112",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "orjson>=3.10",
+  "blake3>=0.4.1",
+  "pynacl>=1.5.0",
+  "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+core = []
+solana = ["solana>=0.35.1"]
+dev = [
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.6.9",
+  "mypy>=1.11",
+]
+all = ["acto[solana,dev]"]
+
+[project.scripts]
+acto = "acto_cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["acto", "acto_cli", "acto_server"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
