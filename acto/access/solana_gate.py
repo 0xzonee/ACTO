@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+
+import httpx
 
 from acto.access.models import AccessDecision
 from acto.errors import AccessError
@@ -10,68 +13,53 @@ from acto.errors import AccessError
 class SolanaTokenGate:
     rpc_url: str
 
-    def _lazy_import(self):
-        try:
-            from solana.rpc.api import Client  # type: ignore
-            from solders.pubkey import Pubkey  # type: ignore
-        except Exception as e:
-            raise AccessError(
-                "Solana dependencies are not installed. Install with: pip install -e '.[solana]'"
-            ) from e
-        return Client, Pubkey
-
     def check_balance(self, owner: str, mint: str) -> float:
-        Client, Pubkey = self._lazy_import()
-        client = Client(self.rpc_url)
-
+        """Check token balance using direct RPC calls."""
         try:
-            # Convert string addresses to Pubkey objects
-            if isinstance(owner, str):
-                owner_pk = Pubkey.from_string(owner)
-            else:
-                owner_pk = owner
+            # Use direct HTTP RPC call to avoid library compatibility issues
+            payload = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "getTokenAccountsByOwner",
+                "params": [
+                    owner,
+                    {"mint": mint},
+                    {"encoding": "jsonParsed"}
+                ]
+            }
             
-            if isinstance(mint, str):
-                mint_pk = Pubkey.from_string(mint)
-            else:
-                mint_pk = mint
-
-            # Get token accounts
-            resp = client.get_token_accounts_by_owner(owner_pk, {"mint": mint_pk})
-            
-            if not resp or not hasattr(resp, 'value') or not resp.value:
-                return 0.0
-
-            total = 0.0
-            for item in resp.value:
-                try:
-                    # Handle different response formats
-                    if hasattr(item, 'account') and hasattr(item.account, 'data'):
-                        if hasattr(item.account.data, 'parsed'):
-                            parsed = item.account.data.parsed
-                        elif isinstance(item.account.data, dict):
-                            parsed = item.account.data.get('parsed', {})
-                        else:
-                            continue
-                    elif isinstance(item, dict):
-                        parsed = item.get('account', {}).get('data', {}).get('parsed', {})
-                    else:
+            with httpx.Client(timeout=10.0) as client:
+                response = client.post(self.rpc_url, json=payload)
+                response.raise_for_status()
+                result = response.json()
+                
+                if "error" in result:
+                    raise AccessError(f"Solana RPC error: {result['error']}")
+                
+                if "result" not in result or "value" not in result["result"]:
+                    return 0.0
+                
+                accounts = result["result"]["value"]
+                if not accounts:
+                    return 0.0
+                
+                total = 0.0
+                for account in accounts:
+                    try:
+                        parsed = account.get("account", {}).get("data", {}).get("parsed", {})
+                        info = parsed.get("info", {})
+                        token_amount = info.get("tokenAmount", {})
+                        ui_amount = token_amount.get("uiAmount")
+                        if ui_amount is not None:
+                            total += float(ui_amount)
+                    except (KeyError, TypeError, ValueError):
                         continue
-                    
-                    # Extract amount
-                    if isinstance(parsed, dict):
-                        info = parsed.get('info', {})
-                        token_amount = info.get('tokenAmount', {})
-                        amt = token_amount.get('uiAmount') or token_amount.get('amount', 0)
-                        if amt:
-                            total += float(amt)
-                except (AttributeError, KeyError, TypeError, ValueError) as e:
-                    # Skip items that can't be parsed
-                    continue
-            
-            return total
-        except Exception as e:
-            raise AccessError(f"Failed to check token balance: {str(e)}") from e
+                
+                return total
+        except httpx.HTTPError as e:
+            raise AccessError(f"Failed to connect to Solana RPC: {str(e)}") from e
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
+            raise AccessError(f"Failed to parse Solana RPC response: {str(e)}") from e
 
     def decide(self, owner: str, mint: str, minimum: float) -> AccessDecision:
         bal = self.check_balance(owner, mint)
