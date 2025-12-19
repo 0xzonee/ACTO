@@ -26,14 +26,13 @@ def require_api_key(store: ApiKeyStore):
 def require_jwt(jwt_manager: JWTManager):
     """Dependency for JWT/OAuth2 authentication."""
 
-    async def _dep(
-        request: Request,
-        credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    ) -> dict:
-        if not credentials:
+    async def _dep(request: Request) -> dict:
+        # Get credentials from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Missing authorization header.")
 
-        token = credentials.credentials
+        token = auth_header.replace("Bearer ", "")
         try:
             payload = jwt_manager.verify_token(token, required_type="access")
             request.state.user_id = payload.get("sub")
@@ -50,14 +49,13 @@ def require_jwt(jwt_manager: JWTManager):
 def require_jwt_optional(jwt_manager: JWTManager):
     """Optional JWT dependency that sets request.state but doesn't raise errors if missing."""
 
-    async def _dep(
-        request: Request,
-        credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    ) -> dict | None:
-        if not credentials:
+    async def _dep(request: Request) -> dict | None:
+        # Get credentials from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
             return None
 
-        token = credentials.credentials
+        token = auth_header.replace("Bearer ", "")
         try:
             payload = jwt_manager.verify_token(token, required_type="access")
             request.state.user_id = payload.get("sub")
@@ -88,7 +86,11 @@ def create_jwt_dependency_optional(jwt_manager: JWTManager | None):
 def require_permission(permission, rbac_manager: RBACManager, jwt_manager: JWTManager):
     """Dependency factory for requiring specific RBAC permissions."""
 
-    def _dep(token_payload: dict = Depends(require_jwt(jwt_manager))) -> dict:
+    def _dep(request: Request) -> dict:
+        # Get token payload from request state (set by JWT middleware)
+        if not hasattr(request.state, "token_payload"):
+            raise HTTPException(status_code=401, detail="Not authenticated.")
+        token_payload = request.state.token_payload
         user_roles = extract_roles_from_token(token_payload)
         rbac_manager.require_permission(user_roles, permission)
         return token_payload
@@ -99,7 +101,11 @@ def require_permission(permission, rbac_manager: RBACManager, jwt_manager: JWTMa
 def require_scope(scope: str, jwt_manager: JWTManager):
     """Dependency factory for requiring specific OAuth2 scopes."""
 
-    def _dep(token_payload: dict = Depends(require_jwt(jwt_manager))) -> dict:
+    def _dep(request: Request) -> dict:
+        # Get token payload from request state (set by JWT middleware)
+        if not hasattr(request.state, "token_payload"):
+            raise HTTPException(status_code=401, detail="Not authenticated.")
+        token_payload = request.state.token_payload
         user_scopes = extract_scopes_from_token(token_payload)
         rbac_manager = RBACManager()
         rbac_manager.require_scope(user_scopes, scope)

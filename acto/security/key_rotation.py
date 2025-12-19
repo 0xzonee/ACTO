@@ -7,7 +7,7 @@ from typing import Any
 from nacl.signing import SigningKey, VerifyKey
 
 from acto.errors import CryptoError
-from acto.security.audit import AuditAction, AuditLogger, AuditResult
+from acto.security.audit import AuditAction, AuditLogger
 
 
 class KeyRotationManager:

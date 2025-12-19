@@ -63,16 +63,17 @@ class TLSManager:
             raise CryptoError("Certificate file not found or not configured.")
 
         try:
-            import ssl
             import socket
+            import ssl
 
             context = ssl.create_default_context()
             context.load_cert_chain(str(self.cert_file), str(self.key_file) if self.key_file else None)
 
             # Extract certificate info
-            with socket.create_connection(("localhost", 443), timeout=1) as sock:
-                with context.wrap_socket(sock, server_hostname="localhost") as ssock:
-                    cert = ssock.getpeercert()
+            with socket.create_connection(("localhost", 443), timeout=1) as sock, context.wrap_socket(
+                sock, server_hostname="localhost"
+            ) as ssock:
+                cert = ssock.getpeercert()
 
             return {
                 "valid": True,
@@ -95,11 +96,17 @@ class TLSManager:
     ) -> None:
         """Generate a self-signed certificate (for development/testing)."""
         try:
-            from cryptography import x509  # type: ignore[import-untyped]
-            from cryptography.x509.oid import NameOID  # type: ignore[import-untyped]
-            from cryptography.hazmat.primitives import hashes, serialization  # type: ignore[import-untyped]
-            from cryptography.hazmat.primitives.asymmetric import rsa  # type: ignore[import-untyped]
             from datetime import datetime, timedelta, timezone
+
+            from cryptography import x509  # type: ignore[import-untyped]
+            from cryptography.hazmat.primitives import (  # type: ignore[import-untyped]
+                hashes,
+                serialization,
+            )
+            from cryptography.hazmat.primitives.asymmetric import (
+                rsa,  # type: ignore[import-untyped]
+            )
+            from cryptography.x509.oid import NameOID  # type: ignore[import-untyped]
 
             # Generate private key
             private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
