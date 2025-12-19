@@ -16,6 +16,14 @@ const documentation = {
                 <li>Score proofs for reputation systems</li>
             </ul>
             
+            <h3>Token Gating Requirement</h3>
+            <p><strong>Important:</strong> All API requests require both:</p>
+            <ul>
+                <li>A valid API key (Bearer token)</li>
+                <li>A Solana wallet address with at least <strong>50,000 tokens</strong></li>
+            </ul>
+            <p>The wallet address must hold the required token balance for the token at address <code>9whFgsoNMhUukn3qsyT5xHTN9Q1dzzkr2qK2PAxtpump</code>.</p>
+            
             <h3>Key Features</h3>
             <ul>
                 <li><strong>Deterministic Proofs:</strong> Canonicalized telemetry ensures consistent proof generation</li>
@@ -40,20 +48,33 @@ const documentation = {
                 <li>Encrypted configuration files</li>
             </ul>
             
-            <h3>Step 3: Use Your Key in Requests</h3>
-            <p>Include your API key in the <code>Authorization</code> header of all API requests:</p>
-            <pre><code>Authorization: Bearer YOUR_API_KEY_HERE</code></pre>
+            <h3>Step 3: Ensure Token Balance</h3>
+            <p>Make sure your Solana wallet holds at least <strong>50,000 tokens</strong> of the required token (mint address: <code>9whFgsoNMhUukn3qsyT5xHTN9Q1dzzkr2qK2PAxtpump</code>).</p>
+            <p>The API will automatically verify your token balance on each request.</p>
+            
+            <h3>Step 4: Use Your Key in Requests</h3>
+            <p>Include both your API key and wallet address in the request headers:</p>
+            <ul>
+                <li><code>Authorization: Bearer YOUR_API_KEY</code> - Your API key</li>
+                <li><code>X-Wallet-Address: YOUR_SOLANA_WALLET_ADDRESS</code> - Your Solana wallet address</li>
+            </ul>
         `
     },
     authentication: {
         title: "Authentication",
         content: `
-            <h3>Bearer Token Authentication</h3>
-            <p>All API endpoints require Bearer token authentication. Include your API key in the request header:</p>
+            <h3>Bearer Token Authentication + Token Gating</h3>
+            <p>All API endpoints require both:</p>
+            <ol>
+                <li><strong>Bearer Token:</strong> Your API key in the <code>Authorization</code> header</li>
+                <li><strong>Wallet Address:</strong> Your Solana wallet address in the <code>X-Wallet-Address</code> header</li>
+            </ol>
+            <p>The API will verify that your wallet holds at least <strong>50,000 tokens</strong> of the required token on each request.</p>
             
-            <h4>Example Request</h4>
+            <h4>Example Request (cURL)</h4>
             <pre><code>curl -X POST https://api.actobotics.net/v1/proofs \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "X-Wallet-Address: YOUR_SOLANA_WALLET_ADDRESS" \\
   -H "Content-Type: application/json" \\
   -d '{"envelope": {...}}'</code></pre>
             
@@ -62,6 +83,7 @@ const documentation = {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
+    'X-Wallet-Address': 'YOUR_SOLANA_WALLET_ADDRESS',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({ envelope: {...} })
@@ -72,6 +94,7 @@ const documentation = {
 
 headers = {
     'Authorization': 'Bearer YOUR_API_KEY',
+    'X-Wallet-Address': 'YOUR_SOLANA_WALLET_ADDRESS',
     'Content-Type': 'application/json'
 }
 
@@ -80,6 +103,13 @@ response = requests.post(
     headers=headers,
     json={'envelope': {...}}
 )</code></pre>
+            
+            <h4>Error Responses</h4>
+            <ul>
+                <li><strong>401 Unauthorized:</strong> Invalid or missing API key</li>
+                <li><strong>400 Bad Request:</strong> Missing <code>X-Wallet-Address</code> header</li>
+                <li><strong>403 Forbidden:</strong> Insufficient token balance (requires 50,000 tokens minimum)</li>
+            </ul>
         `
     },
     endpoints: {
@@ -148,11 +178,17 @@ response = requests.post(
             </ul>
             
             <h3>Access Control</h3>
-            <p>Integrate Solana token-based access control for:</p>
+            <p>The ACTO API uses Solana token-based access control to ensure only authorized users can access the service. All API requests require:</p>
             <ul>
-                <li>Gated robot services</li>
-                <li>Premium feature access</li>
-                <li>DAO-governed permissions</li>
+                <li>A valid API key (Bearer token authentication)</li>
+                <li>A Solana wallet with at least 50,000 tokens of the required token</li>
+            </ul>
+            <p>This enables:</p>
+            <ul>
+                <li>Gated robot services based on token holdings</li>
+                <li>Premium feature access for token holders</li>
+                <li>DAO-governed permissions and access control</li>
+                <li>Secure, decentralized authentication without traditional user accounts</li>
             </ul>
         `
     },
@@ -178,9 +214,19 @@ response = requests.post(
             <h3>Error Handling</h3>
             <ul>
                 <li>Always check HTTP status codes</li>
-                <li>Handle 401 (Unauthorized) errors by checking your API key</li>
-                <li>Handle 429 (Rate Limited) errors with exponential backoff</li>
+                <li><strong>401 (Unauthorized):</strong> Invalid or missing API key - verify your Bearer token</li>
+                <li><strong>400 (Bad Request):</strong> Missing <code>X-Wallet-Address</code> header - include your Solana wallet address</li>
+                <li><strong>403 (Forbidden):</strong> Insufficient token balance - ensure your wallet holds at least 50,000 tokens</li>
+                <li><strong>429 (Rate Limited):</strong> Too many requests - implement exponential backoff</li>
                 <li>Log errors for debugging and monitoring</li>
+            </ul>
+            
+            <h3>Token Balance Requirements</h3>
+            <ul>
+                <li><strong>Required Token:</strong> <code>9whFgsoNMhUukn3qsyT5xHTN9Q1dzzkr2qK2PAxtpump</code></li>
+                <li><strong>Minimum Balance:</strong> 50,000 tokens</li>
+                <li><strong>Network:</strong> Solana Mainnet</li>
+                <li>The balance is checked on every API request via Solana RPC</li>
             </ul>
         `
     }

@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import Depends, Header, HTTPException, Request
 from fastapi.security import HTTPBearer
 
+from acto.access.solana_gate import SolanaTokenGate
+from acto.config.settings import Settings
 from acto.errors import AccessError
 from acto.security.api_key_store import ApiKeyStore
 from acto.security.jwt import JWTManager
@@ -148,3 +150,63 @@ def get_current_user_optional(request: Request) -> dict | None:
         "roles": getattr(request.state, "user_roles", []),
         "scopes": getattr(request.state, "user_scopes", []),
     }
+
+
+def require_api_key_and_token_balance(
+    store: ApiKeyStore,
+    settings: Settings,
+):
+    """Dependency for API key authentication via Bearer token AND Solana token balance check."""
+
+    async def _dep(
+        request: Request,
+        x_wallet_address: str | None = Header(None, description="Solana wallet address (required if token gating is enabled)"),
+    ) -> None:
+        # Get Bearer token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(
+                status_code=401,
+                detail="Missing or invalid authorization header. Please provide a Bearer token.",
+            )
+
+        token = auth_header.replace("Bearer ", "").strip()
+        try:
+            # First verify API key
+            store.require(token)
+            # Record usage statistics
+            endpoint = f"{request.method} {request.url.path}"
+            store.record_usage(token, endpoint)
+        except AccessError as e:
+            raise HTTPException(status_code=401, detail=str(e)) from e
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}") from e
+
+        # Check token gating if enabled
+        if settings.token_gating_enabled:
+            if not x_wallet_address:
+                raise HTTPException(
+                    status_code=400,
+                    detail="X-Wallet-Address header is required when token gating is enabled.",
+                )
+            try:
+                gate = SolanaTokenGate(rpc_url=settings.token_gating_rpc_url)
+                decision = gate.decide(
+                    owner=x_wallet_address,
+                    mint=settings.token_gating_mint,
+                    minimum=settings.token_gating_minimum,
+                )
+                if not decision.allowed:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Insufficient token balance. Required: {settings.token_gating_minimum}, "
+                        f"Your balance: {decision.balance or 0.0}",
+                    )
+            except AccessError as e:
+                raise HTTPException(status_code=403, detail=f"Token balance check failed: {str(e)}") from e
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to verify token balance: {str(e)}"
+                ) from e
+
+    return _dep

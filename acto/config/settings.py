@@ -102,3 +102,9 @@ class Settings(BaseSettings):
     cache_ttl: int = 3600  # Time-to-live in seconds
     redis_url: str = "redis://localhost:6379/0"
     redis_password: str | None = None
+
+    # Token Gating
+    token_gating_enabled: bool = True
+    token_gating_mint: str = "9whFgsoNMhUukn3qsyT5xHTN9Q1dzzkr2qK2PAxtpump"
+    token_gating_minimum: float = 50000.0
+    token_gating_rpc_url: str = "https://api.mainnet-beta.solana.com"

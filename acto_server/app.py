@@ -26,6 +26,7 @@ from acto.security import (
     create_jwt_dependency_optional,
     get_current_user_optional,
     require_api_key,
+    require_api_key_and_token_balance,
     require_jwt,
 )
 from acto.security.api_key_store import ApiKeyStore
@@ -172,8 +173,8 @@ def create_app() -> FastAPI:
             raise
 
     def auth_dependency():
-        """Create authentication dependency - always require Bearer token."""
-        return Depends(require_api_key(api_key_store))
+        """Create authentication dependency - require Bearer token and token balance."""
+        return Depends(require_api_key_and_token_balance(api_key_store, settings))
 
     @app.get("/health")
     def health() -> dict:

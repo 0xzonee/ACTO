@@ -1,0 +1,36 @@
+# ACTO Configuration Example
+# Copy this file to ~/.acto/config.toml or set environment variables with ACTO_ prefix
+
+# Token Gating Configuration
+# Enable token gating to require minimum token balance for API access
+token_gating_enabled = true
+
+# Solana token mint address (contract address)
+token_gating_mint = "9whFgsoNMhUukn3qsyT5xHTN9Q1dzzkr2qK2PAxtpump"
+
+# Minimum token balance required (in tokens, not in smallest unit)
+token_gating_minimum = 50000.0
+
+# Solana RPC URL for balance checks
+# Mainnet: https://api.mainnet-beta.solana.com
+# Devnet: https://api.devnet.solana.com
+# Testnet: https://api.testnet.solana.com
+token_gating_rpc_url = "https://api.mainnet-beta.solana.com"
+
+# Database Configuration
+# db_url = "sqlite:///./data/acto.sqlite"
+# db_url = "postgresql://user:password@localhost/acto"
+
+# Server Configuration
+# host = "127.0.0.1"
+# port = 8080
+
+# JWT Configuration
+# jwt_secret_key = "your-secret-key-here"
+# jwt_access_token_expire_minutes = 60
+
+# Rate Limiting
+# rate_limit_enabled = true
+# rate_limit_rps = 5.0
+# rate_limit_burst = 20
+
