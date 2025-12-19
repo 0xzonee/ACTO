@@ -58,7 +58,8 @@ function renderKeyStats(key, stats) {
     `;
 }
 
-function showKeyStats(keyId) {
+// Make it globally available for onclick handlers
+window.showKeyStats = function showKeyStats(keyId) {
     const modal = document.getElementById('statsModal');
     if (!modal) return;
     

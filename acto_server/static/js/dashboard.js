@@ -30,7 +30,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Connect Phantom Wallet
-async function connectWallet() {
+// Make it globally available for onclick handlers
+window.connectWallet = async function connectWallet() {
     try {
         if (!window.solana || !window.solana.isPhantom) {
             showAlert('Phantom wallet not found. Please install Phantom wallet extension.', 'error');
@@ -94,7 +95,8 @@ async function connectWallet() {
 }
 
 // Disconnect wallet
-async function disconnectWallet() {
+// Make it globally available for onclick handlers
+window.disconnectWallet = async function disconnectWallet() {
     if (phantomWallet) {
         try {
             await phantomWallet.disconnect();
@@ -274,7 +276,8 @@ async function loadStatsKeys() {
 }
 
 // Tab switching
-function switchTab(tabName) {
+// Make it globally available for onclick handlers
+window.switchTab = function switchTab(tabName) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -357,7 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Delete key
-async function deleteKey(keyId) {
+// Make it globally available for onclick handlers
+window.deleteKey = async function deleteKey(keyId) {
     if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
         return;
     }
