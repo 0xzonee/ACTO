@@ -133,66 +133,6 @@ const API_ENDPOINTS = {
 let currentEndpoint = null;
 let playgroundApiKey = '';
 
-function initPlayground() {
-    const endpointSelect = document.getElementById('playgroundEndpoint');
-    if (!endpointSelect) {
-        // If element doesn't exist yet, try again after a short delay
-        setTimeout(initPlayground, 100);
-        return;
-    }
-    
-    // Clear existing options (including "Loading...")
-    endpointSelect.innerHTML = '';
-    
-    // Check if API_ENDPOINTS is defined and has entries
-    if (!API_ENDPOINTS || Object.keys(API_ENDPOINTS).length === 0) {
-        console.error('API_ENDPOINTS is not defined or empty');
-        endpointSelect.innerHTML = '<option value="">No endpoints available</option>';
-        return;
-    }
-    
-    // Populate endpoint dropdown
-    Object.keys(API_ENDPOINTS).forEach(key => {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = `${key} - ${API_ENDPOINTS[key].description}`;
-        endpointSelect.appendChild(option);
-    });
-    
-    // Set default
-    if (endpointSelect.options.length > 0) {
-        endpointSelect.value = endpointSelect.options[0].value;
-        selectEndpoint(endpointSelect.value);
-    }
-    
-    // Load token gating configuration
-    loadTokenGatingConfig();
-}
-
-// Make function globally available
-window.initPlayground = initPlayground;
-
-// Initialize playground when DOM is ready or if already loaded
-(function() {
-    function tryInit() {
-        const playgroundTab = document.getElementById('tab-playground');
-        if (playgroundTab && playgroundTab.classList.contains('active')) {
-            initPlayground();
-        }
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', tryInit);
-    } else {
-        // DOM is already loaded
-        setTimeout(tryInit, 100);
-    }
-})();
-
-function updatePlaygroundApiKey(key) {
-    playgroundApiKey = key;
-}
-
 function selectEndpoint(endpointKey) {
     currentEndpoint = API_ENDPOINTS[endpointKey];
     if (!currentEndpoint) return;
@@ -239,6 +179,60 @@ function selectEndpoint(endpointKey) {
             paramsContainer.style.display = 'none';
         }
     }
+}
+
+function initPlayground() {
+    console.log('initPlayground() called');
+    const endpointSelect = document.getElementById('playgroundEndpoint');
+    if (!endpointSelect) {
+        console.log('endpointSelect element not found, retrying...');
+        // If element doesn't exist yet, try again after a short delay
+        setTimeout(initPlayground, 100);
+        return;
+    }
+    
+    console.log('endpointSelect found, clearing options...');
+    // Clear existing options (including "Loading...")
+    endpointSelect.innerHTML = '';
+    
+    // Check if API_ENDPOINTS is defined and has entries
+    if (!API_ENDPOINTS || Object.keys(API_ENDPOINTS).length === 0) {
+        console.error('API_ENDPOINTS is not defined or empty');
+        endpointSelect.innerHTML = '<option value="">No endpoints available</option>';
+        return;
+    }
+    
+    console.log('API_ENDPOINTS found, adding', Object.keys(API_ENDPOINTS).length, 'endpoints');
+    // Populate endpoint dropdown
+    Object.keys(API_ENDPOINTS).forEach(key => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = `${key} - ${API_ENDPOINTS[key].description}`;
+        endpointSelect.appendChild(option);
+    });
+    
+    console.log('Endpoints added, total options:', endpointSelect.options.length);
+    
+    // Set default
+    if (endpointSelect.options.length > 0) {
+        endpointSelect.value = endpointSelect.options[0].value;
+        if (typeof selectEndpoint === 'function') {
+            selectEndpoint(endpointSelect.options[0].value);
+        } else {
+            console.error('selectEndpoint function not found');
+        }
+    }
+    
+    // Load token gating configuration
+    loadTokenGatingConfig();
+}
+
+// Make functions globally available
+window.initPlayground = initPlayground;
+window.selectEndpoint = selectEndpoint;
+
+function updatePlaygroundApiKey(key) {
+    playgroundApiKey = key;
 }
 
 async function executePlaygroundRequest() {

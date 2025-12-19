@@ -296,15 +296,34 @@ function switchTab(tabName) {
         loadStatsKeys();
     } else if (tabName === 'playground') {
         // Always call initPlayground when playground tab is opened
+        // Use a longer timeout to ensure DOM is ready
         setTimeout(() => {
+            console.log('Initializing playground from switchTab');
+            const endpointSelect = document.getElementById('playgroundEndpoint');
+            if (!endpointSelect) {
+                console.error('playgroundEndpoint element not found in DOM');
+                return;
+            }
+            
             if (typeof window.initPlayground === 'function') {
                 window.initPlayground();
             } else if (typeof initPlayground === 'function') {
                 initPlayground();
             } else {
                 console.error('initPlayground function not found');
+                // Try to manually populate if function doesn't exist
+                if (typeof API_ENDPOINTS !== 'undefined') {
+                    console.log('Manually populating endpoints');
+                    endpointSelect.innerHTML = '';
+                    Object.keys(API_ENDPOINTS).forEach(key => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = `${key} - ${API_ENDPOINTS[key].description}`;
+                        endpointSelect.appendChild(option);
+                    });
+                }
             }
-        }, 100);
+        }, 200);
     } else if (tabName === 'docs') {
         if (typeof initDocumentation === 'function') {
             initDocumentation();
