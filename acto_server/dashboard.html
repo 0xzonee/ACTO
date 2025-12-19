@@ -26,7 +26,6 @@
     
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/navigation.css">
-    <link rel="stylesheet" href="/static/css/playground.css">
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
 </head>
 <body>
@@ -59,7 +58,6 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="keys" onclick="switchTab('keys')">API Keys</button>
                 <button class="nav-tab" data-tab="stats" onclick="switchTab('stats')">Statistics</button>
-                <button class="nav-tab" data-tab="playground" onclick="switchTab('playground')">API Playground</button>
                 <button class="nav-tab" data-tab="docs" onclick="switchTab('docs')">Documentation</button>
             </div>
             
@@ -116,59 +114,6 @@
                 </div>
             </div>
             
-            <!-- API Playground Tab -->
-            <div id="tab-playground" class="tab-content">
-                <div class="playground-container">
-                    <div class="playground-section">
-                        <h3>API Playground</h3>
-                        <p class="playground-description" id="playgroundDescription">Select an endpoint to test the API interactively.</p>
-                        
-                        <div class="playground-form-group">
-                            <label for="playgroundApiKey">API Key (Bearer Token)</label>
-                            <input type="text" id="playgroundApiKey" class="form-control" placeholder="Enter your API key" onchange="updatePlaygroundApiKey(this.value)">
-                            <small style="color: var(--color-text-tertiary); font-size: 12px; margin-top: 4px; display: block;">
-                                Enter your API key. The API key is required for all requests. You can create a new key in the API Keys tab.
-                            </small>
-                        </div>
-                        
-                        <div class="playground-form-group">
-                            <label for="playgroundEndpoint">Select Endpoint</label>
-                            <select id="playgroundEndpoint" class="form-control" onchange="selectEndpoint(this.value)">
-                                <option value="">Loading...</option>
-                            </select>
-                        </div>
-                        
-                        <div id="playgroundParams" class="playground-params" style="display: none;"></div>
-                        
-                        <div class="playground-form-group" id="playgroundBodyGroup" style="display: none;">
-                            <label for="playgroundBody">Request Body (JSON)</label>
-                            <textarea id="playgroundBody" class="playground-body-editor" placeholder='{"key": "value"}'></textarea>
-                        </div>
-                        
-                        <div class="playground-actions">
-                            <button class="btn btn-primary" id="playgroundExecute" onclick="executePlaygroundRequest()">Execute Request</button>
-                            <button class="btn btn-secondary" onclick="clearPlaygroundResponse()">Clear Response</button>
-                        </div>
-                    </div>
-                    
-                    <div class="playground-section">
-                        <div class="playground-response-container">
-                            <div class="playground-response-header">
-                                <div>
-                                    <h3>Response</h3>
-                                    <div class="playground-status" id="playgroundStatus"></div>
-                                </div>
-                                <div class="playground-response-actions">
-                                    <button onclick="formatPlaygroundResponse()">Format JSON</button>
-                                    <button onclick="copyPlaygroundResponse()">Copy</button>
-                                </div>
-                            </div>
-                            <pre id="playgroundResponse" class="playground-response"></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Documentation Tab -->
             <div id="tab-docs" class="tab-content">
                 <div class="doc-layout">
@@ -198,6 +143,5 @@
     <script src="/static/js/dashboard.js"></script>
     <script src="/static/js/stats.js"></script>
     <script src="/static/js/docs.js"></script>
-    <script src="/static/js/playground.js"></script>
 </body>
 </html>

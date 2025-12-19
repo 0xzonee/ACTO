@@ -6,126 +6,6 @@ let currentUser = null;
 let accessToken = null;
 let keysList = [];
 
-// Fallback API endpoints - defined here in case playground.js doesn't load
-// These are hardcoded and should always be available
-if (!window.API_ENDPOINTS) {
-    window.API_ENDPOINTS = {
-        'Test API Key (GET /v1/proofs)': {
-            method: 'GET',
-            path: '/v1/proofs',
-            description: 'Test your API key - Simple endpoint to verify authentication works',
-            requiresBody: false,
-            params: [],
-            isSimple: true,
-            defaultParams: { limit: 1 }
-        },
-        'GET /v1/proofs': {
-            method: 'GET',
-            path: '/v1/proofs',
-            description: 'List all proofs',
-            requiresBody: false,
-            params: ['limit']
-        },
-        'GET /v1/proofs/{id}': {
-            method: 'GET',
-            path: '/v1/proofs',
-            description: 'Get a specific proof by ID',
-            requiresBody: false,
-            params: ['proof_id'],
-            isDynamic: true
-        },
-        'POST /v1/proofs': {
-            method: 'POST',
-            path: '/v1/proofs',
-            description: 'Submit a new proof',
-            requiresBody: true,
-            exampleBody: {
-                envelope: {
-                    payload: {
-                        version: "1",
-                        subject: {
-                            task_id: "example-task",
-                            robot_id: "example-robot",
-                            run_id: "run-001"
-                        },
-                        created_at: new Date().toISOString(),
-                        telemetry_normalized: {},
-                        telemetry_hash: "example-hash",
-                        payload_hash: "example-payload-hash",
-                        hash_alg: "blake3",
-                        signature_alg: "ed25519",
-                        meta: {}
-                    },
-                    signature_b64: "example-signature",
-                    signer_public_key_b64: "example-public-key"
-                }
-            }
-        },
-        'POST /v1/verify': {
-            method: 'POST',
-            path: '/v1/verify',
-            description: 'Verify a proof without storing it',
-            requiresBody: true,
-            exampleBody: {
-                envelope: {
-                    payload: {
-                        version: "1",
-                        subject: {
-                            task_id: "example-task"
-                        },
-                        created_at: new Date().toISOString(),
-                        telemetry_normalized: {},
-                        telemetry_hash: "example-hash",
-                        payload_hash: "example-payload-hash",
-                        hash_alg: "blake3",
-                        signature_alg: "ed25519",
-                        meta: {}
-                    },
-                    signature_b64: "example-signature",
-                    signer_public_key_b64: "example-public-key"
-                }
-            }
-        },
-        'POST /v1/score': {
-            method: 'POST',
-            path: '/v1/score',
-            description: 'Get reputation score for a proof',
-            requiresBody: true,
-            exampleBody: {
-                envelope: {
-                    payload: {
-                        version: "1",
-                        subject: {
-                            task_id: "example-task"
-                        },
-                        created_at: new Date().toISOString(),
-                        telemetry_normalized: {},
-                        telemetry_hash: "example-hash",
-                        payload_hash: "example-payload-hash",
-                        hash_alg: "blake3",
-                        signature_alg: "ed25519",
-                        meta: {}
-                    },
-                    signature_b64: "example-signature",
-                    signer_public_key_b64: "example-public-key"
-                }
-            }
-        },
-        'POST /v1/access/check': {
-            method: 'POST',
-            path: '/v1/access/check',
-            description: 'Check if a wallet has sufficient token balance',
-            requiresBody: true,
-            getExampleBody: () => ({
-                rpc_url: "https://api.mainnet-beta.solana.com",
-                owner: "WALLET_ADDRESS",
-                mint: "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray",
-                minimum: 50000.0
-            })
-        }
-    };
-    console.log('API_ENDPOINTS fallback defined in dashboard.js');
-}
 // Make variables globally accessible for other modules
 window.keysList = keysList;
 window.accessToken = null; // Will be updated when token is set
@@ -247,13 +127,6 @@ function showMainContent() {
     loadKeys();
     if (typeof initDocumentation === 'function') {
         initDocumentation();
-    }
-    // Initialize playground if the tab is active
-    const playgroundTab = document.getElementById('tab-playground');
-    if (playgroundTab && playgroundTab.classList.contains('active')) {
-        if (typeof initPlayground === 'function') {
-            initPlayground();
-        }
     }
 }
 
@@ -417,53 +290,6 @@ function switchTab(tabName) {
     // Load content for specific tabs
     if (tabName === 'stats') {
         loadStatsKeys();
-    } else if (tabName === 'playground') {
-        // Always call initPlayground when playground tab is opened
-        // Use a longer timeout to ensure DOM and scripts are ready
-        setTimeout(() => {
-            console.log('Initializing playground from switchTab');
-            const endpointSelect = document.getElementById('playgroundEndpoint');
-            if (!endpointSelect) {
-                console.error('playgroundEndpoint element not found in DOM');
-                return;
-            }
-            
-            // API_ENDPOINTS should always be available now (either from playground.js or fallback in dashboard.js)
-            const endpoints = window.API_ENDPOINTS;
-            if (!endpoints || Object.keys(endpoints).length === 0) {
-                console.error('API_ENDPOINTS not found - this should not happen!');
-                endpointSelect.innerHTML = '<option value="">Error: Endpoints not available</option>';
-                return;
-            }
-            
-            console.log('API_ENDPOINTS found, populating dropdown with', Object.keys(endpoints).length, 'endpoints');
-            
-            // Try to use initPlayground if available, otherwise manually populate
-            if (typeof window.initPlayground === 'function') {
-                console.log('Using initPlayground function');
-                window.initPlayground();
-            } else if (typeof initPlayground === 'function') {
-                console.log('Using local initPlayground function');
-                initPlayground();
-            } else {
-                console.log('initPlayground not found, manually populating endpoints');
-                // Fallback: manually populate endpoints
-                endpointSelect.innerHTML = '';
-                Object.keys(endpoints).forEach(key => {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = `${key} - ${endpoints[key].description}`;
-                    endpointSelect.appendChild(option);
-                });
-                if (endpointSelect.options.length > 0) {
-                    endpointSelect.value = endpointSelect.options[0].value;
-                    // Try to call selectEndpoint if available
-                    if (typeof window.selectEndpoint === 'function') {
-                        window.selectEndpoint(endpointSelect.options[0].value);
-                    }
-                }
-            }
-        }, 200);
     } else if (tabName === 'docs') {
         if (typeof initDocumentation === 'function') {
             initDocumentation();
@@ -503,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('newKeyDisplay').classList.add('show');
                 showAlert('API key created successfully!', 'success');
                 
-                // Store API key in localStorage for playground use
+                // Store API key in localStorage
                 if (result.key && result.key_id) {
                     localStorage.setItem(`api_key_${result.key_id}`, result.key);
                 }
