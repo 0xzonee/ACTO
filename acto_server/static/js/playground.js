@@ -1,6 +1,8 @@
 // API Playground module for testing API endpoints
 
-const API_BASE = window.location.origin;
+// Use existing API_BASE if available, otherwise define it
+const API_BASE = window.API_BASE || window.location.origin;
+window.API_BASE = API_BASE;
 
 // Token gating configuration (loaded from API)
 let tokenGatingConfig = {
@@ -23,6 +25,7 @@ async function loadTokenGatingConfig() {
     }
 }
 
+// Define API endpoints - these are always available
 const API_ENDPOINTS = {
     'GET /v1/proofs': {
         method: 'GET',
@@ -130,6 +133,9 @@ const API_ENDPOINTS = {
     }
 };
 
+// Make API_ENDPOINTS globally available
+window.API_ENDPOINTS = API_ENDPOINTS;
+
 let currentEndpoint = null;
 let playgroundApiKey = '';
 
@@ -195,19 +201,22 @@ function initPlayground() {
     // Clear existing options (including "Loading...")
     endpointSelect.innerHTML = '';
     
-    // Check if API_ENDPOINTS is defined and has entries
-    if (!API_ENDPOINTS || Object.keys(API_ENDPOINTS).length === 0) {
+    // Check if API_ENDPOINTS is defined - try both local and global scope
+    const endpoints = API_ENDPOINTS || window.API_ENDPOINTS;
+    if (!endpoints || Object.keys(endpoints).length === 0) {
         console.error('API_ENDPOINTS is not defined or empty');
+        console.error('API_ENDPOINTS in local scope:', typeof API_ENDPOINTS);
+        console.error('API_ENDPOINTS in window scope:', typeof window.API_ENDPOINTS);
         endpointSelect.innerHTML = '<option value="">No endpoints available</option>';
         return;
     }
     
-    console.log('API_ENDPOINTS found, adding', Object.keys(API_ENDPOINTS).length, 'endpoints');
+    console.log('API_ENDPOINTS found, adding', Object.keys(endpoints).length, 'endpoints');
     // Populate endpoint dropdown
-    Object.keys(API_ENDPOINTS).forEach(key => {
+    Object.keys(endpoints).forEach(key => {
         const option = document.createElement('option');
         option.value = key;
-        option.textContent = `${key} - ${API_ENDPOINTS[key].description}`;
+        option.textContent = `${key} - ${endpoints[key].description}`;
         endpointSelect.appendChild(option);
     });
     
@@ -226,10 +235,6 @@ function initPlayground() {
     // Load token gating configuration
     loadTokenGatingConfig();
 }
-
-// Make functions globally available
-window.initPlayground = initPlayground;
-window.selectEndpoint = selectEndpoint;
 
 function updatePlaygroundApiKey(key) {
     playgroundApiKey = key;
@@ -375,4 +380,20 @@ function clearPlaygroundResponse() {
     if (responseEl) responseEl.textContent = '';
     if (statusEl) statusEl.textContent = '';
 }
+
+// Make all functions globally available (after they are all defined)
+window.initPlayground = initPlayground;
+window.selectEndpoint = selectEndpoint;
+window.clearPlaygroundResponse = clearPlaygroundResponse;
+window.formatPlaygroundResponse = formatPlaygroundResponse;
+window.copyPlaygroundResponse = copyPlaygroundResponse;
+window.executePlaygroundRequest = executePlaygroundRequest;
+
+// Make all functions globally available (after they are all defined)
+window.initPlayground = initPlayground;
+window.selectEndpoint = selectEndpoint;
+window.clearPlaygroundResponse = clearPlaygroundResponse;
+window.formatPlaygroundResponse = formatPlaygroundResponse;
+window.copyPlaygroundResponse = copyPlaygroundResponse;
+window.executePlaygroundRequest = executePlaygroundRequest;
 

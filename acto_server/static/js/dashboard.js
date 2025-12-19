@@ -1,4 +1,6 @@
+// Define API_BASE first (this will be used by other modules)
 const API_BASE = window.location.origin;
+window.API_BASE = API_BASE;
 let phantomWallet = null;
 let currentUser = null;
 let accessToken = null;
@@ -305,22 +307,31 @@ function switchTab(tabName) {
                 return;
             }
             
+            // Check if API_ENDPOINTS is available (should always be)
+            const endpoints = window.API_ENDPOINTS;
+            if (!endpoints) {
+                console.error('API_ENDPOINTS not found in window scope - playground.js may not be loaded');
+                endpointSelect.innerHTML = '<option value="">Error: Endpoints not loaded</option>';
+                return;
+            }
+            
             if (typeof window.initPlayground === 'function') {
                 window.initPlayground();
             } else if (typeof initPlayground === 'function') {
                 initPlayground();
             } else {
-                console.error('initPlayground function not found');
-                // Try to manually populate if function doesn't exist
-                if (typeof API_ENDPOINTS !== 'undefined') {
-                    console.log('Manually populating endpoints');
-                    endpointSelect.innerHTML = '';
-                    Object.keys(API_ENDPOINTS).forEach(key => {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.textContent = `${key} - ${API_ENDPOINTS[key].description}`;
-                        endpointSelect.appendChild(option);
-                    });
+                console.error('initPlayground function not found, manually populating endpoints');
+                // Fallback: manually populate endpoints
+                endpointSelect.innerHTML = '';
+                Object.keys(endpoints).forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = `${key} - ${endpoints[key].description}`;
+                    endpointSelect.appendChild(option);
+                });
+                if (endpointSelect.options.length > 0 && typeof window.selectEndpoint === 'function') {
+                    endpointSelect.value = endpointSelect.options[0].value;
+                    window.selectEndpoint(endpointSelect.options[0].value);
                 }
             }
         }, 200);
