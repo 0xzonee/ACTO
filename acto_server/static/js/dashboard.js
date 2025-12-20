@@ -1,6 +1,39 @@
 // ACTO Dashboard - Multi-Wallet Support for Solana
 // Supported wallets: Phantom, Solflare, Backpack, Glow, Coinbase Wallet
 
+// ============================================================
+// CRITICAL: Define global functions IMMEDIATELY for onclick handlers
+// These must be defined before any other code runs
+// ============================================================
+
+// Open wallet selection modal - defined immediately for onclick
+function openWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        // Refresh wallet detection when opening modal
+        if (typeof populateWalletList === 'function') {
+            populateWalletList();
+        }
+    }
+}
+window.openWalletModal = openWalletModal;
+
+// Close wallet selection modal - defined immediately for onclick
+function closeWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+window.closeWalletModal = closeWalletModal;
+
+// ============================================================
+// END CRITICAL SECTION
+// ============================================================
+
 // Define API_BASE first (this will be used by other modules)
 const API_BASE = window.location.origin;
 window.API_BASE = API_BASE;
@@ -111,25 +144,8 @@ function populateWalletList() {
     }).join('');
 }
 
-// Open wallet selection modal
-window.openWalletModal = function() {
-    const modal = document.getElementById('walletModal');
-    if (modal) {
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        // Refresh wallet detection when opening modal
-        populateWalletList();
-    }
-};
-
-// Close wallet selection modal
-window.closeWalletModal = function() {
-    const modal = document.getElementById('walletModal');
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-    }
-};
+// Note: openWalletModal and closeWalletModal are defined at the top of this file
+// for immediate availability to onclick handlers
 
 // Connect to a specific wallet
 window.connectWallet = async function(walletId) {
