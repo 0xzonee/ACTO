@@ -1,143 +1,66 @@
 # ACTO
 
-ACTO is a robotics-first proof-of-execution toolkit.
+**Robotics-first proof-of-execution toolkit.**
 
-It helps you generate deterministic, signed execution proofs from robot telemetry and logs, then verify those proofs locally or via an API. ACTO is designed to be smart-contract-free by default and can be integrated into existing robotics stacks.
+Generate deterministic, signed execution proofs from robot telemetry and logs. Verify proofs locally or via API. Smart-contract-free by default.
 
-## What you get
+[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/actobotics/ACTO)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-- Python SDK to create and verify execution proofs
-- Async/await support for asynchronous operations
-- Context managers for better resource management
-- Local-first SQLite proof registry
-- FastAPI verification service (optional)
-- Interactive CLI mode for guided workflows
-- Shell completion support (bash, zsh, fish, PowerShell)
-- Progress bars and color-coded output
-- Config file support (`~/.acto/config.toml`)
-- Pluggable telemetry parsers and normalizers
-- Token gating module (optional) for SPL token balance checks (off-chain)
-- Jupyter notebook examples for SDK usage
+---
 
-## Quick start
+## 🌐 Links
 
-### Create a virtual environment
+| | |
+|---|---|
+| 🌍 **Website** | [actobotics.net](https://actobotics.net) |
+| 📊 **Dashboard** | [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard) |
+| 🐦 **X (Twitter)** | [@actoboticsnet](https://x.com/actoboticsnet) |
+| 📖 **API Docs** | [docs/API.md](docs/API.md) |
+
+---
+
+## ✨ Features
+
+- **Python SDK** - Create and verify execution proofs
+- **Local Registry** - SQLite-based proof storage
+- **REST API** - FastAPI verification service
+- **Multi-Wallet Dashboard** - Phantom, Solflare, Backpack, Glow, Coinbase
+- **Token Gating** - SPL token balance checks (off-chain)
+- **Async Support** - Full async/await API
+- **CLI Tools** - Interactive mode, shell completion
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-python -m venv .venv
-# Windows:
-# .venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-```
-
-### Install
-
-```bash
-pip install -U pip
+# Install
 pip install -e ".[all]"
-```
 
-### Generate a keypair
+# Generate keypair
+acto keys generate
 
-```bash
-acto keys generate --out data/keys/acto_keypair.json
-```
+# Create proof from telemetry
+acto proof create \
+  --task-id "task-001" \
+  --source examples/telemetry/sample_telemetry.jsonl
 
-### Generate a proof from telemetry
-
-```bash
-acto proof create   --task-id "cleaning-run-001"   --source examples/telemetry/sample_telemetry.jsonl   --out examples/proofs/sample_proof.json
-```
-
-### Verify locally
-
-```bash
+# Verify locally
 acto proof verify --proof examples/proofs/sample_proof.json
-```
 
-### Run the API server (optional)
-
-```bash
+# Start API server (optional)
 acto server run
 ```
 
-## Interactive Mode
+---
 
-ACTO includes an interactive mode for guided workflows:
-
-```bash
-acto interactive start
-```
-
-This launches a menu-driven interface where you can:
-- Generate keypairs
-- Create and verify proofs
-- Manage the proof registry
-- Check token access
-
-## Shell Completion
-
-Install shell completion for better CLI experience:
-
-```bash
-# Show completion script
-acto completion show --shell bash
-
-# Install for bash (add to ~/.bashrc)
-acto completion install --shell bash >> ~/.bashrc
-
-# Install for zsh (add to ~/.zshrc)
-acto completion install --shell zsh >> ~/.zshrc
-
-# Install for PowerShell
-acto completion install --shell powershell
-```
-
-Supported shells: `bash`, `zsh`, `fish`, `powershell`
-
-## Configuration
-
-ACTO supports configuration via environment variables or a config file:
-
-### Config File (`~/.acto/config.toml`)
-
-```toml
-[storage]
-db_url = "sqlite:///./data/acto.sqlite"
-
-[logging]
-log_level = "INFO"
-json_logs = false
-
-[proof]
-proof_version = "1"
-proof_hash_alg = "blake3"
-proof_signature_alg = "ed25519"
-
-[server]
-host = "127.0.0.1"
-port = 8080
-```
-
-### Environment Variables
-
-All settings can also be set via environment variables with the `ACTO_` prefix:
-
-```bash
-export ACTO_LOG_LEVEL=DEBUG
-export ACTO_DB_URL=sqlite:///./custom.db
-```
-
-## SDK Usage
-
-### Basic Usage
+## 📦 SDK Usage
 
 ```python
 from acto.proof import create_proof, verify_proof
 from acto.telemetry.models import TelemetryBundle, TelemetryEvent
 from acto.crypto import KeyPair
-from datetime import datetime
 
 # Generate keypair
 keypair = KeyPair.generate()
@@ -146,371 +69,115 @@ keypair = KeyPair.generate()
 bundle = TelemetryBundle(
     task_id="task-001",
     robot_id="robot-001",
-    events=[
-        TelemetryEvent(
-            ts=datetime.now().isoformat(),
-            topic="sensor",
-            data={"value": 42}
-        )
-    ]
+    events=[TelemetryEvent(ts="2025-01-01T00:00:00Z", topic="sensor", data={"value": 42})]
 )
 
-# Create proof
-envelope = create_proof(
-    bundle,
-    keypair.private_key_b64,
-    keypair.public_key_b64
-)
-
-# Verify proof
+# Create and verify proof
+envelope = create_proof(bundle, keypair.private_key_b64, keypair.public_key_b64)
 is_valid = verify_proof(envelope)
 ```
 
-### Async Operations
+---
 
-```python
-import asyncio
-from acto.proof import create_proof_async, verify_proof_async
+## 🌐 API Access
 
-async def main():
-    # Create proof asynchronously
-    envelope = await create_proof_async(
-        bundle,
-        keypair.private_key_b64,
-        keypair.public_key_b64
-    )
-    
-    # Verify asynchronously
-    is_valid = await verify_proof_async(envelope)
+Use the hosted API at `https://api.actobotics.net`:
 
-asyncio.run(main())
-```
-
-### Registry with Context Manager
-
-```python
-from acto.registry import ProofRegistry, AsyncProofRegistry
-
-# Synchronous with context manager
-with ProofRegistry() as registry:
-    proof_id = registry.upsert(envelope)
-    proof = registry.get(proof_id)
-
-# Async with context manager
-async with AsyncProofRegistry() as registry:
-    proof_id = await registry.upsert(envelope)
-    proof = await registry.get(proof_id)
-```
-
-### Jupyter Notebook Examples
-
-Check out the example notebooks in `examples/notebooks/`:
-
-- `01_basic_proof_creation.ipynb` - Basic proof creation and verification
-- `02_async_proof_operations.ipynb` - Async/await examples
-- `03_registry_operations.ipynb` - Registry usage with context managers
-
-## Token gating (no smart contract required)
-
-ACTO can gate access based on SPL token holdings by checking a wallet's token balance via Solana RPC. This is off-chain enforcement (your API decides whether to allow a request).
+1. **Get an API Key** at [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+2. **Connect your Solana wallet** (requires 50,000 ACTO tokens)
+3. **Make API calls**:
 
 ```bash
-acto access check   --rpc https://api.mainnet-beta.solana.com   --owner <WALLET_ADDRESS>   --mint <TOKEN_MINT>   --minimum 50000
+curl -X POST https://api.actobotics.net/v1/proofs \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Wallet-Address: YOUR_WALLET" \
+  -H "Content-Type: application/json" \
+  -d '{"envelope": {...}}'
 ```
-
-## API Access
-
-ACTO provides a hosted API service at `https://api.actobotics.net` for submitting and verifying proofs.
-
-### Getting Started with the API
-
-1. **Get Your API Key**:
-   - Visit the [API Key Dashboard](https://api.actobotics.net/dashboard)
-   - Create a new API key with a descriptive name
-   - **Copy the key immediately** - it's only shown once
-
-2. **Use Your API Key**:
-   All API requests require Bearer token authentication:
-   ```bash
-   curl -X POST https://api.actobotics.net/v1/proofs \
-     -H "Authorization: Bearer your-api-key-here" \
-     -H "Content-Type: application/json" \
-     -d '{"envelope": {...}}'
-   ```
-
-3. **Manage Your Keys**:
-   - View all your keys at the [dashboard](https://api.actobotics.net/dashboard)
-   - See creation date and last used time
-   - Delete keys you no longer need
 
 ### API Endpoints
 
-- `POST /v1/proofs` - Submit a proof
-- `GET /v1/proofs` - List proofs
-- `GET /v1/proofs/{proof_id}` - Get a proof
-- `POST /v1/proofs/search` - Search and filter proofs with pagination
-- `POST /v1/verify` - Verify a proof
-- `POST /v1/verify/batch` - Batch verify multiple proofs
-- `POST /v1/score` - Score a proof
-- `GET /v1/stats/wallet/{address}` - Get wallet statistics
-- `POST /v1/access/check` - Check Solana token access
+| Endpoint | Description |
+|----------|-------------|
+| `POST /v1/proofs` | Submit a proof |
+| `GET /v1/proofs` | List proofs |
+| `POST /v1/proofs/search` | Search & filter proofs |
+| `POST /v1/verify` | Verify a proof |
+| `POST /v1/verify/batch` | Batch verify proofs |
+| `GET /v1/stats/wallet/{addr}` | Wallet statistics |
+| `POST /v1/access/check` | Check token balance |
 
-For complete API documentation, see [docs/API.md](docs/API.md).
+📖 **Full API documentation:** [docs/API.md](docs/API.md)
 
-### Proof Search & Filter (v0.5.23)
+---
 
-Search and filter proofs with flexible query parameters:
+## 🔐 Token Gating
 
-```python
-import httpx
-
-response = httpx.post(
-    "https://api.actobotics.net/v1/proofs/search",
-    headers={
-        "Authorization": "Bearer your-api-key",
-        "X-Wallet-Address": "your-wallet-address"
-    },
-    json={
-        "task_id": "pick-and-place-001",      # Filter by task
-        "robot_id": "robot-alpha",             # Filter by robot
-        "created_after": "2024-01-01T00:00:00Z",  # Date range
-        "created_before": "2024-12-31T23:59:59Z",
-        "search_text": "warehouse",            # Full-text search
-        "limit": 50,
-        "offset": 0,
-        "sort_field": "created_at",
-        "sort_order": "desc"
-    }
-)
-
-result = response.json()
-# {
-#   "items": [...],
-#   "total": 150,
-#   "limit": 50,
-#   "offset": 0,
-#   "has_more": true
-# }
-```
-
-**Supported filters:**
-- `task_id` - Filter by task ID
-- `robot_id` - Filter by robot ID
-- `run_id` - Filter by run ID
-- `signer_public_key` - Filter by signer's public key
-- `created_after` / `created_before` - Date range filter (ISO 8601)
-- `search_text` - Full-text search across all metadata
-
-### Batch Verification (v0.5.23)
-
-Verify multiple proofs in a single API call for efficient bulk operations:
-
-```python
-import httpx
-
-response = httpx.post(
-    "https://api.actobotics.net/v1/verify/batch",
-    headers={
-        "Authorization": "Bearer your-api-key",
-        "X-Wallet-Address": "your-wallet-address"
-    },
-    json={
-        "envelopes": [
-            {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."},
-            {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."},
-            {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."}
-        ]
-    }
-)
-
-result = response.json()
-# {
-#   "results": [
-#     {"index": 0, "valid": true, "reason": "ok", "payload_hash": "abc123..."},
-#     {"index": 1, "valid": true, "reason": "ok", "payload_hash": "def456..."},
-#     {"index": 2, "valid": false, "reason": "Invalid signature", "payload_hash": null}
-#   ],
-#   "total": 3,
-#   "valid_count": 2,
-#   "invalid_count": 1
-# }
-```
-
-**Benefits:**
-- Single HTTP request for multiple verifications
-- Reduced network latency for bulk operations
-- Summary statistics (`valid_count`, `invalid_count`)
-- Individual results with index for correlation
-
-### Python Example
-
-```python
-import httpx
-from acto.proof import create_proof
-
-# Create proof locally
-envelope = create_proof(bundle, private_key, public_key)
-
-# Submit to API
-response = httpx.post(
-    "https://api.actobotics.net/v1/proofs",
-    headers={
-        "Authorization": "Bearer your-api-key-here",
-        "Content-Type": "application/json"
-    },
-    json={"envelope": envelope.model_dump()}
-)
-
-proof_id = response.json()["proof_id"]
-```
-
-## License
-
-MIT. See `LICENSE`.
-
-## Security Features (v0.3.1)
-
-ACTO now includes comprehensive security enhancements for production deployments:
-
-### Authentication & Authorization
-- **OAuth2/JWT Support**: Full JWT-based authentication with access and refresh tokens
-- **Role-Based Access Control (RBAC)**: Fine-grained permission system with predefined roles (VIEWER, USER, ADMIN, AUDITOR)
-- **API Key Authentication**: Optional API key-based authentication (existing feature)
-- **Audit Logging**: Comprehensive audit logging for all operations with multiple backends (memory, file, database)
-
-### Data Protection
-- **Encryption at Rest**: AES-128 encryption for proof data using Fernet
-- **TLS/SSL Support**: TLS certificate management for encryption in transit
-- **Secrets Management**: Integration with HashiCorp Vault, AWS Secrets Manager, or environment variables
-- **PII Detection & Masking**: Automatic detection and masking of personally identifiable information in telemetry data
-
-### Key Management
-- **Signing Key Rotation**: Support for rotating signing keys with multiple active keys
-- **Key Lifecycle Management**: Automatic management of active and retired keys
-
-### Configuration
-
-Security features can be configured via environment variables or config file:
-
-```toml
-# JWT/OAuth2
-jwt_enabled = true
-jwt_secret_key = "your-secret-key"
-jwt_access_token_expire_minutes = 30
-jwt_refresh_token_expire_days = 7
-
-# RBAC
-rbac_enabled = true
-
-# Audit Logging
-audit_log_enabled = true
-audit_log_backend = "file"  # "memory", "file", or "database"
-audit_log_file = "./data/audit.log"
-
-# Encryption at Rest
-encryption_enabled = true
-encryption_key = "base64-encoded-key"
-
-# TLS/SSL
-tls_enabled = true
-tls_cert_file = "./certs/cert.pem"
-tls_key_file = "./certs/key.pem"
-
-# Secrets Management
-secrets_backend = "vault"  # "env", "vault", or "aws"
-vault_url = "http://localhost:8200"
-
-# PII Detection & Masking
-pii_detection_enabled = true
-pii_masking_enabled = true
-```
-
-## New in this expanded build
-
-### Core Features
-- Pluggable pipeline system for telemetry ingestion and proof generation
-- Proof anchoring module (Solana Memo anchoring is optional and contract-free)
-- API key authentication (optional) + request ID middleware
-- In-memory rate limiting middleware for the API
-- Proof reputation scoring module (configurable scoring policy)
-- Metrics endpoint (Prometheus-compatible) for hosted deployments
-- Docker + docker-compose for running the API + registry quickly
-- More CLI commands (registry, score, plugins, pipeline)
-
-### Developer Experience Improvements
-- **Interactive Mode**: Menu-driven CLI interface (`acto interactive`)
-- **Shell Completion**: Auto-completion for bash, zsh, fish, and PowerShell
-- **Progress Bars**: Visual feedback for long-running operations
-- **Color-Coded Output**: Consistent, readable CLI output
-- **Config File Support**: User configuration via `~/.acto/config.toml`
-- **Async/Await Support**: Asynchronous versions of proof and registry operations
-- **Context Managers**: Better resource management with `with` statements
-- **Type Hints**: Complete type annotations throughout the SDK
-- **Comprehensive Docstrings**: Function documentation with code examples
-- **Jupyter Notebooks**: Interactive examples for SDK usage
-
-## Testing & Quality Assurance
-
-ACTO includes comprehensive testing and quality assurance tools:
-
-### Test Coverage
-- **Unit Tests**: Comprehensive unit test suite with pytest
-- **Integration Tests**: End-to-end workflow tests
-- **Property-Based Tests**: Hypothesis-based property testing
-- **Fuzzing Tests**: Parser fuzzing for edge case detection
-- **Load Testing**: Locust and k6 configurations for performance testing
-
-### Code Quality
-- **Pre-commit Hooks**: Automated code quality checks before commit
-- **Code Coverage Reports**: HTML, XML, and JSON coverage reports (target: 80%+)
-- **Linting**: Ruff for code style and quality
-- **Type Checking**: MyPy for static type analysis
-- **Security Scanning**: Bandit for security vulnerabilities
-- **Dependency Scanning**: Safety for known vulnerabilities
-- **CI/CD**: GitHub Actions workflow with automated testing
-
-### Running Tests
+Check SPL token balance for access control (no smart contract required):
 
 ```bash
-# Install development dependencies
+acto access check \
+  --rpc https://api.mainnet-beta.solana.com \
+  --owner WALLET_ADDRESS \
+  --mint TOKEN_MINT \
+  --minimum 50000
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [API.md](docs/API.md) | REST API reference |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture |
+| [PROTOCOL.md](docs/PROTOCOL.md) | Proof protocol specification |
+| [SECURITY.md](docs/SECURITY.md) | Security features & configuration |
+| [THREAT_MODEL.md](docs/THREAT_MODEL.md) | Security threat model |
+| [CHANGELOG.md](CHANGELOG.md) | Version history & release notes |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+
+---
+
+## 🧪 Testing
+
+```bash
+# Install dev dependencies
 pip install -e ".[dev]"
 
-# Run all tests
+# Run tests
 pytest
 
 # Run with coverage
-pytest --cov=acto --cov=acto_cli --cov=acto_server --cov-report=html
+pytest --cov=acto --cov-report=html
 
-# Run specific test categories
-pytest -m unit          # Unit tests
-pytest -m integration    # Integration tests
-pytest -m property      # Property-based tests
-pytest -m fuzz          # Fuzzing tests
-
-# Run load tests
-locust -f tests/load/locustfile.py --host=http://localhost:8080
-k6 run tests/load/k6_load_test.js
-
-# Run security scans
-bandit -c .bandit -r acto acto_cli acto_server
-safety check
+# Load tests
+locust -f tests/load/locustfile.py
 ```
 
-### Pre-commit Hooks
+---
 
-Install and use pre-commit hooks for automatic code quality checks:
+## 🐳 Docker
 
 ```bash
-pip install pre-commit
-pre-commit install
+# Run with docker-compose
+docker-compose up -d
+
+# Or build manually
+docker build -t acto .
+docker run -p 8080:8080 acto
 ```
 
-Hooks will run automatically on commit, checking:
-- Code formatting (Ruff)
-- Linting (Ruff)
-- Type checking (MyPy)
-- Security scanning (Bandit)
-- Dependency scanning (Safety)
-- Test execution
+---
 
-See `CONTRIBUTING.md` for more details on development and testing.
+## 📄 License
+
+MIT. See [LICENSE](LICENSE).
+
+---
+
+<p align="center">
+  <a href="https://actobotics.net">Website</a> •
+  <a href="https://api.actobotics.net/dashboard">Dashboard</a> •
+  <a href="https://x.com/actoboticsnet">X (Twitter)</a>
+</p>

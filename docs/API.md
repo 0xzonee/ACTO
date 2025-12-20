@@ -1,153 +1,111 @@
 # ACTO API Documentation
 
-The ACTO Verification API provides a hosted service for submitting and verifying execution proofs. All API endpoints require Bearer token authentication.
+The ACTO API provides a hosted service for submitting and verifying robot execution proofs.
 
-## Base URL
+**Base URL:** `https://api.actobotics.net`
 
-```
-https://api.actobotics.net
-```
+**Dashboard:** [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+
+---
 
 ## Authentication
 
-All API endpoints (except `/health`, `/metrics`, and `/dashboard`) require Bearer token authentication.
+All API endpoints (except `/health` and `/metrics`) require:
 
-Include your API key in the `Authorization` header:
+1. **Bearer Token**: Your API key in the `Authorization` header
+2. **Wallet Address**: Your Solana wallet in the `X-Wallet-Address` header
+3. **Token Balance**: At least 50,000 ACTO tokens on your wallet
 
-```
-Authorization: Bearer <your-api-key>
-```
-
-### Getting Your API Key
-
-1. Visit the [API Key Dashboard](https://api.actobotics.net/dashboard)
-2. Create a new API key with a descriptive name
-3. **Copy the key immediately** - it's only shown once
-4. Store it securely for use in your API requests
-
-### Using Your API Key
-
-**cURL Example:**
 ```bash
 curl -X POST https://api.actobotics.net/v1/proofs \
-  -H "Authorization: Bearer your-api-key-here" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Wallet-Address: YOUR_WALLET_ADDRESS" \
   -H "Content-Type: application/json" \
   -d '{"envelope": {...}}'
 ```
 
-**Python Example:**
-```python
-import httpx
+### Getting Your API Key
 
-headers = {
-    "Authorization": "Bearer your-api-key-here",
-    "Content-Type": "application/json"
-}
+1. Visit [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+2. Connect your Solana wallet (Phantom, Solflare, Backpack, Glow, or Coinbase)
+3. Create a new API key
+4. **Copy the key immediately** - it's only shown once!
 
-response = httpx.post(
-    "https://api.actobotics.net/v1/proofs",
-    headers=headers,
-    json={"envelope": proof_envelope}
-)
-```
+---
 
-**JavaScript/TypeScript Example:**
-```javascript
-const response = await fetch('https://api.actobotics.net/v1/proofs', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer your-api-key-here',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ envelope: proofEnvelope })
-});
-```
+## Endpoints Overview
 
-## API Key Dashboard
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/health` | Health check | ❌ |
+| GET | `/metrics` | Prometheus metrics | ❌ |
+| POST | `/v1/proofs` | Submit a proof | ✅ |
+| GET | `/v1/proofs` | List proofs | ✅ |
+| GET | `/v1/proofs/{id}` | Get a proof | ✅ |
+| POST | `/v1/proofs/search` | Search proofs | ✅ |
+| POST | `/v1/verify` | Verify a proof | ✅ |
+| POST | `/v1/verify/batch` | Batch verify | ✅ |
+| POST | `/v1/score` | Score a proof | ✅ |
+| GET | `/v1/stats/wallet/{addr}` | Wallet stats | ✅ |
+| POST | `/v1/access/check` | Check token balance | ✅ |
+| POST | `/v1/keys` | Create API key | 🔐 JWT |
+| GET | `/v1/keys` | List API keys | 🔐 JWT |
+| DELETE | `/v1/keys/{id}` | Delete API key | 🔐 JWT |
 
-The dashboard at `https://api.actobotics.net/dashboard` provides a web interface for managing your API keys.
+---
 
-### Features
+## Public Endpoints
 
-- **Create API Keys**: Generate new API keys with descriptive names
-- **View Keys**: See all your API keys with creation date and last used time
-- **Delete Keys**: Deactivate API keys you no longer need
+### Health Check
 
-### Dashboard Usage
-
-1. **Creating a Key**:
-   - Enter a descriptive name (e.g., "Production Key", "Development Key")
-   - Click "Create API Key"
-   - Copy the key immediately - it won't be shown again
-   - The key is automatically stored in your browser's localStorage
-
-2. **Viewing Keys**:
-   - All your active keys are listed with:
-     - Key ID
-     - Creation timestamp
-     - Last used timestamp
-     - Status (Active/Inactive)
-
-3. **Deleting Keys**:
-   - Click "Delete" on any active key
-   - Confirm the deletion
-   - The key will be deactivated immediately
-
-**Note**: Once a key is deleted, it cannot be recovered. You'll need to create a new key to continue using the API.
-
-## API Endpoints
-
-### Public Endpoints
-
-#### Health Check
 ```http
 GET /health
 ```
-
-Returns the health status of the API.
 
 **Response:**
 ```json
 {
   "ok": true,
   "service": "acto",
-  "version": "0.4.0"
+  "version": "0.6.0"
 }
 ```
 
-#### Metrics
+### Prometheus Metrics
+
 ```http
 GET /metrics
 ```
 
-Returns Prometheus-compatible metrics.
+Returns Prometheus-compatible metrics in plain text format.
 
-### Protected Endpoints
+---
 
-All endpoints below require Bearer token authentication.
+## Proof Endpoints
 
-#### Submit Proof
+### Submit Proof
+
 ```http
 POST /v1/proofs
 ```
 
 Submit a new execution proof to the registry.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "envelope": {
     "payload": {
       "version": "1",
       "subject": {
-        "task_id": "cleaning-run-001",
-        "robot_id": "robot-001",
+        "task_id": "pick-and-place-001",
+        "robot_id": "robot-alpha-01",
         "run_id": "run-2025-01-15"
       },
       "created_at": "2025-01-15T10:30:00Z",
       "telemetry_normalized": {...},
-      "telemetry_hash": "...",
-      "payload_hash": "...",
+      "telemetry_hash": "abc123...",
+      "payload_hash": "def456...",
       "hash_alg": "blake3",
       "signature_alg": "ed25519",
       "meta": {}
@@ -166,15 +124,14 @@ Submit a new execution proof to the registry.
 }
 ```
 
-#### List Proofs
+### List Proofs
+
 ```http
 GET /v1/proofs?limit=50
 ```
 
-List proofs from the registry.
-
 **Query Parameters:**
-- `limit` (optional): Maximum number of proofs to return (default: 50)
+- `limit` (optional): Max results, default 50
 
 **Response:**
 ```json
@@ -183,40 +140,83 @@ List proofs from the registry.
     {
       "proof_id": "...",
       "task_id": "...",
-      "created_at": "...",
-      ...
+      "robot_id": "...",
+      "created_at": "..."
     }
   ]
 }
 ```
 
-#### Get Proof
+### Get Proof
+
 ```http
 GET /v1/proofs/{proof_id}
 ```
 
-Retrieve a specific proof by ID.
+### Search Proofs
+
+```http
+POST /v1/proofs/search
+```
+
+Search and filter proofs with pagination.
+
+**Request:**
+```json
+{
+  "task_id": "pick-and-place",
+  "robot_id": "robot-alpha",
+  "run_id": "run-001",
+  "signer_public_key": "...",
+  "created_after": "2025-01-01T00:00:00Z",
+  "created_before": "2025-12-31T23:59:59Z",
+  "search_text": "warehouse",
+  "limit": 50,
+  "offset": 0,
+  "sort_field": "created_at",
+  "sort_order": "desc"
+}
+```
 
 **Response:**
 ```json
 {
-  "proof_id": "abc123...",
-  "envelope": {
-    "payload": {...},
-    "signer_public_key_b64": "...",
-    "signature_b64": "..."
-  }
+  "items": [...],
+  "total": 150,
+  "limit": 50,
+  "offset": 0,
+  "has_more": true
 }
 ```
 
-#### Verify Proof
+**Filter Options:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `task_id` | string | Filter by task ID |
+| `robot_id` | string | Filter by robot ID |
+| `run_id` | string | Filter by run ID |
+| `signer_public_key` | string | Filter by signer |
+| `created_after` | ISO 8601 | Start date |
+| `created_before` | ISO 8601 | End date |
+| `search_text` | string | Full-text search |
+| `limit` | int | Results per page (default: 50) |
+| `offset` | int | Pagination offset |
+| `sort_field` | string | Field to sort by |
+| `sort_order` | string | "asc" or "desc" |
+
+---
+
+## Verification Endpoints
+
+### Verify Proof
+
 ```http
 POST /v1/verify
 ```
 
-Verify a proof's signature and integrity.
+Verify a proof's cryptographic signature and integrity.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "envelope": {
@@ -235,45 +235,96 @@ Verify a proof's signature and integrity.
 }
 ```
 
-#### Score Proof
+### Batch Verify
+
 ```http
-POST /v1/score
+POST /v1/verify/batch
 ```
 
-Calculate a reputation score for a proof.
+Verify multiple proofs in a single request.
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "envelope": {
-    "payload": {...},
-    "signer_public_key_b64": "...",
-    "signature_b64": "..."
-  }
+  "envelopes": [
+    {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."},
+    {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."},
+    {"payload": {...}, "signature_b64": "...", "signer_public_key_b64": "..."}
+  ]
 }
 ```
 
 **Response:**
 ```json
 {
-  "score": 85.5,
-  "reasons": ["Valid signature", "Recent timestamp"]
+  "results": [
+    {"index": 0, "valid": true, "reason": "ok", "payload_hash": "abc..."},
+    {"index": 1, "valid": true, "reason": "ok", "payload_hash": "def..."},
+    {"index": 2, "valid": false, "reason": "Invalid signature", "payload_hash": null}
+  ],
+  "total": 3,
+  "valid_count": 2,
+  "invalid_count": 1
 }
 ```
 
-#### Check Solana Token Access
+---
+
+## Statistics Endpoints
+
+### Wallet Statistics
+
+```http
+GET /v1/stats/wallet/{wallet_address}
+```
+
+Get comprehensive statistics for a wallet.
+
+**Response:**
+```json
+{
+  "wallet_address": "...",
+  "total_proofs_submitted": 25,
+  "total_verifications": 150,
+  "successful_verifications": 145,
+  "failed_verifications": 5,
+  "verification_success_rate": 96.7,
+  "average_reputation_score": 85.5,
+  "first_activity": "2025-01-01T00:00:00Z",
+  "last_activity": "2025-12-20T10:30:00Z",
+  "proofs_by_robot": {
+    "robot-alpha-01": 10,
+    "robot-beta-02": 15
+  },
+  "proofs_by_task": {
+    "pick-and-place": 12,
+    "quality-inspection": 13
+  },
+  "activity_timeline": [
+    {"date": "2025-12-01", "proof_count": 3},
+    {"date": "2025-12-02", "proof_count": 5}
+  ]
+}
+```
+
+---
+
+## Access Control
+
+### Check Token Balance
+
 ```http
 POST /v1/access/check
 ```
 
-Check if a Solana wallet has sufficient token balance.
+Check if a wallet has sufficient token balance for API access.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "rpc_url": "https://api.mainnet-beta.solana.com",
-  "owner": "wallet-address",
-  "mint": "token-mint-address",
+  "owner": "WALLET_ADDRESS",
+  "mint": "TOKEN_MINT_ADDRESS",
   "minimum": 50000
 }
 ```
@@ -287,168 +338,124 @@ Check if a Solana wallet has sufficient token balance.
 }
 ```
 
-### API Key Management Endpoints
-
-#### Create API Key
-```http
-POST /v1/keys
-```
-
-Create a new API key. **Note**: This endpoint does not require authentication (to allow creating your first key).
-
-**Request Body:**
-```json
-{
-  "name": "Production Key"
-}
-```
-
-**Response:**
-```json
-{
-  "key_id": "xyz789...",
-  "key": "acto_abc123...",
-  "name": "Production Key",
-  "created_at": "2025-01-15T10:30:00Z",
-  "created_by": null
-}
-```
-
-**Important**: The `key` field is only returned once. Store it securely immediately.
-
-#### List API Keys
-```http
-GET /v1/keys
-```
-
-List all your API keys (without the actual key values).
-
-**Response:**
-```json
-{
-  "keys": [
-    {
-      "key_id": "xyz789...",
-      "name": "Production Key",
-      "created_at": "2025-01-15T10:30:00Z",
-      "last_used_at": "2025-01-15T11:00:00Z",
-      "is_active": true,
-      "created_by": null
-    }
-  ]
-}
-```
-
-#### Delete API Key
-```http
-DELETE /v1/keys/{key_id}
-```
-
-Deactivate an API key.
-
-**Response:**
-```json
-{
-  "success": true,
-  "key_id": "xyz789..."
-}
-```
+---
 
 ## Error Responses
 
-All errors follow a consistent format:
+All errors return a consistent format:
 
 ```json
 {
-  "detail": "Error message describing what went wrong"
+  "detail": "Error message"
 }
 ```
 
-### Common HTTP Status Codes
+### HTTP Status Codes
 
-- `200 OK`: Request succeeded
-- `400 Bad Request`: Invalid request data
-- `401 Unauthorized`: Missing or invalid Bearer token
-- `404 Not Found`: Resource not found
-- `429 Too Many Requests`: Rate limit exceeded
-- `500 Internal Server Error`: Server error
+| Code | Description |
+|------|-------------|
+| 200 | Success |
+| 400 | Bad Request - Invalid data |
+| 401 | Unauthorized - Invalid or missing API key |
+| 403 | Forbidden - Insufficient token balance |
+| 404 | Not Found |
+| 422 | Unprocessable Entity - Validation error |
+| 429 | Too Many Requests - Rate limited |
+| 500 | Internal Server Error |
+
+---
 
 ## Rate Limiting
 
-The API implements rate limiting to ensure fair usage:
+- **Default**: 5 requests/second
+- **Burst**: Up to 20 requests
 
-- Default: 5 requests per second
-- Burst: Up to 20 requests in a short period
+When rate limited, you'll receive a `429` response. Implement exponential backoff in your client.
 
-If you exceed the rate limit, you'll receive a `429 Too Many Requests` response.
+---
 
-## Best Practices
+## Code Examples
 
-1. **Store Keys Securely**: Never commit API keys to version control
-2. **Use Environment Variables**: Store keys in environment variables or secret management systems
-3. **Rotate Keys Regularly**: Delete old keys and create new ones periodically
-4. **Use Descriptive Names**: Name your keys clearly (e.g., "Production", "Development", "CI/CD")
-5. **Monitor Key Usage**: Check the "last used" timestamp in the dashboard to identify unused keys
-6. **Delete Unused Keys**: Remove keys you no longer need to minimize security risk
-
-## Examples
-
-### Complete Workflow
+### Python
 
 ```python
 import httpx
-from acto.proof import create_proof
-from acto.crypto import KeyPair
-from acto.telemetry.models import TelemetryBundle, TelemetryEvent
-from datetime import datetime
 
-# 1. Create proof locally
-keypair = KeyPair.generate()
-bundle = TelemetryBundle(
-    task_id="task-001",
-    robot_id="robot-001",
-    events=[
-        TelemetryEvent(
-            ts=datetime.now().isoformat(),
-            topic="sensor",
-            data={"temperature": 25.5}
-        )
-    ]
-)
-envelope = create_proof(
-    bundle,
-    keypair.private_key_b64,
-    keypair.public_key_b64
-)
+API_KEY = "your-api-key"
+WALLET = "your-wallet-address"
+BASE_URL = "https://api.actobotics.net"
 
-# 2. Submit to API
-api_key = "your-api-key-here"
-response = httpx.post(
-    "https://api.actobotics.net/v1/proofs",
-    headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    },
-    json={"envelope": envelope.model_dump()}
-)
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "X-Wallet-Address": WALLET,
+    "Content-Type": "application/json"
+}
 
-if response.status_code == 200:
-    proof_id = response.json()["proof_id"]
-    print(f"Proof submitted: {proof_id}")
-    
-    # 3. Verify the proof
-    verify_response = httpx.post(
-        "https://api.actobotics.net/v1/verify",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        },
-        json={"envelope": envelope.model_dump()}
-    )
-    print(f"Verification: {verify_response.json()}")
+# Submit proof
+response = httpx.post(f"{BASE_URL}/v1/proofs", headers=headers, json={"envelope": envelope})
+proof_id = response.json()["proof_id"]
+
+# Verify proof
+response = httpx.post(f"{BASE_URL}/v1/verify", headers=headers, json={"envelope": envelope})
+is_valid = response.json()["valid"]
+
+# Search proofs
+response = httpx.post(f"{BASE_URL}/v1/proofs/search", headers=headers, json={
+    "robot_id": "robot-alpha-01",
+    "limit": 10
+})
+proofs = response.json()["items"]
+
+# Get wallet stats
+response = httpx.get(f"{BASE_URL}/v1/stats/wallet/{WALLET}", headers=headers)
+stats = response.json()
 ```
+
+### JavaScript
+
+```javascript
+const API_KEY = 'your-api-key';
+const WALLET = 'your-wallet-address';
+const BASE_URL = 'https://api.actobotics.net';
+
+const headers = {
+  'Authorization': `Bearer ${API_KEY}`,
+  'X-Wallet-Address': WALLET,
+  'Content-Type': 'application/json'
+};
+
+// Submit proof
+const response = await fetch(`${BASE_URL}/v1/proofs`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({ envelope })
+});
+const { proof_id } = await response.json();
+
+// Batch verify
+const batchResponse = await fetch(`${BASE_URL}/v1/verify/batch`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({ envelopes: [envelope1, envelope2, envelope3] })
+});
+const { valid_count, invalid_count } = await batchResponse.json();
+```
+
+---
+
+## Best Practices
+
+1. **Store keys securely** - Never commit API keys to version control
+2. **Use environment variables** - `export ACTO_API_KEY=...`
+3. **Rotate keys regularly** - Delete old keys, create new ones
+4. **Handle rate limits** - Implement exponential backoff
+5. **Batch when possible** - Use `/v1/verify/batch` for bulk operations
+6. **Monitor usage** - Check statistics in the dashboard
+
+---
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/your-repo/acto).
-
+- **Dashboard**: [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+- **Website**: [actobotics.net](https://actobotics.net)
+- **X (Twitter)**: [@actoboticsnet](https://x.com/actoboticsnet)
