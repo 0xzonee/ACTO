@@ -666,10 +666,12 @@ def create_app() -> FastAPI:
                 user_keys = api_key_store.list_keys(user_id=user.get("user_id"), include_inactive=True)
                 for key in user_keys:
                     endpoint_usage = key.get("endpoint_usage", {})
-                    verify_count = endpoint_usage.get("/v1/verify", 0)
-                    total_verifications += verify_count
+                    # Check both formats: "POST /v1/verify" and "/v1/verify"
+                    verify_count = endpoint_usage.get("POST /v1/verify", 0) + endpoint_usage.get("/v1/verify", 0)
+                    batch_verify_count = endpoint_usage.get("POST /v1/verify/batch", 0) + endpoint_usage.get("/v1/verify/batch", 0)
+                    total_verifications += verify_count + batch_verify_count
                     # Assume 90% success rate for demo (in production, track actual successes)
-                    successful_verifications += int(verify_count * 0.9)
+                    successful_verifications += int((verify_count + batch_verify_count) * 0.9)
             
             failed_verifications = total_verifications - successful_verifications
             success_rate = (successful_verifications / total_verifications * 100) if total_verifications > 0 else 0.0
