@@ -92,3 +92,76 @@ class TokenGatingConfigResponse(BaseModel):
     mint: str
     minimum: float
     rpc_url: str
+
+
+# ============================================================
+# Proof Search Schemas
+# ============================================================
+
+class ProofSearchRequest(BaseModel):
+    """Request for searching proofs with filters."""
+    task_id: str | None = None
+    robot_id: str | None = None
+    run_id: str | None = None
+    signer_public_key: str | None = None
+    created_after: str | None = None
+    created_before: str | None = None
+    search_text: str | None = None
+    limit: int = 50
+    offset: int = 0
+    sort_field: str = "created_at"
+    sort_order: str = "desc"
+
+
+class ProofSearchResponse(BaseModel):
+    """Response for proof search."""
+    items: list[dict]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
+# ============================================================
+# Batch Verification Schemas
+# ============================================================
+
+class BatchVerifyRequest(BaseModel):
+    """Request for batch verification of multiple proofs."""
+    envelopes: list[ProofEnvelope]
+
+
+class BatchVerifyResult(BaseModel):
+    """Result for a single proof in batch verification."""
+    index: int
+    valid: bool
+    reason: str
+    payload_hash: str | None = None
+
+
+class BatchVerifyResponse(BaseModel):
+    """Response for batch verification."""
+    results: list[BatchVerifyResult]
+    total: int
+    valid_count: int
+    invalid_count: int
+
+
+# ============================================================
+# Wallet Statistics Schemas
+# ============================================================
+
+class WalletStatsResponse(BaseModel):
+    """Statistics for a specific wallet address."""
+    wallet_address: str
+    total_proofs_submitted: int
+    total_verifications: int
+    successful_verifications: int
+    failed_verifications: int
+    verification_success_rate: float
+    average_reputation_score: float | None
+    first_activity: str | None
+    last_activity: str | None
+    proofs_by_robot: dict[str, int]
+    proofs_by_task: dict[str, int]
+    activity_timeline: list[dict]

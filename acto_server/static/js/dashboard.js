@@ -496,6 +496,7 @@ window.switchTab = function(tabName) {
     
     // Load content for specific tabs
     if (tabName === 'stats') {
+        loadWalletStats();
         loadStatsKeys();
     } else if (tabName === 'playground') {
         // Update wallet display in playground
@@ -591,6 +592,172 @@ document.addEventListener('keydown', (e) => {
         closeWalletModal();
     }
 });
+
+// ============================================================
+// WALLET STATISTICS FUNCTIONS
+// ============================================================
+
+// Load wallet statistics
+async function loadWalletStats() {
+    if (!currentUser || !currentUser.wallet_address) {
+        console.log('No wallet connected, skipping wallet stats');
+        return;
+    }
+    
+    const apiKey = await getFirstApiKey();
+    if (!apiKey) {
+        console.log('No API key found, skipping wallet stats');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/v1/stats/wallet/${currentUser.wallet_address}`, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'X-Wallet-Address': currentUser.wallet_address
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const stats = await response.json();
+        displayWalletStats(stats);
+    } catch (error) {
+        console.error('Failed to load wallet stats:', error);
+        // Show fallback UI
+        document.getElementById('statProofsSubmitted').textContent = '0';
+        document.getElementById('statVerifications').textContent = '0';
+        document.getElementById('statSuccessRate').textContent = '0%';
+        document.getElementById('statLastActivity').textContent = 'Never';
+    }
+}
+
+// Get first available API key for stats requests
+async function getFirstApiKey() {
+    // Try to get from localStorage (stored when creating keys)
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('api_key_')) {
+            return localStorage.getItem(key);
+        }
+    }
+    return null;
+}
+
+// Display wallet statistics
+function displayWalletStats(stats) {
+    // Update stat cards
+    document.getElementById('statProofsSubmitted').textContent = stats.total_proofs_submitted.toLocaleString();
+    document.getElementById('statVerifications').textContent = stats.total_verifications.toLocaleString();
+    document.getElementById('statSuccessRate').textContent = `${stats.verification_success_rate}%`;
+    
+    // Format last activity
+    if (stats.last_activity) {
+        const lastDate = new Date(stats.last_activity);
+        const now = new Date();
+        const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            document.getElementById('statLastActivity').textContent = 'Today';
+        } else if (diffDays === 1) {
+            document.getElementById('statLastActivity').textContent = 'Yesterday';
+        } else if (diffDays < 7) {
+            document.getElementById('statLastActivity').textContent = `${diffDays} days ago`;
+        } else {
+            document.getElementById('statLastActivity').textContent = lastDate.toLocaleDateString();
+        }
+    } else {
+        document.getElementById('statLastActivity').textContent = 'Never';
+    }
+    
+    // Display activity chart
+    displayActivityChart(stats.activity_timeline);
+    
+    // Display breakdowns
+    displayBreakdown('proofsByRobot', stats.proofs_by_robot, 'robot');
+    displayBreakdown('proofsByTask', stats.proofs_by_task, 'task');
+}
+
+// Display activity timeline chart
+function displayActivityChart(timeline) {
+    const container = document.getElementById('activityChart');
+    if (!timeline || timeline.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No activity data available</p></div>';
+        return;
+    }
+    
+    const maxCount = Math.max(...timeline.map(t => t.proof_count), 1);
+    
+    const barsHtml = timeline.map((day, index) => {
+        const height = (day.proof_count / maxCount) * 100;
+        const date = new Date(day.date);
+        const dayLabel = date.getDate();
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        
+        return `
+            <div class="activity-bar-container" title="${day.date}: ${day.proof_count} proofs">
+                <div class="activity-bar ${isWeekend ? 'weekend' : ''}" style="height: ${Math.max(height, 2)}%"></div>
+                ${index % 7 === 0 ? `<span class="activity-label">${dayLabel}</span>` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = `
+        <div class="activity-bars">
+            ${barsHtml}
+        </div>
+        <div class="activity-summary">
+            Total: ${timeline.reduce((sum, t) => sum + t.proof_count, 0)} proofs in the last 30 days
+        </div>
+    `;
+}
+
+// Display breakdown list
+function displayBreakdown(containerId, data, type) {
+    const container = document.getElementById(containerId);
+    if (!data || Object.keys(data).length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No data available</p></div>';
+        return;
+    }
+    
+    // Sort by count descending
+    const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+    const total = sorted.reduce((sum, [_, count]) => sum + count, 0);
+    
+    // Show top 5
+    const topItems = sorted.slice(0, 5);
+    
+    const itemsHtml = topItems.map(([name, count]) => {
+        const percentage = ((count / total) * 100).toFixed(1);
+        return `
+            <div class="breakdown-item">
+                <div class="breakdown-info">
+                    <span class="breakdown-name" title="${name}">${truncateId(name)}</span>
+                    <span class="breakdown-count">${count}</span>
+                </div>
+                <div class="breakdown-bar-bg">
+                    <div class="breakdown-bar" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = itemsHtml;
+    
+    if (sorted.length > 5) {
+        container.innerHTML += `<div class="breakdown-more">+${sorted.length - 5} more ${type}s</div>`;
+    }
+}
+
+// Truncate long IDs for display
+function truncateId(id) {
+    if (id.length > 20) {
+        return id.substring(0, 8) + '...' + id.substring(id.length - 8);
+    }
+    return id;
+}
 
 // ============================================================
 // API PLAYGROUND FUNCTIONS

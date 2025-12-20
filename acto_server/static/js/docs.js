@@ -225,6 +225,29 @@ response = requests.post(
             <p><strong>GET</strong> <code>/v1/proofs/{proof_id}</code></p>
             <p>Retrieve a stored proof by its ID.</p>
             
+            <h3>Search Proofs</h3>
+            <p><strong>POST</strong> <code>/v1/proofs/search</code></p>
+            <p>Search and filter proofs with pagination. Supports filtering by task, robot, date range, and full-text search.</p>
+            <pre><code>{
+  "task_id": "pick-and-place-001",
+  "robot_id": "robot-alpha",
+  "created_after": "2024-01-01T00:00:00Z",
+  "created_before": "2024-12-31T23:59:59Z",
+  "search_text": "warehouse",
+  "limit": 50,
+  "offset": 0,
+  "sort_field": "created_at",
+  "sort_order": "desc"
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "items": [...],
+  "total": 150,
+  "limit": 50,
+  "offset": 0,
+  "has_more": true
+}</code></pre>
+            
             <h3>Verify Proof</h3>
             <p><strong>POST</strong> <code>/v1/verify</code></p>
             <p>Verify the integrity and authenticity of a proof without storing it.</p>
@@ -237,9 +260,47 @@ response = requests.post(
   "reason": "ok"
 }</code></pre>
             
+            <h3>Batch Verify</h3>
+            <p><strong>POST</strong> <code>/v1/verify/batch</code></p>
+            <p>Verify multiple proof envelopes in a single request. Efficient for bulk verification operations.</p>
+            <pre><code>{
+  "envelopes": [
+    { "payload": {...}, "signature_b64": "...", ... },
+    { "payload": {...}, "signature_b64": "...", ... }
+  ]
+}</code></pre>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "results": [
+    { "index": 0, "valid": true, "reason": "ok", "payload_hash": "abc..." },
+    { "index": 1, "valid": false, "reason": "Invalid signature", "payload_hash": null }
+  ],
+  "total": 2,
+  "valid_count": 1,
+  "invalid_count": 1
+}</code></pre>
+            
             <h3>Score Proof</h3>
             <p><strong>POST</strong> <code>/v1/score</code></p>
             <p>Get a reputation score for a proof based on various factors.</p>
+            
+            <h3>Wallet Statistics</h3>
+            <p><strong>GET</strong> <code>/v1/stats/wallet/{wallet_address}</code></p>
+            <p>Get comprehensive statistics for a wallet address including proof submissions, verification history, and activity timeline.</p>
+            <p><strong>Response:</strong></p>
+            <pre><code>{
+  "wallet_address": "...",
+  "total_proofs_submitted": 42,
+  "total_verifications": 156,
+  "successful_verifications": 150,
+  "failed_verifications": 6,
+  "verification_success_rate": 96.15,
+  "first_activity": "2024-01-15T...",
+  "last_activity": "2024-06-20T...",
+  "proofs_by_robot": { "robot-1": 25, "robot-2": 17 },
+  "proofs_by_task": { "inspection": 30, "transport": 12 },
+  "activity_timeline": [...]
+}</code></pre>
             
             <h3>Check Access</h3>
             <p><strong>POST</strong> <code>/v1/access/check</code></p>

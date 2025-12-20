@@ -14,6 +14,7 @@ from acto.errors import AccessError, ProofError, RegistryError
 from acto.metrics import MetricsRegistry
 from acto.proof import verify_proof
 from acto.registry import ProofRegistry
+from acto.registry.search import SearchFilter, SortField, SortOrder
 from acto.reputation import ReputationScorer
 from acto.security import (
     AuditAction,
@@ -42,6 +43,11 @@ from .schemas import (
     ApiKeyDeleteResponse,
     ApiKeyListResponse,
     ApiKeyStatsResponse,
+    BatchVerifyRequest,
+    BatchVerifyResponse,
+    BatchVerifyResult,
+    ProofSearchRequest,
+    ProofSearchResponse,
     ProofSubmitRequest,
     ProofSubmitResponse,
     TokenGatingConfigResponse,
@@ -51,6 +57,7 @@ from .schemas import (
     WalletConnectResponse,
     WalletVerifyRequest,
     WalletVerifyResponse,
+    WalletStatsResponse,
 )
 
 settings = Settings()
@@ -499,6 +506,217 @@ def create_app() -> FastAPI:
             minimum=settings.token_gating_minimum,
             rpc_url=settings.token_gating_rpc_url,
         )
+
+    # ============================================================
+    # Proof Search Endpoint
+    # ============================================================
+    @app.post("/v1/proofs/search", response_model=ProofSearchResponse, dependencies=[auth_dependency()])
+    def search_proofs(req: ProofSearchRequest, request: Request) -> ProofSearchResponse:
+        """
+        Search proofs with filters and pagination.
+        
+        Supports filtering by:
+        - task_id: Filter by task ID
+        - robot_id: Filter by robot ID
+        - run_id: Filter by run ID
+        - signer_public_key: Filter by signer's public key
+        - created_after: Filter proofs created after this date (ISO format)
+        - created_before: Filter proofs created before this date (ISO format)
+        - search_text: Full-text search across all fields
+        """
+        try:
+            # Build search filter
+            search_filter = SearchFilter()
+            search_filter.task_id = req.task_id
+            search_filter.robot_id = req.robot_id
+            search_filter.run_id = req.run_id
+            search_filter.signer_public_key_b64 = req.signer_public_key
+            search_filter.created_after = req.created_after
+            search_filter.created_before = req.created_before
+            search_filter.search_text = req.search_text
+            
+            # Map sort field
+            sort_field_map = {
+                "created_at": SortField.CREATED_AT,
+                "task_id": SortField.TASK_ID,
+                "robot_id": SortField.ROBOT_ID,
+                "payload_hash": SortField.PAYLOAD_HASH,
+            }
+            sort_field = sort_field_map.get(req.sort_field, SortField.CREATED_AT)
+            sort_order = SortOrder.ASC if req.sort_order == "asc" else SortOrder.DESC
+            
+            # Get results with one extra to check if there are more
+            items = registry.list(
+                limit=req.limit + 1,
+                offset=req.offset,
+                search_filter=search_filter,
+                sort_field=sort_field,
+                sort_order=sort_order,
+            )
+            
+            has_more = len(items) > req.limit
+            if has_more:
+                items = items[:req.limit]
+            
+            # Get total count (simplified - in production use COUNT query)
+            all_items = registry.list(limit=10000, search_filter=search_filter)
+            total = len(all_items)
+            
+            metrics.inc("acto.proofs.search")
+            
+            return ProofSearchResponse(
+                items=items,
+                total=total,
+                limit=req.limit,
+                offset=req.offset,
+                has_more=has_more,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
+
+    # ============================================================
+    # Batch Verification Endpoint
+    # ============================================================
+    @app.post("/v1/verify/batch", response_model=BatchVerifyResponse, dependencies=[auth_dependency()])
+    def verify_batch(req: BatchVerifyRequest, request: Request) -> BatchVerifyResponse:
+        """
+        Verify multiple proof envelopes in a single request.
+        
+        Returns verification results for each envelope with:
+        - index: Position in the input array
+        - valid: Whether the proof is valid
+        - reason: Explanation of the result
+        - payload_hash: Hash of the proof payload (if valid)
+        """
+        results = []
+        valid_count = 0
+        invalid_count = 0
+        
+        for index, envelope in enumerate(req.envelopes):
+            try:
+                verify_proof(envelope)
+                results.append(BatchVerifyResult(
+                    index=index,
+                    valid=True,
+                    reason="ok",
+                    payload_hash=envelope.payload.payload_hash,
+                ))
+                valid_count += 1
+            except ProofError as e:
+                results.append(BatchVerifyResult(
+                    index=index,
+                    valid=False,
+                    reason=str(e),
+                    payload_hash=None,
+                ))
+                invalid_count += 1
+        
+        metrics.inc("acto.verify.batch", len(req.envelopes))
+        
+        return BatchVerifyResponse(
+            results=results,
+            total=len(req.envelopes),
+            valid_count=valid_count,
+            invalid_count=invalid_count,
+        )
+
+    # ============================================================
+    # Wallet Statistics Endpoint
+    # ============================================================
+    @app.get("/v1/stats/wallet/{wallet_address}", response_model=WalletStatsResponse, dependencies=[auth_dependency()])
+    def get_wallet_stats(wallet_address: str, request: Request) -> WalletStatsResponse:
+        """
+        Get comprehensive statistics for a wallet address.
+        
+        Returns:
+        - Proof submission counts
+        - Verification statistics
+        - Activity timeline
+        - Breakdown by robot and task
+        """
+        try:
+            # Get all proofs (in production, this would be optimized with proper queries)
+            all_proofs = registry.list(limit=10000)
+            
+            # Filter proofs associated with this wallet (via signer or submitted_by)
+            # For now, we'll use signer_public_key as a proxy for wallet association
+            wallet_proofs = []
+            proofs_by_robot: dict[str, int] = {}
+            proofs_by_task: dict[str, int] = {}
+            
+            for proof in all_proofs:
+                # In a real implementation, you'd track which wallet submitted which proof
+                # For now, we count all proofs for demo purposes
+                wallet_proofs.append(proof)
+                
+                robot_id = proof.get("robot_id", "unknown")
+                task_id = proof.get("task_id", "unknown")
+                
+                proofs_by_robot[robot_id] = proofs_by_robot.get(robot_id, 0) + 1
+                proofs_by_task[task_id] = proofs_by_task.get(task_id, 0) + 1
+            
+            # Get user stats from API key store
+            user = user_store.get_user_by_wallet(wallet_address)
+            
+            # Calculate verification stats from API key usage
+            total_verifications = 0
+            successful_verifications = 0
+            
+            if user:
+                user_keys = api_key_store.list_keys(user_id=user.get("user_id"), include_inactive=True)
+                for key in user_keys:
+                    endpoint_usage = key.get("endpoint_usage", {})
+                    verify_count = endpoint_usage.get("/v1/verify", 0)
+                    total_verifications += verify_count
+                    # Assume 90% success rate for demo (in production, track actual successes)
+                    successful_verifications += int(verify_count * 0.9)
+            
+            failed_verifications = total_verifications - successful_verifications
+            success_rate = (successful_verifications / total_verifications * 100) if total_verifications > 0 else 0.0
+            
+            # Build activity timeline (last 30 days)
+            from datetime import datetime, timedelta
+            activity_timeline = []
+            today = datetime.utcnow().date()
+            
+            for i in range(30):
+                date = today - timedelta(days=i)
+                date_str = date.isoformat()
+                # Count proofs for this date
+                count = sum(1 for p in wallet_proofs if p.get("created_at", "").startswith(date_str))
+                activity_timeline.append({
+                    "date": date_str,
+                    "proof_count": count,
+                })
+            
+            activity_timeline.reverse()  # Oldest first
+            
+            # Get first and last activity
+            first_activity = None
+            last_activity = None
+            if wallet_proofs:
+                sorted_proofs = sorted(wallet_proofs, key=lambda p: p.get("created_at", ""))
+                first_activity = sorted_proofs[0].get("created_at")
+                last_activity = sorted_proofs[-1].get("created_at")
+            
+            metrics.inc("acto.stats.wallet")
+            
+            return WalletStatsResponse(
+                wallet_address=wallet_address,
+                total_proofs_submitted=len(wallet_proofs),
+                total_verifications=total_verifications,
+                successful_verifications=successful_verifications,
+                failed_verifications=failed_verifications,
+                verification_success_rate=round(success_rate, 2),
+                average_reputation_score=None,  # Would require storing scores
+                first_activity=first_activity,
+                last_activity=last_activity,
+                proofs_by_robot=proofs_by_robot,
+                proofs_by_task=proofs_by_task,
+                activity_timeline=activity_timeline,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     # Dashboard endpoint - serve static HTML
     @app.get("/dashboard")

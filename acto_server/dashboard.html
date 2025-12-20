@@ -129,6 +129,58 @@
             
             <!-- Statistics Tab -->
             <div id="tab-stats" class="tab-content">
+                <!-- Wallet Overview Stats -->
+                <div class="card">
+                    <h2>Wallet Statistics</h2>
+                    <p>Overview of your proof submissions and verification activity.</p>
+                    
+                    <div id="walletStatsContainer">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="statProofsSubmitted">-</div>
+                                <div class="stat-label">Proofs Submitted</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statVerifications">-</div>
+                                <div class="stat-label">Total Verifications</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statSuccessRate">-</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statLastActivity">-</div>
+                                <div class="stat-label">Last Activity</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Timeline -->
+                        <div class="activity-section">
+                            <h3>Activity Timeline (Last 30 Days)</h3>
+                            <div class="activity-chart" id="activityChart">
+                                <div class="activity-loading">Loading activity data...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Breakdown Charts -->
+                        <div class="breakdown-section">
+                            <div class="breakdown-card">
+                                <h3>Proofs by Robot</h3>
+                                <div class="breakdown-list" id="proofsByRobot">
+                                    <div class="empty-state"><p>No data available</p></div>
+                                </div>
+                            </div>
+                            <div class="breakdown-card">
+                                <h3>Proofs by Task</h3>
+                                <div class="breakdown-list" id="proofsByTask">
+                                    <div class="empty-state"><p>No data available</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Key Stats -->
                 <div class="card">
                     <h2>API Key Usage Statistics</h2>
                     <p>View detailed usage statistics for your API keys. Click on any key below to see its usage statistics.</p>
