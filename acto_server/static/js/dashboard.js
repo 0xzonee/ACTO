@@ -497,6 +497,9 @@ window.switchTab = function(tabName) {
     // Load content for specific tabs
     if (tabName === 'stats') {
         loadStatsKeys();
+    } else if (tabName === 'playground') {
+        // Update wallet display in playground
+        updatePlaygroundWallet();
     } else if (tabName === 'docs') {
         setTimeout(() => {
             if (typeof window.initDocumentation === 'function') {
@@ -588,3 +591,187 @@ document.addEventListener('keydown', (e) => {
         closeWalletModal();
     }
 });
+
+// ============================================================
+// API PLAYGROUND FUNCTIONS
+// ============================================================
+
+// Toggle API key visibility
+window.toggleApiKeyVisibility = function() {
+    const input = document.getElementById('playgroundApiKey');
+    const icon = document.getElementById('toggleKeyIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'Show';
+    }
+};
+
+// Update playground wallet display when tab is opened
+function updatePlaygroundWallet() {
+    const walletDisplay = document.getElementById('playgroundWalletAddress');
+    const indicator = document.querySelector('.wallet-indicator');
+    
+    if (currentUser && currentUser.wallet_address) {
+        walletDisplay.textContent = currentUser.wallet_address;
+        if (indicator) indicator.classList.add('connected');
+    } else {
+        walletDisplay.textContent = 'Not connected - Please connect wallet first';
+        if (indicator) indicator.classList.remove('connected');
+    }
+}
+
+// Format JSON response for display
+function formatResponse(data, status, duration) {
+    const statusClass = status >= 200 && status < 300 ? 'success' : 'error';
+    return `
+        <div class="response-header">
+            <span class="response-status ${statusClass}">Status: ${status}</span>
+            <span class="response-time">${duration}ms</span>
+        </div>
+        <pre class="response-body">${JSON.stringify(data, null, 2)}</pre>
+    `;
+}
+
+// Show loading state on button
+function setButtonLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.innerHTML = '<span class="loading"></span> Loading...';
+        btn.disabled = true;
+    } else {
+        btn.innerHTML = 'Execute';
+        btn.disabled = false;
+    }
+}
+
+// Execute Health Check
+window.executeHealthCheck = async function() {
+    const responseContainer = document.getElementById('healthResponse');
+    responseContainer.innerHTML = '<div class="loading-state">Executing request...</div>';
+    setButtonLoading('healthBtnText', true);
+    
+    const startTime = performance.now();
+    
+    try {
+        const response = await fetch(`${API_BASE}/health`);
+        const data = await response.json();
+        const duration = Math.round(performance.now() - startTime);
+        
+        responseContainer.innerHTML = formatResponse(data, response.status, duration);
+    } catch (error) {
+        const duration = Math.round(performance.now() - startTime);
+        responseContainer.innerHTML = formatResponse({ error: error.message }, 0, duration);
+    } finally {
+        setButtonLoading('healthBtnText', false);
+    }
+};
+
+// Execute Access Check (Token Balance)
+window.executeAccessCheck = async function() {
+    const responseContainer = document.getElementById('accessResponse');
+    const apiKey = document.getElementById('playgroundApiKey').value.trim();
+    const tokenMint = document.getElementById('tokenMint').value.trim();
+    const minimumBalance = parseFloat(document.getElementById('minimumBalance').value) || 50000;
+    
+    if (!currentUser || !currentUser.wallet_address) {
+        responseContainer.innerHTML = formatResponse({ error: 'Please connect your wallet first' }, 400, 0);
+        return;
+    }
+    
+    if (!apiKey) {
+        responseContainer.innerHTML = formatResponse({ error: 'Please enter your API key' }, 400, 0);
+        return;
+    }
+    
+    responseContainer.innerHTML = '<div class="loading-state">Checking token balance...</div>';
+    setButtonLoading('accessBtnText', true);
+    
+    const startTime = performance.now();
+    
+    try {
+        const response = await fetch(`${API_BASE}/v1/access/check`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'X-Wallet-Address': currentUser.wallet_address
+            },
+            body: JSON.stringify({
+                rpc_url: 'https://api.mainnet-beta.solana.com',
+                owner: currentUser.wallet_address,
+                mint: tokenMint,
+                minimum: minimumBalance
+            })
+        });
+        
+        const data = await response.json();
+        const duration = Math.round(performance.now() - startTime);
+        
+        responseContainer.innerHTML = formatResponse(data, response.status, duration);
+    } catch (error) {
+        const duration = Math.round(performance.now() - startTime);
+        responseContainer.innerHTML = formatResponse({ error: error.message }, 0, duration);
+    } finally {
+        setButtonLoading('accessBtnText', false);
+    }
+};
+
+// Execute Verify Proof
+window.executeVerify = async function() {
+    const responseContainer = document.getElementById('verifyResponse');
+    const apiKey = document.getElementById('playgroundApiKey').value.trim();
+    const proofEnvelopeText = document.getElementById('proofEnvelope').value.trim();
+    
+    if (!currentUser || !currentUser.wallet_address) {
+        responseContainer.innerHTML = formatResponse({ error: 'Please connect your wallet first' }, 400, 0);
+        return;
+    }
+    
+    if (!apiKey) {
+        responseContainer.innerHTML = formatResponse({ error: 'Please enter your API key' }, 400, 0);
+        return;
+    }
+    
+    if (!proofEnvelopeText) {
+        responseContainer.innerHTML = formatResponse({ error: 'Please enter a proof envelope' }, 400, 0);
+        return;
+    }
+    
+    let proofEnvelope;
+    try {
+        proofEnvelope = JSON.parse(proofEnvelopeText);
+    } catch (e) {
+        responseContainer.innerHTML = formatResponse({ error: 'Invalid JSON format in proof envelope' }, 400, 0);
+        return;
+    }
+    
+    responseContainer.innerHTML = '<div class="loading-state">Verifying proof...</div>';
+    setButtonLoading('verifyBtnText', true);
+    
+    const startTime = performance.now();
+    
+    try {
+        const response = await fetch(`${API_BASE}/v1/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'X-Wallet-Address': currentUser.wallet_address
+            },
+            body: JSON.stringify({ envelope: proofEnvelope })
+        });
+        
+        const data = await response.json();
+        const duration = Math.round(performance.now() - startTime);
+        
+        responseContainer.innerHTML = formatResponse(data, response.status, duration);
+    } catch (error) {
+        const duration = Math.round(performance.now() - startTime);
+        responseContainer.innerHTML = formatResponse({ error: error.message }, 0, duration);
+    } finally {
+        setButtonLoading('verifyBtnText', false);
+    }
+};
