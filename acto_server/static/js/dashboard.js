@@ -426,8 +426,8 @@ async function apiRequest(endpoint, options = {}) {
         });
         
         if (response.status === 401) {
-            showAlert('Session expired. Please reconnect your wallet.', 'error');
-            disconnectWallet();
+            // Don't auto-disconnect - let user see the error and decide
+            showAlert('Authentication error. Try refreshing the page or reconnecting your wallet.', 'warning');
             return null;
         }
         
@@ -652,9 +652,8 @@ async function loadWalletStats() {
         return;
     }
     
-    const apiKey = await getFirstApiKey();
-    if (!apiKey) {
-        showStatsMessage('Create an API Key in the "Keys" tab to view your wallet statistics', 'warning');
+    if (!accessToken) {
+        showStatsMessage('Session expired - please reconnect your wallet', 'warning');
         return;
     }
     
@@ -662,12 +661,19 @@ async function loadWalletStats() {
     hideStatsMessage();
     
     try {
+        // Use JWT token (accessToken) for dashboard API calls, not API key
         const response = await fetch(`${API_BASE}/v1/stats/wallet/${currentUser.wallet_address}`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'X-Wallet-Address': currentUser.wallet_address
             }
         });
+        
+        if (response.status === 401) {
+            // Token expired - don't logout automatically, just show message
+            showStatsMessage('Session expired - please reconnect your wallet', 'warning');
+            return;
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -677,11 +683,24 @@ async function loadWalletStats() {
         displayWalletStats(stats);
     } catch (error) {
         console.error('Failed to load wallet stats:', error);
-        // Show fallback UI
-        document.getElementById('statProofsSubmitted').textContent = '0';
-        document.getElementById('statVerifications').textContent = '0';
-        document.getElementById('statSuccessRate').textContent = '0%';
-        document.getElementById('statLastActivity').textContent = 'Never';
+        // Show empty state instead of crashing
+        showStatsMessage('Could not load statistics - try refreshing the page', 'info');
+        setDefaultStats();
+    }
+}
+
+// Set default stats values
+function setDefaultStats() {
+    const elements = {
+        'statProofsSubmitted': '0',
+        'statVerifications': '0',
+        'statSuccessRate': '0%',
+        'statLastActivity': 'Never'
+    };
+    
+    for (const [id, value] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
     }
 }
 
