@@ -34,8 +34,9 @@ window.closeWalletModal = closeWalletModal;
 // END CRITICAL SECTION
 // ============================================================
 
-// Define API_BASE first (this will be used by other modules)
-const API_BASE = window.location.origin;
+// Use existing API_BASE if available (may be set by docs.js), otherwise define it
+// Using var to avoid redeclaration errors with const
+var API_BASE = window.API_BASE || window.location.origin;
 window.API_BASE = API_BASE;
 
 // Global state

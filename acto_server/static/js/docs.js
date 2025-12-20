@@ -1,7 +1,8 @@
 // Documentation module for API usage guide
 
 // Use existing API_BASE if available, otherwise define it
-const API_BASE = window.API_BASE || window.location.origin;
+// Using var to avoid redeclaration errors with const across multiple scripts
+var API_BASE = window.API_BASE || window.location.origin;
 window.API_BASE = API_BASE;
 
 // Define initDocumentation function immediately and make it globally available
