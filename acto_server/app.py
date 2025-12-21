@@ -363,7 +363,9 @@ def create_app() -> FastAPI:
     @app.post("/v1/access/check", response_model=AccessCheckResponse, dependencies=[auth_dependency()])
     def access_check(req: AccessCheckRequest) -> AccessCheckResponse:
         try:
-            gate = SolanaTokenGate(rpc_url=req.rpc_url)
+            # Use backend RPC config (Helius) if no custom RPC provided
+            rpc_url = req.rpc_url if req.rpc_url else settings.get_solana_rpc_url()
+            gate = SolanaTokenGate(rpc_url=rpc_url)
             decision = gate.decide(owner=req.owner, mint=req.mint, minimum=req.minimum)
             metrics.inc("acto.access.check")
             return AccessCheckResponse(**decision.model_dump())
