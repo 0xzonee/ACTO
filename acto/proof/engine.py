@@ -115,12 +115,42 @@ def create_proof(
     )
 
 
+def _verify_proof_internal(envelope: ProofEnvelope) -> bool:
+    """
+    Internal proof verification - used by the server only.
+    
+    This function is NOT exported in the public API.
+    SDK users must use ACTOClient.verify() instead.
+    """
+    payload = envelope.payload
+    payload_base = {
+        "version": payload.version,
+        "subject": payload.subject.model_dump(),
+        "created_at": payload.created_at,
+        "telemetry_normalized": payload.telemetry_normalized,
+        "telemetry_hash": payload.telemetry_hash,
+        "hash_alg": payload.hash_alg,
+        "signature_alg": payload.signature_alg,
+        "meta": payload.meta,
+    }
+    recomputed = compute_payload_hash(payload_base, payload.hash_alg)
+    if recomputed != payload.payload_hash:
+        raise ProofError("Payload hash mismatch. Proof is tampered or inconsistent.")
+
+    ok = verify_bytes(
+        envelope.signer_public_key_b64, payload.payload_hash.encode("utf-8"), envelope.signature_b64
+    )
+    if not ok:
+        raise ProofError("Invalid signature.")
+    return True
+
+
 def verify_proof(envelope: ProofEnvelope) -> bool:
     """
     Verify a proof envelope via the ACTO API.
 
     .. deprecated::
-        Local verification has been removed. All proof verification must
+        Local verification has been removed for SDK users. All proof verification must
         be done through the ACTO API to ensure integrity and compliance.
 
     Args:

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from acto.errors import ProofError, RegistryError
 from acto.metrics import MetricsRegistry
-from acto.proof import verify_proof
+from acto.proof.engine import _verify_proof_internal as verify_proof
 from acto.registry import ProofRegistry
 from acto.registry.search import SearchFilter, SortField, SortOrder
 from acto.reputation import ReputationScorer
