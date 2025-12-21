@@ -87,6 +87,8 @@ jobs:
       run: |
         acto --version
         acto --help
+        acto keys --help
+        acto proof --help
 
   publish-pypi:
     name: Publish to PyPI
