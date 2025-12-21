@@ -5,6 +5,30 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2025-12-21
+
+### 🔧 Dashboard Key Management Fixes
+
+This release fixes critical issues with API key management in the dashboard.
+
+#### Fixed
+
+- **Key Actions via Event Delegation** - Rename, toggle, and delete buttons now work reliably using event delegation instead of inline onclick handlers with JSON.stringify (prevents HTML attribute parsing issues)
+- **Delete Keys Permanently** - Delete button now permanently removes keys from the database instead of just deactivating them
+- **Toggle vs Delete Distinction** - Toggle (on/off switch) deactivates keys but keeps them visible; Delete removes them completely
+- **Key Statistics Loading** - Fixed 401 errors when viewing key statistics (requires `ACTO_JWT_SECRET_KEY` environment variable on Vercel)
+
+#### Changed
+
+- Improved success checking for delete operations
+- Keys list now loads with `include_inactive=true` to show toggled-off keys
+
+#### Important
+
+- **Vercel Users**: Set `ACTO_JWT_SECRET_KEY` environment variable with a fixed secret to prevent JWT validation issues across serverless instances
+
+---
+
 ## [0.7.2] - 2025-12-21
 
 ### 🏗️ Modular Codebase Refactoring
