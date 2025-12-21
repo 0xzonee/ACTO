@@ -16,7 +16,6 @@ This release introduces a comprehensive fleet management system for monitoring a
 - **Fleet Dashboard**
   - Device overview with proof counts, task history, and activity status
   - Device status indicators (Active, Idle, Inactive based on activity)
-  - Real-time WebSocket connection for live updates
   - List and grid view options
   - Search and filter functionality
 
@@ -62,7 +61,6 @@ This release introduces a comprehensive fleet management system for monitoring a
   - `DELETE /v1/fleet/groups/{id}` - Delete group
   - `POST /v1/fleet/groups/{id}/assign` - Assign devices
   - `POST /v1/fleet/groups/{id}/unassign` - Remove devices
-  - `WS /ws/fleet` - WebSocket for real-time updates
 
 - **New Files**
   - `acto/fleet/__init__.py` - Fleet module export
@@ -80,7 +78,6 @@ This release introduces a comprehensive fleet management system for monitoring a
 #### Technical
 
 - All fleet data tied to user's wallet via JWT authentication
-- WebSocket manager for broadcasting real-time updates
 - Health metrics history with automatic cleanup (30 days)
 - Responsive design for mobile and desktop
 

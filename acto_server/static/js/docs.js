@@ -349,7 +349,6 @@ response = requests.post(
                 <li><strong>Custom Names:</strong> Rename devices with friendly names for easier identification</li>
                 <li><strong>Device Groups:</strong> Organize robots into groups (e.g., "Warehouse A", "Production Line")</li>
                 <li><strong>Health Monitoring:</strong> View CPU, RAM, battery, and other metrics (when available)</li>
-                <li><strong>Real-time Updates:</strong> WebSocket connection for live status updates</li>
             </ul>
             
             <h3>Device Status</h3>
@@ -422,16 +421,6 @@ response = requests.post(
 {
   "device_ids": ["robot-001", "robot-002"]
 }</code></pre>
-            
-            <h3>Real-time Updates</h3>
-            <p>Connect via WebSocket for live updates:</p>
-            <pre><code>WebSocket: wss://api.actobotics.net/ws/fleet</code></pre>
-            <p>Message types received:</p>
-            <ul>
-                <li><code>device_update</code> - Device status changed</li>
-                <li><code>health_update</code> - New health metrics</li>
-                <li><code>group_update</code> - Group created/modified/deleted</li>
-            </ul>
         `
     },
     bestPractices: {

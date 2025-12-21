@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from acto.registry import ProofRegistry
@@ -90,72 +90,6 @@ class DeviceHealthUpdateRequest(BaseModel):
     
     # Custom metrics (optional)
     custom_metrics: Optional[dict] = None
-
-
-# ============================================================
-# WebSocket Connection Manager
-# ============================================================
-
-class FleetWebSocketManager:
-    """Manager for WebSocket connections for real-time fleet updates."""
-    
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
-    
-    async def connect(self, websocket: WebSocket):
-        """Accept a new WebSocket connection."""
-        await websocket.accept()
-        self.active_connections.append(websocket)
-    
-    def disconnect(self, websocket: WebSocket):
-        """Remove a WebSocket connection."""
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-    
-    async def broadcast(self, message: dict):
-        """Broadcast a message to all connected clients."""
-        disconnected = []
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                disconnected.append(connection)
-        
-        # Clean up disconnected clients
-        for connection in disconnected:
-            self.disconnect(connection)
-    
-    async def send_device_update(self, device_id: str, data: dict):
-        """Send a device update to all clients."""
-        await self.broadcast({
-            "type": "device_update",
-            "device_id": device_id,
-            "data": data,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-    
-    async def send_health_update(self, device_id: str, health: dict):
-        """Send a health update to all clients."""
-        await self.broadcast({
-            "type": "health_update",
-            "device_id": device_id,
-            "health": health,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-    
-    async def send_group_update(self, group_id: str, action: str, data: dict):
-        """Send a group update to all clients."""
-        await self.broadcast({
-            "type": "group_update",
-            "group_id": group_id,
-            "action": action,
-            "data": data,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-
-
-# Global WebSocket manager instance
-fleet_ws_manager = FleetWebSocketManager()
 
 
 def create_fleet_router(

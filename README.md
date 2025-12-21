@@ -123,7 +123,6 @@ Monitor and manage your robot fleet from the dashboard:
 - **Custom Names** - Rename devices for easy identification
 - **Device Groups** - Organize robots (e.g., "Warehouse A", "Production Line")
 - **Health Monitoring** - CPU, RAM, battery status (optional)
-- **Real-time Updates** - WebSocket for live status
 - **Activity Logs** - View complete proof history per device
 
 ```python

@@ -1,6 +1,6 @@
 // ============================================================
 // ACTO Dashboard - Fleet Management Module
-// Features: Device Details, Groups, Rename, Health, WebSocket
+// Features: Device Details, Groups, Rename, Health Monitoring
 // ============================================================
 
 var API_BASE = window.API_BASE || '';
@@ -17,142 +17,8 @@ const FleetState = {
     activeGroupFilter: null,
     searchQuery: '',
     viewMode: 'list', // 'list' or 'grid'
-    wsConnection: null,
-    wsStatus: 'disconnected',
     currentDeviceModal: null,
 };
-
-// ============================================================
-// WebSocket Real-time Updates
-// ============================================================
-
-function initFleetWebSocket() {
-    if (FleetState.wsConnection) {
-        FleetState.wsConnection.close();
-    }
-    
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/ws/fleet`;
-    
-    updateWsStatus('connecting');
-    
-    try {
-        FleetState.wsConnection = new WebSocket(wsUrl);
-        
-        FleetState.wsConnection.onopen = () => {
-            console.log('[Fleet] WebSocket connected');
-            updateWsStatus('connected');
-            // Start heartbeat
-            startWsHeartbeat();
-        };
-        
-        FleetState.wsConnection.onmessage = (event) => {
-            handleWsMessage(event.data);
-        };
-        
-        FleetState.wsConnection.onclose = () => {
-            console.log('[Fleet] WebSocket disconnected');
-            updateWsStatus('disconnected');
-            // Reconnect after delay
-            setTimeout(() => {
-                if (document.getElementById('tab-fleet')?.classList.contains('active')) {
-                    initFleetWebSocket();
-                }
-            }, 5000);
-        };
-        
-        FleetState.wsConnection.onerror = (error) => {
-            console.error('[Fleet] WebSocket error:', error);
-            updateWsStatus('disconnected');
-        };
-    } catch (error) {
-        console.error('[Fleet] Failed to connect WebSocket:', error);
-        updateWsStatus('disconnected');
-    }
-}
-
-function startWsHeartbeat() {
-    setInterval(() => {
-        if (FleetState.wsConnection?.readyState === WebSocket.OPEN) {
-            FleetState.wsConnection.send('ping');
-        }
-    }, 30000);
-}
-
-function handleWsMessage(data) {
-    try {
-        const message = JSON.parse(data);
-        
-        switch (message.type) {
-            case 'device_update':
-                handleDeviceUpdate(message.device_id, message.data);
-                break;
-            case 'health_update':
-                handleHealthUpdate(message.device_id, message.health);
-                break;
-            case 'group_update':
-                handleGroupUpdate(message.group_id, message.action, message.data);
-                break;
-            default:
-                console.log('[Fleet] Unknown message type:', message.type);
-        }
-    } catch (error) {
-        // Ignore non-JSON messages (like 'pong')
-    }
-}
-
-function handleDeviceUpdate(deviceId, data) {
-    const device = FleetState.devices.find(d => d.id === deviceId);
-    if (device) {
-        Object.assign(device, data);
-        renderFleetList();
-        // Highlight updated device
-        const deviceEl = document.querySelector(`[data-device-id="${deviceId}"]`);
-        if (deviceEl) {
-            deviceEl.classList.add('updating');
-            setTimeout(() => deviceEl.classList.remove('updating'), 500);
-        }
-    }
-}
-
-function handleHealthUpdate(deviceId, health) {
-    const device = FleetState.devices.find(d => d.id === deviceId);
-    if (device) {
-        device.health = health;
-        // Update health display if device modal is open
-        if (FleetState.currentDeviceModal === deviceId) {
-            renderDeviceHealth(health);
-        }
-        // Update list item health indicators
-        updateDeviceHealthIndicators(deviceId, health);
-    }
-}
-
-function handleGroupUpdate(groupId, action, data) {
-    if (action === 'created') {
-        FleetState.groups.push(data);
-    } else if (action === 'updated') {
-        const idx = FleetState.groups.findIndex(g => g.id === groupId);
-        if (idx >= 0) Object.assign(FleetState.groups[idx], data);
-    } else if (action === 'deleted') {
-        FleetState.groups = FleetState.groups.filter(g => g.id !== groupId);
-    }
-    renderGroupsList();
-}
-
-function updateWsStatus(status) {
-    FleetState.wsStatus = status;
-    const statusEl = document.getElementById('wsStatus');
-    if (statusEl) {
-        statusEl.className = `ws-status ${status}`;
-        const labelMap = {
-            'connected': 'Live',
-            'connecting': 'Connecting...',
-            'disconnected': 'Offline'
-        };
-        statusEl.querySelector('.ws-status-label').textContent = labelMap[status] || status;
-    }
-}
 
 // ============================================================
 // Load Fleet Data
@@ -198,9 +64,6 @@ async function loadFleet() {
         updateFleetStats();
         renderGroupsList();
         renderFleetList();
-        
-        // Initialize WebSocket
-        initFleetWebSocket();
         
     } catch (error) {
         console.error('Failed to load fleet:', error);

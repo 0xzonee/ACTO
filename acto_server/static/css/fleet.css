@@ -1013,57 +1013,6 @@
 }
 
 /* ============================================
-   Real-time Update Indicators
-   ============================================ */
-
-.ws-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--color-bg-primary);
-    border-radius: 20px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
-}
-
-.ws-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-text-tertiary);
-}
-
-.ws-status.connected .ws-status-dot {
-    background: var(--color-success);
-    animation: pulse 2s ease-in-out infinite;
-}
-
-.ws-status.disconnected .ws-status-dot {
-    background: var(--color-error);
-}
-
-.ws-status.connecting .ws-status-dot {
-    background: var(--color-warning);
-    animation: blink 1s ease-in-out infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-
-/* Device Update Animation */
-.fleet-device.updating {
-    animation: deviceUpdate 0.5s ease;
-}
-
-@keyframes deviceUpdate {
-    0% { background-color: rgba(59, 130, 246, 0.1); }
-    100% { background-color: var(--color-bg-primary); }
-}
-
-/* ============================================
    Grid View (alternative layout)
    ============================================ */
 

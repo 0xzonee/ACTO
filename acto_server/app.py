@@ -3,7 +3,7 @@ from __future__ import annotations
 import secrets
 import uuid
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -813,7 +813,7 @@ def create_app() -> FastAPI:
     # ============================================================
     # Fleet Router (database-backed, JWT authenticated)
     # ============================================================
-    from .routers.fleet import create_fleet_router, fleet_ws_manager
+    from .routers.fleet import create_fleet_router
     
     fleet_router = create_fleet_router(
         registry=registry,
@@ -821,29 +821,6 @@ def create_app() -> FastAPI:
         fleet_store=fleet_store,
     )
     app.include_router(fleet_router)
-    
-    # ============================================================
-    # WebSocket Endpoint for Real-time Fleet Updates
-    # ============================================================
-    
-    @app.websocket("/ws/fleet")
-    async def fleet_websocket(websocket: WebSocket):
-        """
-        WebSocket endpoint for real-time fleet updates.
-        Clients connect here to receive live device status updates.
-        """
-        await fleet_ws_manager.connect(websocket)
-        try:
-            while True:
-                # Keep connection alive and handle incoming messages
-                data = await websocket.receive_text()
-                # Echo back for ping/pong
-                if data == "ping":
-                    await websocket.send_text("pong")
-        except WebSocketDisconnect:
-            fleet_ws_manager.disconnect(websocket)
-        except Exception:
-            fleet_ws_manager.disconnect(websocket)
 
     # Dashboard endpoint - serve static HTML
     @app.get("/dashboard")

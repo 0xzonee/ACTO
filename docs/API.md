@@ -621,43 +621,6 @@ DELETE /v1/fleet/groups/{group_id}
 }
 ```
 
-### WebSocket Real-time Updates
-
-Connect via WebSocket for live fleet updates:
-
-```
-WebSocket: wss://api.actobotics.net/ws/fleet
-```
-
-**Message Types:**
-
-```json
-// Device update
-{
-  "type": "device_update",
-  "device_id": "robot-alpha-01",
-  "data": {...},
-  "timestamp": "2025-01-15T10:30:00Z"
-}
-
-// Health update
-{
-  "type": "health_update",
-  "device_id": "robot-alpha-01",
-  "health": {...},
-  "timestamp": "2025-01-15T10:30:00Z"
-}
-
-// Group update
-{
-  "type": "group_update",
-  "group_id": "grp_abc123",
-  "action": "created",
-  "data": {...},
-  "timestamp": "2025-01-15T10:30:00Z"
-}
-```
-
 ---
 
 ## Error Responses
