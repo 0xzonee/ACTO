@@ -536,15 +536,19 @@ body {
    Footer - Slim & Compact
    ----------------------------------------------------------------------------- */
 .VPFooter {
-  padding: 16px 24px !important;
+  padding: 12px 24px !important;
+  margin-top: 60px !important;
   border-top: 1px solid var(--vp-c-divider);
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px);
 }
 
 .VPFooter .message,
 .VPFooter .copyright {
-  font-size: 12px !important;
-  line-height: 1.4 !important;
-  margin: 0 !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  margin: 2px 0 !important;
+  color: var(--vp-c-text-3) !important;
 }
 
 .VPFooter .container {
