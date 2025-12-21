@@ -75,9 +75,10 @@ jobs:
     - name: Test basic imports
       run: |
         python -c "import acto; print(f'ACTO version: {acto.__version__}')"
-        python -c "from acto.proof import create_proof, verify_proof; print('Proof module: OK')"
+        python -c "from acto.proof import create_proof; print('Proof module: OK')"
         python -c "from acto.crypto import KeyPair; print('Crypto module: OK')"
         python -c "from acto.telemetry import TelemetryBundle; print('Telemetry module: OK')"
+        python -c "from acto.client import ACTOClient, AsyncACTOClient; print('Client module: OK')"
         echo "All imports successful!"
 
   publish-pypi:
