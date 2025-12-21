@@ -20,8 +20,8 @@ async function loadKeys() {
     
     keysListEl.innerHTML = '<div class="empty-state"><p>Loading keys...</p></div>';
     
-    // Only load active keys (deleted keys are marked as inactive)
-    const result = await apiRequest('/v1/keys?include_inactive=false');
+    // Load all keys including inactive (toggled off) ones
+    const result = await apiRequest('/v1/keys?include_inactive=true');
     if (!result) {
         keysListEl.innerHTML = '<div class="empty-state"><p>Failed to load keys.</p></div>';
         return;

@@ -294,14 +294,14 @@ class ApiKeyStore:
         return None
     
     def delete_key(self, key_id: str, user_id: str | None = None) -> bool:
-        """Delete (deactivate) an API key. Optionally filter by user_id."""
+        """Permanently delete an API key from the database. Optionally filter by user_id."""
         with self.Session() as session:
             query = session.query(ApiKeyRecord).filter(ApiKeyRecord.key_id == key_id)
             if user_id:
                 query = query.filter(ApiKeyRecord.user_id == user_id)
             record = query.first()
             if record:
-                record.is_active = False
+                session.delete(record)
                 session.commit()
                 return True
         return False
