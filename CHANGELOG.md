@@ -5,6 +5,20 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2025-12-21
+
+### 🔧 Fleet Improvements
+
+#### Changed
+- Fleet data now uses JWT authentication (wallet-based) instead of API key
+- Moved fleet code to separate `fleet.js` module for better code organization
+- New `/v1/fleet` endpoint that returns fleet data tied to wallet session
+
+#### Fixed
+- Fleet tab now correctly loads devices without requiring an API key
+
+---
+
 ## [0.7.0] - 2025-12-21
 
 ### 🚀 Fleet Management & Helius RPC Integration
