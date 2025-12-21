@@ -2,6 +2,21 @@
 
 This directory contains example scripts, telemetry data, and Jupyter notebooks demonstrating ACTO usage.
 
+## Prerequisites
+
+### Install the SDK
+
+```bash
+# Install from PyPI
+pip install actobotics
+
+# Or with optional features
+pip install actobotics[solana]  # With Solana integration
+pip install actobotics[full]    # With all optional features
+```
+
+> **Note:** The package is called `actobotics` on PyPI, but you import it as `acto` in Python.
+
 ## Jupyter Notebooks
 
 Interactive examples for SDK usage:
@@ -39,15 +54,12 @@ Use the interactive mode for guided workflows:
 acto interactive start
 ```
 
-### Submit to local API
+### Submit to hosted API
 
-Start the server:
+Use the hosted API at `https://api.actobotics.net`:
 
-```bash
-acto server run
-```
-
-Then:
+1. Get an API key at [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+2. Submit proofs via the API
 
 ```bash
 python examples/scripts/submit_proof.py examples/proofs/sample_proof.json

@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to ACTO! This document provides guidelines and instructions for contributing.
 
+> **Note for SDK Users:** If you just want to use the SDK, install it from PyPI with `pip install actobotics`. This guide is for contributors who want to develop ACTO itself.
+
 ## Development Setup
 
 ### Prerequisites
@@ -10,7 +12,7 @@ Thank you for your interest in contributing to ACTO! This document provides guid
 - pip
 - git
 
-### Installation
+### Installation (Full Repository)
 
 1. Clone the repository:
 ```bash
