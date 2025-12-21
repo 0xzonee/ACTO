@@ -31,7 +31,9 @@ def create_access_router(
     def access_check(req: AccessCheckRequest) -> AccessCheckResponse:
         """Check if a wallet has sufficient token balance for access."""
         try:
-            gate = SolanaTokenGate(rpc_url=req.rpc_url)
+            # Use backend RPC config (Helius) if no custom RPC provided
+            rpc_url = req.rpc_url if req.rpc_url else settings.get_solana_rpc_url()
+            gate = SolanaTokenGate(rpc_url=rpc_url)
             decision = gate.decide(owner=req.owner, mint=req.mint, minimum=req.minimum)
             metrics.inc("acto.access.check")
             return AccessCheckResponse(**decision.model_dump())

@@ -440,7 +440,7 @@ class AsyncACTOClient:
         owner: str,
         mint: str,
         minimum: float = 50000,
-        rpc_url: str = "https://api.mainnet-beta.solana.com",
+        rpc_url: str = "",  # Empty = use backend's configured RPC (Helius)
     ) -> AccessCheckResponse:
         """Check if a wallet has sufficient token balance."""
         data = await self._request(

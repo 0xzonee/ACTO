@@ -43,11 +43,13 @@ window.initDocumentation = function initDocumentation() {
     }, 50);
 };
 
-// Token gating configuration (loaded from API)
+// Token gating configuration (loaded from API at runtime)
+// These are fallback defaults - actual values come from /v1/config/token-gating
+// Backend uses Helius RPC when ACTO_HELIUS_API_KEY is configured
 let tokenGatingConfig = {
-    mint: "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray", // Default, will be loaded from API
+    mint: "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray",
     minimum: 50000.0,
-    rpc_url: "https://api.mainnet-beta.solana.com"
+    rpc_url: "https://mainnet.helius-rpc.com"  // Helius (actual key added by backend)
 };
 
 // Load token gating configuration from API
@@ -321,11 +323,11 @@ response = httpx.post(
             <h3>Check Access</h3>
             <p><strong>POST</strong> <code>/v1/access/check</code></p>
             <p>Check if a Solana wallet address has sufficient token holdings for access.</p>
+            <p><em>Note: <code>rpc_url</code> is optional. If omitted, the backend uses its configured RPC (Helius).</em></p>
             <pre><code>{
-  "rpc_url": "https://api.mainnet-beta.solana.com",
   "owner": "WALLET_ADDRESS",
   "mint": "TOKEN_MINT_ADDRESS",
-  "minimum": 1.0
+  "minimum": 50000
 }</code></pre>
         `
     },

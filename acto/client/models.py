@@ -112,7 +112,7 @@ class WalletStatsResponse(BaseModel):
 class AccessCheckRequest(BaseModel):
     """Request for checking token access."""
 
-    rpc_url: str = "https://api.mainnet-beta.solana.com"
+    rpc_url: str = ""  # Empty = use backend's configured RPC (Helius)
     owner: str
     mint: str
     minimum: float = 50000

@@ -204,15 +204,18 @@ httpx.post(
 
 ## 🔐 Token Gating
 
-Check SPL token balance for access control (off-chain, gas-free):
+API requests automatically verify your wallet holds sufficient tokens (via Helius RPC).
+
+For manual balance checks via CLI:
 
 ```bash
 acto access check \
-  --rpc https://api.mainnet-beta.solana.com \
   --owner WALLET_ADDRESS \
   --mint TOKEN_MINT \
   --minimum 50000
 ```
+
+> **Note:** The `--rpc` flag is optional. If omitted, defaults to the configured RPC.
 
 ---
 

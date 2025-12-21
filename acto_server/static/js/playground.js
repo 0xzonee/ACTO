@@ -126,7 +126,6 @@ window.executeAccessCheck = async function() {
                 'X-Wallet-Address': window.currentUser.wallet_address
             },
             body: JSON.stringify({
-                rpc_url: 'https://api.mainnet-beta.solana.com',
                 owner: window.currentUser.wallet_address,
                 mint: ACTO_TOKEN_MINT,
                 minimum: ACTO_MINIMUM_BALANCE

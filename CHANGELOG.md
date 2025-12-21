@@ -5,6 +5,27 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-12-21
+
+### 🔧 Helius RPC Integration
+
+This release ensures all token balance checks use the backend's configured RPC (Helius) instead of public endpoints.
+
+#### Changed
+
+- Backend uses Helius RPC for all token balance checks when configured
+- `rpc_url` is now optional in `/v1/access/check` - defaults to backend config
+- SDK clients default to empty `rpc_url` (backend uses Helius)
+- Removed hardcoded public RPC from dashboard and playground
+- Updated all documentation to reflect Helius integration
+
+#### Fixed
+
+- Dashboard and playground no longer send public RPC URL
+- Consistent RPC usage across all token gating checks
+
+---
+
 ## [0.9.1] - 2025-12-21
 
 ### 🔒 API-Only Verification

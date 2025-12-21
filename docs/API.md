@@ -328,10 +328,11 @@ POST /v1/access/check
 
 Check if a wallet has sufficient token balance for API access.
 
+> **Note:** The `rpc_url` field is optional. If omitted, the backend uses its configured RPC (Helius).
+
 **Request:**
 ```json
 {
-  "rpc_url": "https://api.mainnet-beta.solana.com",
   "owner": "WALLET_ADDRESS",
   "mint": "TOKEN_MINT_ADDRESS",
   "minimum": 50000
