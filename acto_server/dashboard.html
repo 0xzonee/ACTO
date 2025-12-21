@@ -37,7 +37,10 @@
     <link rel="stylesheet" href="/static/css/balance.css">
     <link rel="stylesheet" href="/static/css/responsive.css">
     <link rel="stylesheet" href="/static/css/navigation.css">
+    <link rel="stylesheet" href="/static/css/analytics.css">
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
 </head>
 <body>
     <!-- Logo fixed top left -->
@@ -309,59 +312,220 @@
             
             <!-- Statistics Tab -->
             <div id="tab-stats" class="tab-content">
-                <!-- Wallet Overview Stats -->
-                <div class="card">
-                    <h2>Wallet Statistics</h2>
-                    <p>Overview of your proof submissions and verification activity.</p>
-                    
-                    <div id="walletStatsContainer">
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-value" id="statProofsSubmitted">-</div>
-                                <div class="stat-label">Proofs Submitted</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="statVerifications">-</div>
-                                <div class="stat-label">Total Verifications</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="statSuccessRate">-</div>
-                                <div class="stat-label">Success Rate</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="statLastActivity">-</div>
-                                <div class="stat-label">Last Activity</div>
+                <!-- Analytics Toolbar -->
+                <div class="analytics-toolbar">
+                    <div class="time-range-selector">
+                        <button class="time-range-btn" data-days="7" onclick="setTimePeriod(7)">7 Days</button>
+                        <button class="time-range-btn active" data-days="30" onclick="setTimePeriod(30)">30 Days</button>
+                        <button class="time-range-btn" data-days="90" onclick="setTimePeriod(90)">90 Days</button>
+                        <button class="time-range-btn" data-days="custom" onclick="setTimePeriod('custom')">Custom</button>
+                        <div class="custom-range-inputs" id="customRangeInputs">
+                            <input type="date" id="customStartDate">
+                            <span>to</span>
+                            <input type="date" id="customEndDate">
+                            <button class="btn btn-small btn-primary" onclick="applyCustomRange()">Apply</button>
+                        </div>
+                    </div>
+                    <div class="export-buttons">
+                        <button class="btn-export" onclick="exportStatsCSV()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            CSV
+                        </button>
+                        <button class="btn-export" onclick="exportStatsJSON()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            JSON
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Analytics Summary Cards -->
+                <div class="analytics-summary">
+                    <div class="analytics-summary-card">
+                        <div class="analytics-summary-icon blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="analytics-summary-info">
+                            <div class="analytics-summary-value" id="analyticsTotalProofs">0</div>
+                            <div class="analytics-summary-label">Proofs Submitted</div>
+                        </div>
+                    </div>
+                    <div class="analytics-summary-card">
+                        <div class="analytics-summary-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="analytics-summary-info">
+                            <div class="analytics-summary-value" id="analyticsTotalVerifications">0</div>
+                            <div class="analytics-summary-label">Verifications</div>
+                        </div>
+                    </div>
+                    <div class="analytics-summary-card">
+                        <div class="analytics-summary-icon purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="20" x2="12" y2="10"/>
+                                <line x1="18" y1="20" x2="18" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="analytics-summary-info">
+                            <div class="analytics-summary-value" id="analyticsSuccessRate">0%</div>
+                            <div class="analytics-summary-label">Success Rate</div>
+                        </div>
+                    </div>
+                    <div class="analytics-summary-card">
+                        <div class="analytics-summary-icon orange">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                        </div>
+                        <div class="analytics-summary-info">
+                            <div class="analytics-summary-value" id="analyticsTotalRequests">0</div>
+                            <div class="analytics-summary-label">API Requests</div>
+                        </div>
+                    </div>
+                    <div class="analytics-summary-card">
+                        <div class="analytics-summary-icon red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+                        <div class="analytics-summary-info">
+                            <div class="analytics-summary-value" id="analyticsActiveKeys">0</div>
+                            <div class="analytics-summary-label">Active API Keys</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Line Chart -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div>
+                            <h3 class="chart-card-title">Activity Timeline</h3>
+                            <p class="chart-card-subtitle">Proof submissions over time</p>
+                        </div>
+                    </div>
+                    <div class="chart-container activity-chart-container" id="activityLineChartContainer">
+                        <div class="chart-loading">
+                            <div class="loading-spinner"></div>
+                            <span>Loading chart...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Request Heatmap -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div>
+                            <h3 class="chart-card-title">Request Heatmap</h3>
+                            <p class="chart-card-subtitle">API usage by hour and day of week</p>
+                        </div>
+                    </div>
+                    <div class="chart-container heatmap-container" id="heatmapChartContainer">
+                        <div class="chart-loading">
+                            <div class="loading-spinner"></div>
+                            <span>Loading heatmap...</span>
+                        </div>
+                    </div>
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="heatmap-legend-gradient"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+                
+                <!-- Endpoint Charts Grid -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">Endpoint Distribution</h3>
+                        </div>
+                        <div class="chart-container pie-chart-container" id="endpointPieChartContainer">
+                            <div class="chart-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading chart...</span>
                             </div>
                         </div>
-                        
-                        <!-- Activity Timeline -->
-                        <div class="activity-section">
-                            <h3>Activity Timeline (Last 30 Days)</h3>
-                            <div class="activity-chart" id="activityChart">
-                                <div class="activity-loading">Loading activity data...</div>
-                            </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">Top Endpoints</h3>
                         </div>
-                        
-                        <!-- Breakdown Charts -->
-                        <div class="breakdown-section">
-                            <div class="breakdown-card">
-                                <h3>Proofs by Robot</h3>
-                                <div class="breakdown-list" id="proofsByRobot">
-                                    <div class="empty-state"><p>No data available</p></div>
-                                </div>
-                            </div>
-                            <div class="breakdown-card">
-                                <h3>Proofs by Task</h3>
-                                <div class="breakdown-list" id="proofsByTask">
-                                    <div class="empty-state"><p>No data available</p></div>
-                                </div>
+                        <div class="chart-container bar-chart-container" id="endpointBarChartContainer">
+                            <div class="chart-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading chart...</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Endpoint Breakdown Table -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3 class="chart-card-title">Endpoint Usage Details</h3>
+                    </div>
+                    <table class="endpoint-table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Requests</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="endpointTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">Loading endpoint data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Breakdown Charts (Legacy - kept for compatibility) -->
+                <div class="breakdown-section" style="margin-top: 24px;">
+                    <div class="breakdown-card">
+                        <h3>Proofs by Robot</h3>
+                        <div class="breakdown-list" id="proofsByRobot">
+                            <div class="empty-state"><p>No data available</p></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Proofs by Task</h3>
+                        <div class="breakdown-list" id="proofsByTask">
+                            <div class="empty-state"><p>No data available</p></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden legacy elements for compatibility -->
+                <div style="display:none;">
+                    <div id="activityChart"></div>
+                    <div id="walletStatsContainer">
+                        <span id="statProofsSubmitted"></span>
+                        <span id="statVerifications"></span>
+                        <span id="statSuccessRate"></span>
+                        <span id="statLastActivity"></span>
+                    </div>
+                </div>
+                
                 <!-- API Key Stats -->
-                <div class="card">
+                <div class="card" style="margin-top: 24px;">
                     <h2>API Key Usage Statistics</h2>
                     <p>View detailed usage statistics for your API keys. Click on any key below to see its usage statistics.</p>
                     <div id="statsKeysList" class="keys-list">
@@ -499,6 +663,7 @@
     <script src="/static/js/clipboard.js" defer></script>
     <script src="/static/js/modals.js" defer></script>
     <script src="/static/js/keys.js" defer></script>
+    <script src="/static/js/charts.js" defer></script>
     <script src="/static/js/wallet-stats.js" defer></script>
     <script src="/static/js/playground.js" defer></script>
     <!-- Feature modules -->

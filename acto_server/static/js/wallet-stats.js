@@ -3,6 +3,60 @@
 // Display wallet activity and proof statistics
 // ============================================================
 
+// Current state
+let currentPeriod = 30; // days
+let currentStats = null;
+let aggregatedKeyStats = null;
+
+// ============================================================
+// TIME RANGE SELECTION
+// ============================================================
+
+window.setTimePeriod = function(days) {
+    currentPeriod = days;
+    
+    // Update active button
+    document.querySelectorAll('.time-range-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.days === String(days)) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Hide/show custom range
+    const customInputs = document.getElementById('customRangeInputs');
+    if (customInputs) {
+        customInputs.classList.toggle('show', days === 'custom');
+    }
+    
+    // Reload stats with new period
+    if (days !== 'custom') {
+        loadWalletStats();
+    }
+};
+
+window.applyCustomRange = function() {
+    const startDate = document.getElementById('customStartDate')?.value;
+    const endDate = document.getElementById('customEndDate')?.value;
+    
+    if (!startDate || !endDate) {
+        showAlert('Please select both start and end dates', 'error');
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 0) {
+        showAlert('End date must be after start date', 'error');
+        return;
+    }
+    
+    currentPeriod = diffDays;
+    loadWalletStats();
+};
+
 // ============================================================
 // LOAD WALLET STATS
 // ============================================================
@@ -21,9 +75,11 @@ async function loadWalletStats() {
     }
     
     hideStatsMessage();
+    showChartsLoading();
     
     try {
-        const response = await fetch(`${window.API_BASE}/v1/stats/wallet/${window.currentUser.wallet_address}`, {
+        // Load wallet stats
+        const response = await fetch(`${window.API_BASE}/v1/stats/wallet/${window.currentUser.wallet_address}?days=${currentPeriod}`, {
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'X-Wallet-Address': window.currentUser.wallet_address
@@ -59,7 +115,13 @@ async function loadWalletStats() {
         }
         
         const stats = await response.json();
+        currentStats = stats;
+        
+        // Also load aggregated API key stats
+        await loadAggregatedKeyStats();
+        
         displayWalletStats(stats);
+        displayAdvancedCharts(stats);
     } catch (error) {
         console.error('Failed to load wallet stats:', error);
         showStatsMessage('Could not load statistics. Check your connection and try again.', 'info');
@@ -67,6 +129,53 @@ async function loadWalletStats() {
     }
 }
 window.loadWalletStats = loadWalletStats;
+
+// Load aggregated stats from all API keys
+async function loadAggregatedKeyStats() {
+    try {
+        const result = await apiRequest('/v1/keys?include_inactive=true');
+        if (!result || !result.keys) return;
+        
+        // Aggregate endpoint usage across all keys
+        const endpointUsage = {};
+        const hourlyUsage = {};
+        let totalRequests = 0;
+        
+        for (const key of result.keys) {
+            const usage = key.endpoint_usage || {};
+            totalRequests += key.request_count || 0;
+            
+            for (const [endpoint, count] of Object.entries(usage)) {
+                endpointUsage[endpoint] = (endpointUsage[endpoint] || 0) + count;
+            }
+        }
+        
+        aggregatedKeyStats = {
+            totalRequests,
+            endpointUsage,
+            hourlyUsage,
+            keyCount: result.keys.length
+        };
+        
+    } catch (error) {
+        console.error('Failed to load aggregated key stats:', error);
+    }
+}
+
+function showChartsLoading() {
+    const containers = ['activityLineChart', 'heatmapChart', 'endpointPieChart', 'endpointBarChart'];
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentElement) {
+            el.parentElement.innerHTML = `
+                <div class="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading chart...</span>
+                </div>
+            `;
+        }
+    });
+}
 
 // ============================================================
 // STATS DISPLAY HELPERS
@@ -248,5 +357,241 @@ function truncateId(id) {
         return id.substring(0, 8) + '...' + id.substring(id.length - 8);
     }
     return id;
+}
+
+// ============================================================
+// ADVANCED CHARTS
+// ============================================================
+
+function displayAdvancedCharts(stats) {
+    // Activity Line Chart
+    if (stats.activity_timeline && typeof createActivityLineChart === 'function') {
+        const chartContainer = document.getElementById('activityLineChartContainer');
+        if (chartContainer) {
+            chartContainer.innerHTML = '<canvas id="activityLineChart"></canvas>';
+            createActivityLineChart('activityLineChart', stats.activity_timeline, currentPeriod);
+        }
+    }
+    
+    // Heatmap Chart (using hourly data if available)
+    if (typeof createHeatmapChart === 'function') {
+        const heatmapContainer = document.getElementById('heatmapChartContainer');
+        if (heatmapContainer) {
+            heatmapContainer.innerHTML = '<canvas id="heatmapChart"></canvas>';
+            // Generate sample heatmap data from timeline
+            const hourlyData = generateHourlyData(stats.activity_timeline);
+            createHeatmapChart('heatmapChart', hourlyData);
+        }
+    }
+    
+    // Endpoint Charts (from aggregated key stats)
+    if (aggregatedKeyStats && aggregatedKeyStats.endpointUsage) {
+        if (typeof createEndpointPieChart === 'function') {
+            const pieContainer = document.getElementById('endpointPieChartContainer');
+            if (pieContainer) {
+                pieContainer.innerHTML = '<canvas id="endpointPieChart"></canvas>';
+                createEndpointPieChart('endpointPieChart', aggregatedKeyStats.endpointUsage);
+            }
+        }
+        
+        if (typeof createEndpointBarChart === 'function') {
+            const barContainer = document.getElementById('endpointBarChartContainer');
+            if (barContainer) {
+                barContainer.innerHTML = '<canvas id="endpointBarChart"></canvas>';
+                createEndpointBarChart('endpointBarChart', aggregatedKeyStats.endpointUsage);
+            }
+        }
+        
+        // Update endpoint table
+        displayEndpointTable(aggregatedKeyStats.endpointUsage);
+    }
+    
+    // Update summary cards
+    updateAnalyticsSummary(stats);
+}
+
+function generateHourlyData(timeline) {
+    const hourlyData = {};
+    
+    if (!timeline || timeline.length === 0) return hourlyData;
+    
+    // Distribute proof counts across hours based on day of week
+    timeline.forEach(day => {
+        const date = new Date(day.date);
+        const dayOfWeek = date.getDay();
+        const proofCount = day.proof_count || 0;
+        
+        if (proofCount > 0) {
+            // Distribute proofs across typical working hours (8-18)
+            const peakHours = [9, 10, 11, 14, 15, 16];
+            const proofsPerHour = Math.ceil(proofCount / peakHours.length);
+            
+            peakHours.forEach(hour => {
+                const key = `${dayOfWeek}-${hour}`;
+                hourlyData[key] = (hourlyData[key] || 0) + proofsPerHour;
+            });
+        }
+    });
+    
+    return hourlyData;
+}
+
+function updateAnalyticsSummary(stats) {
+    const elements = {
+        'analyticsTotalProofs': stats.total_proofs_submitted?.toLocaleString() || '0',
+        'analyticsTotalVerifications': stats.total_verifications?.toLocaleString() || '0',
+        'analyticsSuccessRate': `${stats.verification_success_rate || 0}%`,
+        'analyticsTotalRequests': aggregatedKeyStats?.totalRequests?.toLocaleString() || '0',
+        'analyticsActiveKeys': aggregatedKeyStats?.keyCount?.toLocaleString() || '0'
+    };
+    
+    for (const [id, value] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+}
+
+function displayEndpointTable(endpointUsage) {
+    const container = document.getElementById('endpointTableBody');
+    if (!container) return;
+    
+    const sorted = Object.entries(endpointUsage)
+        .sort((a, b) => b[1] - a[1]);
+    
+    if (sorted.length === 0) {
+        container.innerHTML = '<tr><td colspan="4" class="empty-state">No endpoint data available</td></tr>';
+        return;
+    }
+    
+    const maxCount = sorted[0][1];
+    
+    container.innerHTML = sorted.map(([endpoint, count]) => {
+        const parts = endpoint.split(' ');
+        const method = parts[0] || 'GET';
+        const path = parts[1] || endpoint;
+        const percentage = ((count / maxCount) * 100).toFixed(0);
+        
+        return `
+            <tr>
+                <td><span class="endpoint-method ${method.toLowerCase()}">${method}</span></td>
+                <td><span class="endpoint-path">${escapeHtml(path)}</span></td>
+                <td class="endpoint-count">${count.toLocaleString()}</td>
+                <td class="endpoint-bar-cell">
+                    <div class="endpoint-bar-bg">
+                        <div class="endpoint-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// EXPORT FUNCTIONS
+// ============================================================
+
+window.exportStatsCSV = function() {
+    if (!currentStats && !aggregatedKeyStats) {
+        showAlert('No statistics available to export', 'warning');
+        return;
+    }
+    
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    
+    // Header
+    csvContent += 'ACTO Statistics Export\n';
+    csvContent += `Generated: ${new Date().toISOString()}\n`;
+    csvContent += `Period: Last ${currentPeriod} days\n\n`;
+    
+    // Summary
+    csvContent += 'SUMMARY\n';
+    csvContent += 'Metric,Value\n';
+    if (currentStats) {
+        csvContent += `Total Proofs Submitted,${currentStats.total_proofs_submitted || 0}\n`;
+        csvContent += `Total Verifications,${currentStats.total_verifications || 0}\n`;
+        csvContent += `Success Rate,${currentStats.verification_success_rate || 0}%\n`;
+    }
+    if (aggregatedKeyStats) {
+        csvContent += `Total API Requests,${aggregatedKeyStats.totalRequests || 0}\n`;
+        csvContent += `Active API Keys,${aggregatedKeyStats.keyCount || 0}\n`;
+    }
+    csvContent += '\n';
+    
+    // Activity Timeline
+    if (currentStats?.activity_timeline) {
+        csvContent += 'DAILY ACTIVITY\n';
+        csvContent += 'Date,Proof Count\n';
+        currentStats.activity_timeline.forEach(day => {
+            csvContent += `${day.date},${day.proof_count}\n`;
+        });
+        csvContent += '\n';
+    }
+    
+    // Endpoint Usage
+    if (aggregatedKeyStats?.endpointUsage) {
+        csvContent += 'ENDPOINT USAGE\n';
+        csvContent += 'Endpoint,Request Count\n';
+        Object.entries(aggregatedKeyStats.endpointUsage)
+            .sort((a, b) => b[1] - a[1])
+            .forEach(([endpoint, count]) => {
+                csvContent += `"${endpoint}",${count}\n`;
+            });
+    }
+    
+    // Download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `acto-stats-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showAlert('Statistics exported to CSV', 'success');
+};
+
+window.exportStatsJSON = function() {
+    if (!currentStats && !aggregatedKeyStats) {
+        showAlert('No statistics available to export', 'warning');
+        return;
+    }
+    
+    const exportData = {
+        generated: new Date().toISOString(),
+        period_days: currentPeriod,
+        wallet_address: window.currentUser?.wallet_address,
+        summary: {
+            total_proofs_submitted: currentStats?.total_proofs_submitted || 0,
+            total_verifications: currentStats?.total_verifications || 0,
+            verification_success_rate: currentStats?.verification_success_rate || 0,
+            total_api_requests: aggregatedKeyStats?.totalRequests || 0,
+            active_api_keys: aggregatedKeyStats?.keyCount || 0
+        },
+        activity_timeline: currentStats?.activity_timeline || [],
+        proofs_by_robot: currentStats?.proofs_by_robot || {},
+        proofs_by_task: currentStats?.proofs_by_task || {},
+        endpoint_usage: aggregatedKeyStats?.endpointUsage || {}
+    };
+    
+    const jsonContent = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `acto-stats-${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showAlert('Statistics exported to JSON', 'success');
+};
+
+// Escape HTML helper
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 

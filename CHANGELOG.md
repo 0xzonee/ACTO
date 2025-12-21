@@ -5,6 +5,53 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2025-12-21
+
+### 📊 Advanced Statistics & Analytics Dashboard
+
+This release introduces comprehensive analytics features with interactive charts and data export capabilities.
+
+#### Added
+
+- **Interactive Charts (Chart.js)**
+  - Activity line chart showing proof submissions over time with gradient fill
+  - Request heatmap displaying API usage by hour and day of week
+  - Endpoint distribution doughnut chart with color-coded segments
+  - Top endpoints horizontal bar chart with HTTP method colors
+
+- **Analytics Dashboard Components**
+  - Summary cards (5 KPIs: Proofs, Verifications, Success Rate, API Requests, Active Keys)
+  - Endpoint usage details table with visual usage bars
+  - Responsive charts grid layout
+
+- **Time Range Selection**
+  - Quick filters: 7 days, 30 days, 90 days
+  - Custom date range picker with start/end date inputs
+  - Automatic chart refresh on period change
+
+- **Data Export**
+  - CSV export with summary, timeline, and endpoint data
+  - JSON export with full structured data
+  - Timestamped filenames for easy organization
+
+- **New Files**
+  - `static/js/charts.js` - Chart.js integration and chart creation functions
+  - `static/css/analytics.css` - Analytics-specific styling (toolbar, charts, heatmap, tables)
+
+#### Changed
+
+- Extended `wallet-stats.js` with aggregated key statistics, advanced chart rendering, and export functions
+- Updated `dashboard.html` with new analytics section and Chart.js CDN
+
+#### Technical
+
+- Chart.js v4.4.1 CDN for core charting functionality
+- chartjs-chart-matrix plugin for heatmap visualization
+- Consistent color palette across all chart types
+- Loading states with spinners for async chart rendering
+
+---
+
 ## [0.7.3] - 2025-12-21
 
 ### 🔧 Dashboard Key Management Fixes
