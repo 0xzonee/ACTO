@@ -11,11 +11,14 @@ token_gating_mint = "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray"
 # Minimum token balance required (in tokens, not in smallest unit)
 token_gating_minimum = 50000.0
 
-# Solana RPC URL for balance checks
-# Mainnet: https://api.mainnet-beta.solana.com
-# Devnet: https://api.devnet.solana.com
-# Testnet: https://api.testnet.solana.com
-token_gating_rpc_url = "https://api.mainnet-beta.solana.com"
+# Solana RPC Configuration
+# Option 1: Use Helius (recommended for production - better rate limits)
+# helius_api_key = "your-helius-api-key"
+
+# Option 2: Use custom RPC URL (overrides Helius if both are set)
+# solana_rpc_url = "https://your-custom-rpc.com"
+
+# If neither is set, falls back to public Solana RPC (strict rate limits)
 
 # Database Configuration
 # db_url = "sqlite:///./data/acto.sqlite"

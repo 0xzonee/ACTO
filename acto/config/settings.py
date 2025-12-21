@@ -105,7 +105,7 @@ class Settings(BaseSettings):
 
     # Token Gating
     token_gating_enabled: bool = True
-    token_gating_mint: str = "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+    token_gating_mint: str = "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray"
     token_gating_minimum: float = 50000.0
     
     # Solana RPC - Helius recommended for production
@@ -113,8 +113,7 @@ class Settings(BaseSettings):
     helius_api_key: str = ""
     solana_rpc_url: str = ""  # Custom RPC URL (overrides Helius if set)
     
-    @property
-    def token_gating_rpc_url(self) -> str:
+    def get_solana_rpc_url(self) -> str:
         """Get the Solana RPC URL, preferring Helius if API key is set."""
         # Custom URL takes priority
         if self.solana_rpc_url:

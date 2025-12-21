@@ -190,7 +190,7 @@ def require_api_key_and_token_balance(
                     detail="X-Wallet-Address header is required when token gating is enabled.",
                 )
             try:
-                gate = SolanaTokenGate(rpc_url=settings.token_gating_rpc_url)
+                gate = SolanaTokenGate(rpc_url=settings.get_solana_rpc_url())
                 decision = gate.decide(
                     owner=x_wallet_address,
                     mint=settings.token_gating_mint,

@@ -383,7 +383,7 @@ def create_app() -> FastAPI:
         # Check token balance BEFORE creating session (if token gating is enabled)
         if settings.token_gating_enabled:
             try:
-                gate = SolanaTokenGate(rpc_url=settings.token_gating_rpc_url)
+                gate = SolanaTokenGate(rpc_url=settings.get_solana_rpc_url())
                 decision = gate.decide(
                     owner=req.wallet_address,
                     mint=settings.token_gating_mint,
@@ -536,7 +536,7 @@ def create_app() -> FastAPI:
             enabled=settings.token_gating_enabled,
             mint=settings.token_gating_mint,
             minimum=settings.token_gating_minimum,
-            rpc_url=settings.token_gating_rpc_url,
+            rpc_url=settings.get_solana_rpc_url(),
         )
 
     # ============================================================
