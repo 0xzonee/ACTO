@@ -1,0 +1,354 @@
+/* ============================================
+   ACTO Dashboard - Modal Styles
+   Wallet, Rename, and Delete modals
+   ============================================ */
+
+/* Modal Close Button */
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--color-text-tertiary);
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--color-text-primary);
+}
+
+/* Wallet Modal */
+.wallet-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.wallet-modal.show {
+    display: flex;
+}
+
+.wallet-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.wallet-modal-content {
+    position: relative;
+    background: var(--color-bg-overlay);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.wallet-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.wallet-modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.wallet-modal-body {
+    padding: 20px 28px 28px;
+}
+
+.wallet-modal-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+}
+
+/* Wallet List */
+.wallet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wallet-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.wallet-option:hover {
+    border-color: var(--color-text-primary);
+    background: var(--color-bg-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.wallet-option.not-installed {
+    opacity: 0.7;
+}
+
+.wallet-option.not-installed:hover {
+    opacity: 1;
+    border-color: var(--color-accent);
+}
+
+.wallet-option-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.wallet-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.wallet-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.wallet-option-right {
+    display: flex;
+    align-items: center;
+}
+
+.wallet-status {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.wallet-status.detected {
+    background: rgba(16, 185, 129, 0.1);
+    color: #065f46;
+}
+
+.wallet-status.install {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
+}
+
+.wallet-modal-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border-light);
+    text-align: center;
+}
+
+.wallet-modal-footer p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.wallet-modal-footer a {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.wallet-modal-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Wallet Type Display in Header */
+.wallet-type {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 4px;
+}
+
+.wallet-addr {
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+/* Rename Modal */
+.rename-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.rename-modal.show {
+    display: flex;
+}
+
+.rename-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.rename-modal-content {
+    position: relative;
+    background: var(--color-bg-overlay);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.rename-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.rename-modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.rename-modal-body {
+    padding: 24px 28px;
+}
+
+.rename-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* Delete Modal */
+.delete-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-modal.show {
+    display: flex;
+}
+
+.delete-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.delete-modal-content {
+    position: relative;
+    background: var(--color-bg-overlay);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 400px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.delete-modal-icon {
+    margin-bottom: 16px;
+}
+
+.delete-modal-icon svg {
+    color: var(--color-error);
+}
+
+.delete-modal-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 12px;
+}
+
+.delete-modal-content p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.delete-modal-actions .btn {
+    min-width: 100px;
+}
+

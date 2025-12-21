@@ -1,0 +1,198 @@
+/* ============================================
+   ACTO Dashboard - API Playground Styles
+   Endpoint testing and response display
+   ============================================ */
+
+/* Playground Config */
+.playground-config {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-md);
+    margin-top: 20px;
+}
+
+/* Wallet Display */
+.wallet-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    word-break: break-all;
+}
+
+.wallet-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-text-tertiary);
+    flex-shrink: 0;
+}
+
+.wallet-indicator.connected {
+    background: var(--color-success);
+}
+
+/* Endpoint Cards */
+.endpoint-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.method-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.method-badge.get {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.method-badge.post {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+}
+
+.method-badge.put {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+.method-badge.delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.method-badge.patch {
+    background: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+}
+
+.endpoint-card .endpoint-path {
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.endpoint-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-left: auto;
+}
+
+.endpoint-info {
+    padding: 12px 16px;
+    background: rgba(59, 130, 246, 0.08);
+    border-left: 3px solid #3b82f6;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+}
+
+.endpoint-info p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.endpoint-info strong {
+    color: var(--color-text-primary);
+}
+
+.endpoint-body {
+    padding: 16px 0;
+    border-top: 1px solid var(--color-border-light);
+}
+
+.endpoint-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* Response Container */
+.response-container {
+    margin-top: 16px;
+    display: none;
+}
+
+.response-container:not(:empty) {
+    display: block;
+}
+
+.response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-size: 13px;
+}
+
+.response-status {
+    font-weight: 600;
+}
+
+.response-status.success {
+    color: var(--color-success);
+}
+
+.response-status.error {
+    color: var(--color-error);
+}
+
+.response-time {
+    color: var(--color-text-tertiary);
+}
+
+.response-body {
+    margin: 0;
+    padding: 16px;
+    background: #1e1e1e;
+    border: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    font-size: 13px;
+    color: #d4d4d4;
+    overflow-x: auto;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--color-text-tertiary);
+    font-size: 14px;
+}
+

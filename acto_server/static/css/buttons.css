@@ -1,0 +1,245 @@
+/* ============================================
+   ACTO Dashboard - Button Styles
+   All button variants and states
+   ============================================ */
+
+/* Base Button */
+.btn {
+    padding: 12px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.2px;
+}
+
+.btn-primary {
+    background: var(--color-text-primary);
+    color: white;
+    border-color: var(--color-text-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-text-primary);
+}
+
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--color-error);
+    border-color: var(--color-border);
+}
+
+.btn-danger:hover {
+    background: var(--color-error);
+    color: white;
+    border-color: var(--color-error);
+}
+
+.btn-danger svg {
+    flex-shrink: 0;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* Connect Button with Icon */
+.btn-connect {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    font-size: 15px;
+}
+
+.btn-connect svg {
+    flex-shrink: 0;
+}
+
+/* Icon Button */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-text-primary);
+}
+
+/* Toggle Button */
+.btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.toggle-track {
+    display: block;
+    width: 42px;
+    height: 24px;
+    background: var(--color-border);
+    border-radius: 12px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.toggle-thumb {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-toggle.active .toggle-track {
+    background: var(--color-success);
+}
+
+.btn-toggle.active .toggle-thumb {
+    left: 21px;
+}
+
+.btn-toggle:hover .toggle-track {
+    background: var(--color-text-tertiary);
+}
+
+.btn-toggle.active:hover .toggle-track {
+    background: #059669;
+}
+
+/* Copy Button */
+.btn-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--color-text-tertiary);
+    transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-text-primary);
+}
+
+.btn-copy.copied {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+/* Copy Key Button */
+.btn-copy-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--color-text-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-copy-key:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-copy-key.copied {
+    background: var(--color-success);
+}
+
+.btn-copy-key svg {
+    flex-shrink: 0;
+}
+
+/* Pagination Button */
+.btn-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: var(--color-bg-primary);
+    border-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+}
+
+.btn-pagination:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+

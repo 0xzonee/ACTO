@@ -548,6 +548,15 @@ async function apiRequest(endpoint, options = {}) {
     }
 }
 
+// ============================================================
+// KEYS LIST STATE MANAGEMENT
+// ============================================================
+
+// Pagination and filtering state
+let keysCurrentPage = 1;
+const KEYS_PER_PAGE = 10;
+let selectedKeys = new Set();
+
 // Load and display API keys
 async function loadKeys() {
     if (!accessToken) return;
@@ -564,32 +573,259 @@ async function loadKeys() {
     keysList = result.keys || [];
     window.keysList = keysList;
     
-    if (keysList.length === 0) {
-        keysListEl.innerHTML = '<div class="empty-state"><p>No API keys found. Create your first key above!</p></div>';
-        return;
-    }
+    // Reset state
+    keysCurrentPage = 1;
+    selectedKeys.clear();
+    updateBulkActionsBar();
     
-    keysListEl.innerHTML = keysList.map(key => `
-        <div class="key-item">
-            <div class="key-info">
-                <h3>${escapeHtml(key.name)}</h3>
-                <p><strong>ID:</strong> ${escapeHtml(key.key_id)}</p>
-                <p><strong>Created:</strong> ${new Date(key.created_at).toLocaleString()}</p>
-                ${key.last_used_at ? `<p><strong>Last Used:</strong> ${new Date(key.last_used_at).toLocaleString()}</p>` : '<p><strong>Last Used:</strong> Never</p>'}
-                ${key.request_count !== undefined ? `<p><strong>Requests:</strong> ${key.request_count}</p>` : ''}
-                <p><strong>Status:</strong> <span class="status-badge status-${key.is_active ? 'active' : 'inactive'}">${key.is_active ? 'Active' : 'Inactive'}</span></p>
-            </div>
-            <div class="key-actions">
-                ${key.is_active ? `<button class="btn btn-danger" onclick="deleteKey('${key.key_id}')">Delete</button>` : ''}
-            </div>
-        </div>
-    `).join('');
+    // Render with current filters
+    filterAndRenderKeys();
     
     // Also update stats tab if it's visible
     if (document.getElementById('tab-stats').classList.contains('active')) {
         loadStatsKeys();
     }
 }
+
+// Filter, sort and render keys
+window.filterAndRenderKeys = function() {
+    const searchTerm = (document.getElementById('keysSearch')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('keysFilterStatus')?.value || 'all';
+    const sortBy = document.getElementById('keysSort')?.value || 'created_desc';
+    
+    // Filter keys
+    let filteredKeys = keysList.filter(key => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+            key.name.toLowerCase().includes(searchTerm) ||
+            key.key_id.toLowerCase().includes(searchTerm);
+        
+        // Status filter
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'active' && key.is_active) ||
+            (statusFilter === 'inactive' && !key.is_active);
+        
+        return matchesSearch && matchesStatus;
+    });
+    
+    // Sort keys
+    filteredKeys.sort((a, b) => {
+        switch (sortBy) {
+            case 'created_asc':
+                return new Date(a.created_at) - new Date(b.created_at);
+            case 'created_desc':
+                return new Date(b.created_at) - new Date(a.created_at);
+            case 'name_asc':
+                return a.name.localeCompare(b.name);
+            case 'name_desc':
+                return b.name.localeCompare(a.name);
+            case 'used_desc':
+                const aUsed = a.last_used_at ? new Date(a.last_used_at) : new Date(0);
+                const bUsed = b.last_used_at ? new Date(b.last_used_at) : new Date(0);
+                return bUsed - aUsed;
+            case 'requests_desc':
+                return (b.request_count || 0) - (a.request_count || 0);
+            default:
+                return 0;
+        }
+    });
+    
+    // Calculate pagination
+    const totalKeys = filteredKeys.length;
+    const totalPages = Math.ceil(totalKeys / KEYS_PER_PAGE);
+    
+    // Adjust current page if needed
+    if (keysCurrentPage > totalPages) {
+        keysCurrentPage = Math.max(1, totalPages);
+    }
+    
+    // Get current page items
+    const startIndex = (keysCurrentPage - 1) * KEYS_PER_PAGE;
+    const pageKeys = filteredKeys.slice(startIndex, startIndex + KEYS_PER_PAGE);
+    
+    // Render keys
+    renderKeysList(pageKeys, totalKeys);
+    
+    // Update pagination UI
+    updatePagination(totalPages, totalKeys);
+};
+
+// Render the keys list
+function renderKeysList(keys, totalCount) {
+    const keysListEl = document.getElementById('keysList');
+    
+    if (totalCount === 0 && keysList.length === 0) {
+        keysListEl.innerHTML = '<div class="empty-state"><p>No API keys found. Create your first key above!</p></div>';
+        return;
+    }
+    
+    if (keys.length === 0) {
+        keysListEl.innerHTML = '<div class="empty-state"><p>No keys match your search criteria.</p></div>';
+        return;
+    }
+    
+    keysListEl.innerHTML = keys.map(key => `
+        <div class="key-item ${key.is_active ? '' : 'key-disabled'} ${selectedKeys.has(key.key_id) ? 'selected' : ''}" data-key-id="${key.key_id}">
+            <div class="key-select">
+                <input type="checkbox" 
+                    class="key-checkbox" 
+                    ${selectedKeys.has(key.key_id) ? 'checked' : ''} 
+                    onchange="toggleKeySelection('${key.key_id}', this.checked)">
+            </div>
+            <div class="key-info">
+                <h3>${escapeHtml(key.name)}</h3>
+                <p class="key-id-row">
+                    <strong>ID:</strong> 
+                    <code class="key-id-value">${escapeHtml(key.key_id)}</code>
+                    <button class="btn-copy" onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(key.key_id)}', this)" title="Copy Key ID">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </p>
+                <p><strong>Created:</strong> ${new Date(key.created_at).toLocaleString()}</p>
+                ${key.last_used_at ? `<p><strong>Last Used:</strong> ${new Date(key.last_used_at).toLocaleString()}</p>` : '<p><strong>Last Used:</strong> Never</p>'}
+                ${key.request_count !== undefined ? `<p><strong>Requests:</strong> ${key.request_count}</p>` : ''}
+                <p><strong>Status:</strong> <span class="status-badge status-${key.is_active ? 'active' : 'inactive'}">${key.is_active ? 'Active' : 'Inactive'}</span></p>
+            </div>
+            <div class="key-actions">
+                <button class="btn btn-icon" onclick="event.stopPropagation(); openRenameModal('${key.key_id}', ${JSON.stringify(key.name)})" title="Rename">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <button class="btn btn-toggle ${key.is_active ? 'active' : ''}" onclick="event.stopPropagation(); toggleKey('${key.key_id}', ${key.is_active})" title="${key.is_active ? 'Disable Key' : 'Enable Key'}">
+                    <span class="toggle-track">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </button>
+                <button class="btn btn-danger" onclick="event.stopPropagation(); openDeleteModal('${key.key_id}', ${JSON.stringify(key.name)})" title="Delete Key">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update pagination UI
+function updatePagination(totalPages, totalCount) {
+    const paginationEl = document.getElementById('keysPagination');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const infoEl = document.getElementById('paginationInfo');
+    
+    // Show/hide pagination
+    if (totalCount > KEYS_PER_PAGE) {
+        paginationEl.classList.remove('hidden');
+    } else {
+        paginationEl.classList.add('hidden');
+    }
+    
+    // Update buttons
+    prevBtn.disabled = keysCurrentPage <= 1;
+    nextBtn.disabled = keysCurrentPage >= totalPages;
+    
+    // Update info text
+    const startItem = ((keysCurrentPage - 1) * KEYS_PER_PAGE) + 1;
+    const endItem = Math.min(keysCurrentPage * KEYS_PER_PAGE, totalCount);
+    infoEl.textContent = `${startItem}-${endItem} of ${totalCount}`;
+}
+
+// Change page
+window.changePage = function(delta) {
+    keysCurrentPage += delta;
+    filterAndRenderKeys();
+};
+
+// ============================================================
+// BULK SELECTION FUNCTIONS
+// ============================================================
+
+// Toggle single key selection
+window.toggleKeySelection = function(keyId, checked) {
+    if (checked) {
+        selectedKeys.add(keyId);
+    } else {
+        selectedKeys.delete(keyId);
+    }
+    
+    // Update UI
+    const keyItem = document.querySelector(`[data-key-id="${keyId}"]`);
+    if (keyItem) {
+        keyItem.classList.toggle('selected', checked);
+    }
+    
+    updateBulkActionsBar();
+};
+
+// Toggle select all
+window.toggleSelectAll = function(checked) {
+    const checkboxes = document.querySelectorAll('.key-checkbox');
+    checkboxes.forEach(cb => {
+        const keyItem = cb.closest('.key-item');
+        const keyId = keyItem?.dataset.keyId;
+        if (keyId) {
+            cb.checked = checked;
+            if (checked) {
+                selectedKeys.add(keyId);
+                keyItem.classList.add('selected');
+            } else {
+                selectedKeys.delete(keyId);
+                keyItem.classList.remove('selected');
+            }
+        }
+    });
+    
+    updateBulkActionsBar();
+};
+
+// Clear selection
+window.clearSelection = function() {
+    selectedKeys.clear();
+    document.querySelectorAll('.key-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.key-item.selected').forEach(item => item.classList.remove('selected'));
+    document.getElementById('selectAllKeys').checked = false;
+    updateBulkActionsBar();
+};
+
+// Update bulk actions bar visibility
+function updateBulkActionsBar() {
+    const bar = document.getElementById('bulkActionsBar');
+    const countEl = document.getElementById('selectedCount');
+    const selectAllCb = document.getElementById('selectAllKeys');
+    
+    if (selectedKeys.size > 0) {
+        bar.classList.remove('hidden');
+        countEl.textContent = `${selectedKeys.size} selected`;
+    } else {
+        bar.classList.add('hidden');
+    }
+    
+    // Update "select all" checkbox state
+    const visibleCheckboxes = document.querySelectorAll('.key-checkbox');
+    if (visibleCheckboxes.length > 0 && selectedKeys.size === visibleCheckboxes.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+    } else if (selectedKeys.size > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+    } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+    }
+}
+
+// Bulk delete keys
+window.bulkDeleteKeys = function() {
+    if (selectedKeys.size === 0) return;
+    
+    openDeleteModal(null, null, Array.from(selectedKeys));
+};
 
 // Load keys for statistics view (silent - no alerts on error)
 async function loadStatsKeys() {
@@ -728,21 +964,322 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Delete API key
-window.deleteKey = async function(keyId) {
-    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+// ============================================================
+// DELETE CONFIRMATION MODAL
+// ============================================================
+
+// Current delete context
+let deleteContext = { keyId: null, keyName: null, keyIds: null };
+
+// Open delete confirmation modal
+window.openDeleteModal = function(keyId, keyName, keyIds = null) {
+    deleteContext = { keyId, keyName, keyIds };
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('deleteModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'deleteModal';
+        modal.className = 'delete-modal';
+        document.body.appendChild(modal);
+    }
+    
+    // Determine content based on single or bulk delete
+    const isBulk = keyIds && keyIds.length > 0;
+    const count = isBulk ? keyIds.length : 1;
+    const title = isBulk ? `Delete ${count} API Keys?` : 'Delete API Key?';
+    const message = isBulk
+        ? `Are you sure you want to delete <strong>${count} API keys</strong>? This action cannot be undone.`
+        : `Are you sure you want to delete the API key <strong>"${escapeHtml(keyName || 'Unknown')}"</strong>? This action cannot be undone.`;
+    
+    modal.innerHTML = `
+        <div class="delete-modal-overlay" onclick="closeDeleteModal()"></div>
+        <div class="delete-modal-content">
+            <div class="delete-modal-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="delete-modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete${isBulk ? ` (${count})` : ''}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Show modal
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+};
+
+// Close delete modal
+window.closeDeleteModal = function() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    deleteContext = { keyId: null, keyName: null, keyIds: null };
+};
+
+// Confirm delete action
+window.confirmDelete = async function() {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Deleting...';
+    
+    const { keyId, keyIds } = deleteContext;
+    const isBulk = keyIds && keyIds.length > 0;
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    if (isBulk) {
+        // Bulk delete
+        for (const id of keyIds) {
+            const result = await apiRequest(`/v1/keys/${id}`, {
+                method: 'DELETE',
+                silent: true
+            });
+            if (result && result.success) {
+                localStorage.removeItem(`api_key_${id}`);
+                successCount++;
+            } else {
+                failCount++;
+            }
+        }
+    } else if (keyId) {
+        // Single delete
+        const result = await apiRequest(`/v1/keys/${keyId}`, {
+            method: 'DELETE',
+        });
+        if (result && result.success) {
+            localStorage.removeItem(`api_key_${keyId}`);
+            successCount = 1;
+        } else {
+            failCount = 1;
+        }
+    }
+    
+    closeDeleteModal();
+    
+    // Show result message
+    if (successCount > 0 && failCount === 0) {
+        showAlert(`${successCount} API key${successCount > 1 ? 's' : ''} deleted successfully`, 'success');
+    } else if (successCount > 0 && failCount > 0) {
+        showAlert(`Deleted ${successCount} key${successCount > 1 ? 's' : ''}, ${failCount} failed`, 'warning');
+    } else {
+        showAlert('Failed to delete API key(s)', 'error');
+    }
+    
+    // Clear selection and reload
+    selectedKeys.clear();
+    updateBulkActionsBar();
+    await loadKeys();
+};
+
+// Legacy delete function (now opens modal)
+window.deleteKey = function(keyId) {
+    const key = keysList.find(k => k.key_id === keyId);
+    openDeleteModal(keyId, key?.name || 'Unknown');
+};
+
+// ============================================================
+// COPY TO CLIPBOARD FUNCTION
+// ============================================================
+
+// Copy newly created API key
+window.copyNewApiKey = async function() {
+    const keyValue = document.getElementById('newKeyValue').textContent;
+    const btn = document.getElementById('copyNewKeyBtn');
+    
+    try {
+        await navigator.clipboard.writeText(keyValue);
+        
+        btn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Copied!</span>
+        `;
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+            btn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Copy Key</span>
+            `;
+            btn.classList.remove('copied');
+        }, 3000);
+        
+        showAlert('API key copied to clipboard!', 'success');
+    } catch (err) {
+        showAlert('Failed to copy to clipboard', 'error');
+    }
+};
+
+// Copy text to clipboard with visual feedback
+window.copyToClipboard = async function(text, buttonEl) {
+    try {
+        await navigator.clipboard.writeText(text);
+        
+        // Visual feedback on button
+        if (buttonEl) {
+            const originalHTML = buttonEl.innerHTML;
+            buttonEl.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Copied!
+            `;
+            buttonEl.classList.add('copied');
+            
+            setTimeout(() => {
+                buttonEl.innerHTML = originalHTML;
+                buttonEl.classList.remove('copied');
+            }, 2000);
+        }
+        
+        showAlert('Copied to clipboard!', 'success');
+    } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showAlert('Copied to clipboard!', 'success');
+        } catch (e) {
+            showAlert('Failed to copy to clipboard', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
+};
+
+// ============================================================
+// RENAME API KEY FUNCTIONS
+// ============================================================
+
+// Open rename modal
+window.openRenameModal = function(keyId, currentName) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('renameModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'renameModal';
+        modal.className = 'rename-modal';
+        modal.innerHTML = `
+            <div class="rename-modal-overlay" onclick="closeRenameModal()"></div>
+            <div class="rename-modal-content">
+                <div class="rename-modal-header">
+                    <h3>Rename API Key</h3>
+                    <button class="modal-close" onclick="closeRenameModal()">&times;</button>
+                </div>
+                <div class="rename-modal-body">
+                    <div class="form-group">
+                        <label for="renameKeyInput">New Name</label>
+                        <input type="text" id="renameKeyInput" placeholder="Enter new name..." autocomplete="off">
+                    </div>
+                    <input type="hidden" id="renameKeyId">
+                </div>
+                <div class="rename-modal-footer">
+                    <button class="btn btn-secondary" onclick="closeRenameModal()">Cancel</button>
+                    <button class="btn btn-primary" id="renameSubmitBtn" onclick="submitRename()">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Set values
+    document.getElementById('renameKeyInput').value = currentName;
+    document.getElementById('renameKeyId').value = keyId;
+    
+    // Show modal
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus input
+    setTimeout(() => {
+        document.getElementById('renameKeyInput').focus();
+        document.getElementById('renameKeyInput').select();
+    }, 100);
+};
+
+// Close rename modal
+window.closeRenameModal = function() {
+    const modal = document.getElementById('renameModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+};
+
+// Submit rename
+window.submitRename = async function() {
+    const keyId = document.getElementById('renameKeyId').value;
+    const newName = document.getElementById('renameKeyInput').value.trim();
+    const submitBtn = document.getElementById('renameSubmitBtn');
+    
+    if (!newName) {
+        showAlert('Please enter a name', 'error');
         return;
     }
     
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Saving... <span class="loading"></span>';
+    
     const result = await apiRequest(`/v1/keys/${keyId}`, {
-        method: 'DELETE',
+        method: 'PATCH',
+        body: JSON.stringify({ name: newName }),
+    });
+    
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Save Changes';
+    
+    if (result && result.success) {
+        closeRenameModal();
+        showAlert('API key renamed successfully', 'success');
+        await loadKeys();
+    }
+};
+
+// ============================================================
+// TOGGLE API KEY FUNCTIONS
+// ============================================================
+
+// Toggle API key active state
+window.toggleKey = async function(keyId, currentState) {
+    const action = currentState ? 'disable' : 'enable';
+    if (!confirm(`Are you sure you want to ${action} this API key?`)) {
+        return;
+    }
+    
+    const result = await apiRequest(`/v1/keys/${keyId}/toggle`, {
+        method: 'POST',
     });
     
     if (result && result.success) {
-        // Remove from localStorage
-        localStorage.removeItem(`api_key_${keyId}`);
-        
-        showAlert('API key deleted successfully', 'success');
+        const newState = result.is_active ? 'enabled' : 'disabled';
+        showAlert(`API key ${newState} successfully`, 'success');
         await loadKeys();
     }
 };
@@ -754,10 +1291,21 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Close modal on Escape key
+// Close modals on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeWalletModal();
+        closeRenameModal();
+        closeDeleteModal();
+    }
+    
+    // Submit rename on Enter (if rename modal is open)
+    if (e.key === 'Enter') {
+        const renameModal = document.getElementById('renameModal');
+        if (renameModal && renameModal.classList.contains('show')) {
+            e.preventDefault();
+            submitRename();
+        }
     }
 });
 

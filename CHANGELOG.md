@@ -5,6 +5,61 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2025-12-21
+
+### 🏗️ Modular Codebase Refactoring
+
+This release focuses on code organization and maintainability by splitting the codebase into logical, reusable modules.
+
+#### Added
+
+- **Modular JavaScript Architecture** (`static/js/`)
+  - `core.js` - Global state, API helpers, alerts, tab navigation
+  - `wallet.js` - Wallet connection, multi-wallet support, authentication
+  - `clipboard.js` - Copy-to-clipboard functionality
+  - `modals.js` - Rename and delete confirmation dialogs
+  - `keys.js` - API key CRUD, filtering, pagination, bulk actions
+  - `wallet-stats.js` - Wallet statistics and activity charts
+  - `playground.js` - API playground endpoint testing
+
+- **Modular CSS Architecture** (`static/css/`)
+  - `base.css` - CSS variables, reset, container, cards
+  - `buttons.css` - All button variants (primary, secondary, danger, toggle, copy)
+  - `forms.css` - Input fields, select, textarea styling
+  - `alerts.css` - Notification alerts, status badges
+  - `modals.css` - Wallet, rename, delete modal styles
+  - `keys.css` - Key list, search, filter, pagination
+  - `stats.css` - Statistics grid, activity charts, breakdowns
+  - `playground.css` - API playground, response display
+  - `fleet.css` - Fleet device management
+  - `balance.css` - Insufficient balance screen
+  - `responsive.css` - Mobile and tablet adaptations
+
+- **Backend Router Modules** (`acto_server/routers/`)
+  - `auth.py` - Wallet authentication, JWT endpoints
+  - `keys.py` - API key management endpoints
+  - `proofs.py` - Proof submission, verification, search
+  - `access.py` - Token gating, access control
+  - `stats.py` - Wallet statistics endpoints
+  - `fleet.py` - Fleet management endpoints
+
+#### Changed
+
+- Dashboard now loads modular JS/CSS instead of monolithic files
+- Better separation of concerns for easier maintenance
+- Improved code reusability across modules
+- Smaller file sizes for faster development iteration
+
+#### Benefits
+
+- ✅ Better maintainability - each module has clear responsibility
+- ✅ Easier development - changes in one area don't affect others
+- ✅ Reusability - modules can be imported individually
+- ✅ Readability - smaller files are easier to understand
+- ✅ Team collaboration - fewer merge conflicts
+
+---
+
 ## [0.7.1] - 2025-12-21
 
 ### 🔧 Fleet Improvements

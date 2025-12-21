@@ -43,6 +43,9 @@ from .schemas import (
     ApiKeyDeleteResponse,
     ApiKeyListResponse,
     ApiKeyStatsResponse,
+    ApiKeyToggleResponse,
+    ApiKeyUpdateRequest,
+    ApiKeyUpdateResponse,
     BatchVerifyRequest,
     BatchVerifyResponse,
     BatchVerifyResult,
@@ -466,7 +469,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=f"Failed to create API key: {str(e)}") from e
 
     @app.get("/v1/keys", response_model=ApiKeyListResponse, dependencies=[Depends(require_jwt(jwt_manager))])
-    def list_api_keys(request: Request) -> ApiKeyListResponse:
+    def list_api_keys(request: Request, include_inactive: bool = True) -> ApiKeyListResponse:
         """List all your API keys (without the actual key values)."""
         try:
             # Get current user from JWT token
@@ -475,7 +478,7 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=401, detail="Authentication required")
             
             user_id = current_user.get("user_id")
-            keys = api_key_store.list_keys(user_id=user_id, include_inactive=False)
+            keys = api_key_store.list_keys(user_id=user_id, include_inactive=include_inactive)
             metrics.inc("acto.keys.list")
             return ApiKeyListResponse(keys=keys)
         except HTTPException:
@@ -527,6 +530,57 @@ def create_app() -> FastAPI:
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to get API key statistics: {str(e)}") from e
+
+    @app.patch("/v1/keys/{key_id}", response_model=ApiKeyUpdateResponse, dependencies=[Depends(require_jwt(jwt_manager))])
+    def update_api_key(key_id: str, req: ApiKeyUpdateRequest, request: Request) -> ApiKeyUpdateResponse:
+        """Update an API key's name."""
+        try:
+            # Get current user from JWT token
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            result = api_key_store.update_key(key_id, name=req.name, user_id=user_id)
+            if not result:
+                raise HTTPException(status_code=404, detail="API key not found")
+            
+            metrics.inc("acto.keys.update")
+            return ApiKeyUpdateResponse(
+                success=True,
+                key_id=result["key_id"],
+                name=result["name"],
+                is_active=result["is_active"],
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update API key: {str(e)}") from e
+
+    @app.post("/v1/keys/{key_id}/toggle", response_model=ApiKeyToggleResponse, dependencies=[Depends(require_jwt(jwt_manager))])
+    def toggle_api_key(key_id: str, request: Request) -> ApiKeyToggleResponse:
+        """Toggle an API key's active state (enable/disable)."""
+        try:
+            # Get current user from JWT token
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            result = api_key_store.toggle_key(key_id, user_id=user_id)
+            if not result:
+                raise HTTPException(status_code=404, detail="API key not found")
+            
+            metrics.inc("acto.keys.toggle")
+            return ApiKeyToggleResponse(
+                success=True,
+                key_id=result["key_id"],
+                is_active=result["is_active"],
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to toggle API key: {str(e)}") from e
 
     # Configuration endpoint - public, no auth required
     @app.get("/v1/config/token-gating", response_model=TokenGatingConfigResponse)

@@ -24,7 +24,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- CSS Modules -->
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/buttons.css">
+    <link rel="stylesheet" href="/static/css/forms.css">
+    <link rel="stylesheet" href="/static/css/alerts.css">
+    <link rel="stylesheet" href="/static/css/modals.css">
+    <link rel="stylesheet" href="/static/css/keys.css">
+    <link rel="stylesheet" href="/static/css/stats.css">
+    <link rel="stylesheet" href="/static/css/playground.css">
+    <link rel="stylesheet" href="/static/css/fleet.css">
+    <link rel="stylesheet" href="/static/css/balance.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
     <link rel="stylesheet" href="/static/css/navigation.css">
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
 </head>
@@ -116,7 +127,16 @@
                     <div id="newKeyDisplay" class="new-key-display">
                         <h3>API Key Created Successfully</h3>
                         <p>Copy this key now - you won't be able to see it again:</p>
-                        <div class="key-value" id="newKeyValue"></div>
+                        <div class="key-value-container">
+                            <div class="key-value" id="newKeyValue"></div>
+                            <button class="btn btn-copy-key" id="copyNewKeyBtn" onclick="copyNewApiKey()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Copy Key</span>
+                            </button>
+                        </div>
                         <div class="warning">
                             <strong>Important:</strong> Store this key securely. It will not be shown again after you close this dialog.
                         </div>
@@ -124,11 +144,74 @@
                 </div>
                 
                 <div class="card">
-                    <h2>Your API Keys</h2>
+                    <div class="keys-header">
+                        <h2>Your API Keys</h2>
+                        <div class="keys-toolbar">
+                            <!-- Search -->
+                            <div class="search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <input type="text" id="keysSearch" placeholder="Search keys..." oninput="filterAndRenderKeys()">
+                            </div>
+                            <!-- Filter by Status -->
+                            <select id="keysFilterStatus" onchange="filterAndRenderKeys()">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <!-- Sort -->
+                            <select id="keysSort" onchange="filterAndRenderKeys()">
+                                <option value="created_desc">Newest First</option>
+                                <option value="created_asc">Oldest First</option>
+                                <option value="name_asc">Name A-Z</option>
+                                <option value="name_desc">Name Z-A</option>
+                                <option value="used_desc">Recently Used</option>
+                                <option value="requests_desc">Most Requests</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Actions Bar -->
+                    <div id="bulkActionsBar" class="bulk-actions-bar hidden">
+                        <div class="bulk-info">
+                            <input type="checkbox" id="selectAllKeys" onchange="toggleSelectAll(this.checked)">
+                            <span id="selectedCount">0 selected</span>
+                        </div>
+                        <div class="bulk-buttons">
+                            <button class="btn btn-danger" onclick="bulkDeleteKeys()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Delete Selected
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearSelection()">Cancel</button>
+                        </div>
+                    </div>
+                    
                     <div id="keysList" class="keys-list">
                         <div class="empty-state">
                             <p>Loading keys...</p>
                         </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div id="keysPagination" class="pagination hidden">
+                        <button class="btn btn-pagination" id="prevPageBtn" onclick="changePage(-1)" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Previous
+                        </button>
+                        <span class="pagination-info" id="paginationInfo">Page 1 of 1</span>
+                        <button class="btn btn-pagination" id="nextPageBtn" onclick="changePage(1)" disabled>
+                            Next
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -410,8 +493,16 @@
         <div class="modal-content"></div>
     </div>
     
+    <!-- Core modules (order matters) -->
+    <script src="/static/js/core.js" defer></script>
+    <script src="/static/js/wallet.js" defer></script>
+    <script src="/static/js/clipboard.js" defer></script>
+    <script src="/static/js/modals.js" defer></script>
+    <script src="/static/js/keys.js" defer></script>
+    <script src="/static/js/wallet-stats.js" defer></script>
+    <script src="/static/js/playground.js" defer></script>
+    <!-- Feature modules -->
     <script src="/static/js/docs.js" defer></script>
-    <script src="/static/js/dashboard.js" defer></script>
     <script src="/static/js/stats.js" defer></script>
     <script src="/static/js/fleet.js" defer></script>
 </body>

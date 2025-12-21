@@ -306,3 +306,40 @@ class ApiKeyStore:
                 return True
         return False
 
+    def update_key(self, key_id: str, name: str | None = None, user_id: str | None = None) -> dict[str, Any] | None:
+        """Update an API key's metadata. Returns updated key data or None if not found."""
+        with self.Session() as session:
+            query = session.query(ApiKeyRecord).filter(ApiKeyRecord.key_id == key_id)
+            if user_id:
+                query = query.filter(ApiKeyRecord.user_id == user_id)
+            record = query.first()
+            if record:
+                if name is not None:
+                    record.name = name
+                session.commit()
+                return {
+                    "key_id": record.key_id,
+                    "name": record.name,
+                    "is_active": record.is_active,
+                    "created_at": record.created_at,
+                    "last_used_at": record.last_used_at,
+                }
+        return None
+
+    def toggle_key(self, key_id: str, user_id: str | None = None) -> dict[str, Any] | None:
+        """Toggle an API key's active state. Returns updated key data or None if not found."""
+        with self.Session() as session:
+            query = session.query(ApiKeyRecord).filter(ApiKeyRecord.key_id == key_id)
+            if user_id:
+                query = query.filter(ApiKeyRecord.user_id == user_id)
+            record = query.first()
+            if record:
+                record.is_active = not record.is_active
+                session.commit()
+                return {
+                    "key_id": record.key_id,
+                    "name": record.name,
+                    "is_active": record.is_active,
+                }
+        return None
+

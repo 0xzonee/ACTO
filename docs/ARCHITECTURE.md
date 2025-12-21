@@ -1,5 +1,7 @@
 # ACTO Architecture
 
+## Overview
+
 Layers:
 
 1. SDK (`acto/`)
@@ -12,6 +14,54 @@ Principles:
 - Deterministic hashing + Ed25519 signatures
 - Optional Solana integrations are isolated behind lazy imports
 - Security-first design with comprehensive authentication and authorization
+- Modular codebase for maintainability and reusability
+
+## Dashboard Architecture (v0.7.2)
+
+The dashboard follows a modular architecture for better maintainability:
+
+### JavaScript Modules (`acto_server/static/js/`)
+
+| Module | Responsibility |
+|--------|---------------|
+| `core.js` | Global state, API helpers, alerts, tab navigation, keyboard handlers |
+| `wallet.js` | Multi-wallet support (Phantom, Solflare, Backpack, Glow, Coinbase) |
+| `clipboard.js` | Copy-to-clipboard functionality with visual feedback |
+| `modals.js` | Rename and delete confirmation dialogs |
+| `keys.js` | API key CRUD, filtering, pagination, bulk actions |
+| `wallet-stats.js` | Wallet statistics, activity charts, breakdowns |
+| `playground.js` | API playground endpoint testing |
+| `docs.js` | Documentation rendering |
+| `stats.js` | Statistics display |
+| `fleet.js` | Fleet device management |
+
+### CSS Modules (`acto_server/static/css/`)
+
+| Module | Responsibility |
+|--------|---------------|
+| `base.css` | CSS variables, reset, layout, cards |
+| `buttons.css` | All button variants |
+| `forms.css` | Input, select, textarea |
+| `alerts.css` | Notifications, status badges |
+| `modals.css` | Modal dialogs |
+| `keys.css` | Key management UI |
+| `stats.css` | Statistics components |
+| `playground.css` | API playground |
+| `fleet.css` | Fleet management |
+| `balance.css` | Balance error screen |
+| `responsive.css` | Mobile adaptations |
+| `navigation.css` | Tab navigation |
+
+### Backend Router Modules (`acto_server/routers/`)
+
+| Router | Endpoints |
+|--------|-----------|
+| `auth.py` | `/v1/auth/wallet/connect`, `/v1/auth/wallet/verify`, `/v1/auth/me` |
+| `keys.py` | `/v1/keys` (CRUD), `/v1/keys/{id}/toggle`, `/v1/keys/{id}/stats` |
+| `proofs.py` | `/v1/proofs`, `/v1/verify`, `/v1/verify/batch`, `/v1/proofs/search` |
+| `access.py` | `/v1/access/check`, `/v1/config/token-gating` |
+| `stats.py` | `/v1/stats/wallet/{address}` |
+| `fleet.py` | `/v1/fleet` |
 
 ## Security Layer (v0.3.1)
 

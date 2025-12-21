@@ -4,7 +4,7 @@
 
 Generate deterministic, signed execution proofs from robot telemetry and logs. Verify proofs locally or via API. Fast, gas-free verification.
 
-[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/actobotics/ACTO)
+[![Version](https://img.shields.io/badge/version-0.7.2-blue.svg)](https://github.com/actobotics/ACTO)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---

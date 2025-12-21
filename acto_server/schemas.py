@@ -56,6 +56,23 @@ class ApiKeyDeleteResponse(BaseModel):
     key_id: str
 
 
+class ApiKeyUpdateRequest(BaseModel):
+    name: str | None = None
+
+
+class ApiKeyUpdateResponse(BaseModel):
+    success: bool
+    key_id: str
+    name: str
+    is_active: bool
+
+
+class ApiKeyToggleResponse(BaseModel):
+    success: bool
+    key_id: str
+    is_active: bool
+
+
 class WalletConnectRequest(BaseModel):
     wallet_address: str
 

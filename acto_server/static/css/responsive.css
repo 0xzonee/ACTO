@@ -1,0 +1,207 @@
+/* ============================================
+   ACTO Dashboard - Responsive Styles
+   Mobile and tablet adaptations
+   ============================================ */
+
+/* Tablet Breakpoint */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 900px) {
+    .fleet-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .fleet-device {
+        flex-wrap: wrap;
+    }
+    
+    .fleet-device-stats {
+        order: 3;
+        width: 100%;
+        margin: 12px 0 0 60px;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .wallet-info {
+        text-align: left;
+        width: 100%;
+    }
+
+    .card {
+        padding: 24px;
+    }
+
+    .login-card {
+        padding: 60px 24px;
+    }
+    
+    .wallet-modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .wallet-modal-header,
+    .wallet-modal-body {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .playground-config {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .endpoint-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .endpoint-desc {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .breakdown-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+    }
+    
+    /* Keys Responsive */
+    .keys-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .keys-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .search-box input {
+        width: 100%;
+    }
+    
+    .search-box input:focus {
+        width: 100%;
+    }
+    
+    .keys-toolbar select {
+        width: 100%;
+    }
+    
+    .bulk-actions-bar {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .bulk-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .bulk-buttons .btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .key-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        position: relative;
+        padding-right: 50px;
+    }
+    
+    .key-select {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+    }
+    
+    .key-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .key-id-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .btn-copy-key {
+        width: 100%;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn-pagination {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Balance Screen */
+    .balance-error-card {
+        padding: 32px 24px;
+    }
+    
+    .balance-error-card h2 {
+        font-size: 20px;
+    }
+    
+    .balance-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    /* Fleet */
+    .fleet-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .fleet-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .fleet-device-stats {
+        margin-left: 0;
+    }
+}
+
