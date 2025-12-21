@@ -659,7 +659,58 @@ When rate limited, you'll receive a `429` response. Implement exponential backof
 
 ## Code Examples
 
-### Python
+### Python (SDK - Recommended)
+
+Install the SDK:
+
+```bash
+pip install actobotics
+```
+
+Use the client:
+
+```python
+from acto.client import ACTOClient
+from acto.proof import create_proof
+from acto.crypto import KeyPair
+from acto.telemetry import TelemetryBundle, TelemetryEvent
+
+# Create a proof locally
+keypair = KeyPair.generate()
+bundle = TelemetryBundle(
+    task_id="pick-and-place-001",
+    robot_id="robot-alpha-01",
+    events=[TelemetryEvent(ts="2025-01-15T10:30:00Z", topic="sensor", data={"value": 42})]
+)
+envelope = create_proof(bundle, keypair.private_key_b64, keypair.public_key_b64)
+
+# Connect to hosted API
+client = ACTOClient(
+    api_key="your-api-key",
+    wallet_address="your-wallet-address"
+)
+
+# Submit proof
+proof_id = client.submit_proof(envelope)
+
+# Verify proof
+result = client.verify(envelope)
+print(f"Valid: {result.valid}")
+
+# Search proofs
+results = client.search_proofs(robot_id="robot-alpha-01", limit=10)
+for proof in results.items:
+    print(f"  {proof.task_id}")
+
+# Get wallet stats
+stats = client.get_wallet_stats()
+
+# Fleet management
+fleet = client.fleet.get_overview()
+client.fleet.report_health("robot-alpha-01", cpu_percent=45.2, battery_percent=85.0)
+```
+
+### Python (Direct HTTP)
 
 ```python
 import httpx
@@ -675,11 +726,11 @@ headers = {
 }
 
 # Submit proof
-response = httpx.post(f"{BASE_URL}/v1/proofs", headers=headers, json={"envelope": envelope})
+response = httpx.post(f"{BASE_URL}/v1/proofs", headers=headers, json={"envelope": envelope.model_dump()})
 proof_id = response.json()["proof_id"]
 
 # Verify proof
-response = httpx.post(f"{BASE_URL}/v1/verify", headers=headers, json={"envelope": envelope})
+response = httpx.post(f"{BASE_URL}/v1/verify", headers=headers, json={"envelope": envelope.model_dump()})
 is_valid = response.json()["valid"]
 
 # Search proofs

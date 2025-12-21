@@ -172,8 +172,36 @@ const documentation = {
   body: JSON.stringify({ envelope: {...} })
 })</code></pre>
             
-            <h4>Python Example</h4>
-            <pre><code>import requests
+            <h4>Python SDK (Recommended)</h4>
+            <pre><code># Install: pip install actobotics
+
+from acto.client import ACTOClient
+from acto.proof import create_proof
+from acto.crypto import KeyPair
+from acto.telemetry import TelemetryBundle, TelemetryEvent
+
+# Create proof locally
+keypair = KeyPair.generate()
+bundle = TelemetryBundle(
+    task_id="task-001",
+    robot_id="robot-001",
+    events=[TelemetryEvent(ts="2025-01-01T00:00:00Z", topic="sensor", data={"value": 42})]
+)
+envelope = create_proof(bundle, keypair.private_key_b64, keypair.public_key_b64)
+
+# Submit to API
+client = ACTOClient(api_key="YOUR_API_KEY", wallet_address="YOUR_WALLET")
+proof_id = client.submit_proof(envelope)
+
+# Search proofs
+results = client.search_proofs(robot_id="robot-001")
+
+# Fleet management  
+fleet = client.fleet.get_overview()
+client.fleet.report_health("robot-001", cpu_percent=45.2)</code></pre>
+            
+            <h4>Python (Direct HTTP)</h4>
+            <pre><code>import httpx
 
 headers = {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -181,7 +209,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-response = requests.post(
+response = httpx.post(
     'https://api.actobotics.net/v1/proofs',
     headers=headers,
     json={'envelope': {...}}
