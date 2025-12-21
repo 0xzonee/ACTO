@@ -5,6 +5,72 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-12-21
+
+### 📦 PyPI SDK & API Client
+
+This release introduces the ACTO SDK as a standalone PyPI package and a comprehensive API client for easy integration.
+
+#### Added
+
+- **PyPI Publishing**
+  - SDK now available via `pip install actobotics`
+  - Lightweight package for end users (no server dependencies)
+  - Automatic publishing via GitHub Actions on release/tag
+  - Trusted Publishing with PyPI (no API tokens required)
+
+- **API Client** (`acto.client`)
+  - `ACTOClient` - Synchronous client for the ACTO API
+  - `AsyncACTOClient` - Asynchronous client using httpx
+  - `FleetClient` / `AsyncFleetClient` - Fleet management operations
+  - Full endpoint coverage: proofs, verification, fleet, statistics
+  - Automatic authentication header handling
+  - Typed responses with Pydantic models
+  - Custom exceptions (`ClientError`, `APIResponseError`)
+
+- **New Client Features**
+  - `client.submit_proof(envelope)` - Submit proof to registry
+  - `client.verify(envelope)` - Verify proof remotely
+  - `client.verify_batch(envelopes)` - Batch verification
+  - `client.search_proofs(...)` - Advanced proof search
+  - `client.get_wallet_stats()` - Wallet statistics
+  - `client.fleet.get_overview()` - Fleet overview
+  - `client.fleet.report_health(...)` - Device health reporting
+  - `client.fleet.create_group(...)` - Device group management
+
+- **Dashboard Loading Screen**
+  - Elegant loading animation with ACTO logo
+  - Preloads background image for smooth startup
+  - Fade-in transition when ready
+  - Fallback timeout (max 3 seconds)
+  - No more "white flash" on page load
+
+- **New Files**
+  - `acto/client/__init__.py` - Client module exports
+  - `acto/client/exceptions.py` - Custom exception classes
+  - `acto/client/models.py` - Pydantic request/response models
+  - `acto/client/sync_client.py` - Synchronous client implementation
+  - `acto/client/async_client.py` - Async client implementation
+  - `.github/workflows/publish.yml` - PyPI publishing workflow
+
+#### Changed
+
+- Package name on PyPI: `actobotics` (import as `acto`)
+- `httpx` added to core dependencies for API client
+- CLI server command now shows helpful error if server deps missing
+- Conditional imports for FastAPI in security module
+
+#### Documentation
+
+- Updated README.md with SDK client examples
+- Updated docs/API.md with Python SDK examples
+- Updated dashboard docs.js with SDK code snippets
+- Updated CONTRIBUTING.md with new installation method
+- Updated examples/README.md and Jupyter notebooks
+- Added "Installation" cells to all example notebooks
+
+---
+
 ## [0.8.0] - 2025-12-21
 
 ### 🚀 Fleet Management System
