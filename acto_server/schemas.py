@@ -23,10 +23,10 @@ class VerifyResponse(BaseModel):
 
 
 class AccessCheckRequest(BaseModel):
-    rpc_url: str
+    rpc_url: str = ""  # Optional - empty = use backend's configured RPC (Helius)
     owner: str
     mint: str
-    minimum: float
+    minimum: float = 50000
 
 
 class AccessCheckResponse(BaseModel):
