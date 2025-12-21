@@ -349,7 +349,7 @@ body {
 .VPHero .image-container .image-bg,
 .VPHero .image-container img,
 .VPHero .VPImage {
-  max-width: 50% !important;
+  max-width: 40% !important;
   height: auto !important;
 }
 
