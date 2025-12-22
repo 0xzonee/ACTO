@@ -90,14 +90,16 @@ function showMainContent() {
     document.getElementById('loginCard').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
     
-    if (currentUser) {
+    // Use window.currentUser to ensure we get the value set by wallet.js
+    const user = window.currentUser;
+    if (user) {
         const walletType = localStorage.getItem('acto_wallet_type') || 'wallet';
         const wallet = window.SUPPORTED_WALLETS?.find(w => w.id === walletType);
         const walletName = wallet ? wallet.name : 'Wallet';
         
         document.getElementById('walletAddress').innerHTML = `
             <span class="wallet-type">${walletName}</span>
-            <span class="wallet-addr">${currentUser.wallet_address.substring(0, 4)}...${currentUser.wallet_address.substring(currentUser.wallet_address.length - 4)}</span>
+            <span class="wallet-addr">${user.wallet_address.substring(0, 4)}...${user.wallet_address.substring(user.wallet_address.length - 4)}</span>
         `;
         document.getElementById('walletInfo').style.display = 'block';
     }
