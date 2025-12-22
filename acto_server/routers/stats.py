@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from acto.metrics import MetricsRegistry
 from acto.registry import ProofRegistry
-from acto.security import require_api_key_and_token_balance
+from acto.security import JWTManager, get_current_user_optional, require_jwt
 from acto.security.api_key_store import ApiKeyStore
 from acto.security.user_store import UserStore
 
@@ -21,13 +21,14 @@ def create_stats_router(
     api_key_store: ApiKeyStore,
     user_store: UserStore,
     metrics: MetricsRegistry,
-    settings,
+    jwt_manager: JWTManager,
 ) -> APIRouter:
     """Create statistics router with dependencies."""
     
-    auth_dep = Depends(require_api_key_and_token_balance(api_key_store, settings))
+    # Use JWT authentication (same as other dashboard endpoints)
+    jwt_dep = Depends(require_jwt(jwt_manager))
 
-    @router.get("/wallet/{wallet_address}", response_model=WalletStatsResponse, dependencies=[auth_dep])
+    @router.get("/wallet/{wallet_address}", response_model=WalletStatsResponse, dependencies=[jwt_dep])
     def get_wallet_stats(wallet_address: str, request: Request) -> WalletStatsResponse:
         """
         Get comprehensive statistics for a wallet address.

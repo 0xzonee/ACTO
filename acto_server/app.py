@@ -713,9 +713,9 @@ def create_app() -> FastAPI:
         )
 
     # ============================================================
-    # Wallet Statistics Endpoint
+    # Wallet Statistics Endpoint (JWT authenticated for dashboard)
     # ============================================================
-    @app.get("/v1/stats/wallet/{wallet_address}", response_model=WalletStatsResponse, dependencies=[auth_dependency()])
+    @app.get("/v1/stats/wallet/{wallet_address}", response_model=WalletStatsResponse, dependencies=[Depends(require_jwt(jwt_manager))])
     def get_wallet_stats(wallet_address: str, request: Request) -> WalletStatsResponse:
         """
         Get comprehensive statistics for a wallet address.

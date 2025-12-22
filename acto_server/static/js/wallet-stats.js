@@ -67,9 +67,8 @@ async function loadWalletStats() {
         return;
     }
     
-    const apiKey = await getFirstApiKey();
-    if (!apiKey) {
-        showStatsMessage('Create an API Key in the "Keys" tab to view your wallet statistics', 'warning');
+    if (!window.accessToken) {
+        showStatsMessage('Please reconnect your wallet to view statistics', 'warning');
         setDefaultStats();
         return;
     }
@@ -78,43 +77,15 @@ async function loadWalletStats() {
     showChartsLoading();
     
     try {
-        // Load wallet stats
-        const response = await fetch(`${window.API_BASE}/v1/stats/wallet/${window.currentUser.wallet_address}?days=${currentPeriod}`, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'X-Wallet-Address': window.currentUser.wallet_address
-            }
-        });
+        // Load wallet stats using apiRequest (uses JWT token automatically)
+        const stats = await apiRequest(`/v1/stats/wallet/${window.currentUser.wallet_address}?days=${currentPeriod}`, { silent: true });
         
-        if (response.status === 401) {
-            showStatsMessage('API Key invalid or expired. Try creating a new one in the "Keys" tab.', 'warning');
+        if (!stats) {
+            showStatsMessage('Could not load statistics. Please try refreshing the page.', 'warning');
             setDefaultStats();
             return;
         }
         
-        if (response.status === 403) {
-            showStatsMessage('Insufficient token balance. You need at least 50,000 ACTO tokens.', 'warning');
-            setDefaultStats();
-            return;
-        }
-        
-        if (response.status === 500) {
-            const errorData = await response.json().catch(() => ({}));
-            const detail = errorData.detail || '';
-            if (detail.includes('token balance') || detail.includes('Token balance')) {
-                showStatsMessage('Token balance verification failed. Make sure you have at least 50,000 ACTO tokens in your wallet.', 'warning');
-            } else {
-                showStatsMessage('Server error while loading statistics. Please try again later.', 'error');
-            }
-            setDefaultStats();
-            return;
-        }
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const stats = await response.json();
         currentStats = stats;
         
         // Also load aggregated API key stats
