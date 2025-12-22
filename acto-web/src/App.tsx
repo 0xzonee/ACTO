@@ -5,7 +5,7 @@ import { Home, About, Privacy, Terms } from './pages';
 function App() {
   return (
     <BrowserRouter>
-      <LoadingScreen imagesToPreload={['/hero.png', '/hero2.png', '/hero3.png', '/hero4.png', '/bg1.png', '/bg2.png']} />
+      <LoadingScreen imagesToPreload={['/hero.png', '/hero2.png', '/hero3.png', '/hero4.png', '/bg1.png', '/bg2.png', '/bg3.png', '/bg4.png']} />
       <div className="min-h-screen bg-white text-gray-900">
         <Logo />
         <Navigation />

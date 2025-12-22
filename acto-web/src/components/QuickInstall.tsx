@@ -13,7 +13,10 @@ export function QuickInstall() {
   };
 
   return (
-    <section className="border-t border-gray-200 text-gray-900 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #f5f5f4 0%, #e7e5e4 50%, #f5f5f4 100%)' }}>
+    <section 
+      className="border-t border-gray-200 text-gray-900 relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at center, #fafaf9 0%, #a8a29e 100%)' }}
+    >
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32">
         {/* Centered content */}
         <div className="max-w-3xl mx-auto text-center">

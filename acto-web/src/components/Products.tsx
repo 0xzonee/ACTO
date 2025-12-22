@@ -15,6 +15,7 @@ const products = [
     ],
     cta: 'View on PyPI',
     ctaLink: config.links.pypi,
+    bg: '/bg2.png',
   },
   {
     icon: Server,
@@ -29,6 +30,7 @@ const products = [
     ],
     cta: 'API Documentation',
     ctaLink: config.links.docs + '/api/overview',
+    bg: '/bg1.png',
   },
   {
     icon: LayoutDashboard,
@@ -43,6 +45,7 @@ const products = [
     ],
     cta: 'Open Dashboard',
     ctaLink: config.links.dashboard,
+    bg: '/bg3.png',
   },
   {
     icon: Terminal,
@@ -57,6 +60,7 @@ const products = [
     ],
     cta: 'CLI Documentation',
     ctaLink: config.links.docs + '/cli/overview',
+    bg: '/bg4.png',
   },
 ];
 
@@ -79,8 +83,18 @@ export function Products() {
             return (
               <div
                 key={product.name}
-                className="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-gray-300 hover:shadow-xl transition-all flex flex-col"
+                className="group relative overflow-hidden border border-gray-200 rounded-2xl p-6 hover:border-gray-300 hover:shadow-xl transition-all flex flex-col"
               >
+                {/* Background Image */}
+                <div
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${product.bg})` }}
+                />
+                {/* White overlay for 50% visibility */}
+                <div className="absolute inset-0 bg-white/50" />
+                
+                {/* Content */}
+                <div className="relative z-10 flex flex-col h-full">
                 {/* Icon */}
                 <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-gray-900 transition-colors">
                   <Icon className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
@@ -115,6 +129,7 @@ export function Products() {
                   {product.cta}
                   <ArrowRight size={14} />
                 </a>
+                </div>
               </div>
             );
           })}
