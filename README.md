@@ -209,13 +209,18 @@ API requests automatically verify your wallet holds sufficient tokens (via Heliu
 For manual balance checks via CLI:
 
 ```bash
+# Using configured defaults (recommended)
+acto access check --owner WALLET_ADDRESS
+
+# With explicit parameters
 acto access check \
   --owner WALLET_ADDRESS \
   --mint TOKEN_MINT \
-  --minimum 50000
+  --minimum 50000 \
+  --rpc https://your-rpc-url.com
 ```
 
-> **Note:** The `--rpc` flag is optional. If omitted, defaults to the configured RPC.
+> **Note:** `--mint`, `--minimum`, and `--rpc` are all optional. If omitted, defaults from your configuration (environment variables or `config.toml`) are used.
 
 ---
 

@@ -1629,13 +1629,16 @@ window.executeHealthCheck = async function() {
 };
 
 // Execute Access Check (Token Balance)
-// Token requirements are hardcoded - these are the mandatory requirements for ACTO API access
-const ACTO_TOKEN_MINT = '9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray';
-const ACTO_MINIMUM_BALANCE = 50000;
+// Token requirements are loaded from server config via window.tokenGatingConfig
+// Set by docs.js loadTokenGatingConfig() or fallback to defaults
 
 window.executeAccessCheck = async function() {
     const responseContainer = document.getElementById('accessResponse');
     const apiKey = document.getElementById('playgroundApiKey').value.trim();
+    
+    // Get token config from global (set by docs.js) or use fallbacks
+    const tokenMint = window.tokenGatingConfig?.mint || '';
+    const minimumBalance = window.tokenGatingConfig?.minimum || 50000;
     
     if (!currentUser || !currentUser.wallet_address) {
         responseContainer.innerHTML = formatResponse({ error: 'Please connect your wallet first' }, 400, 0);
@@ -1644,6 +1647,11 @@ window.executeAccessCheck = async function() {
     
     if (!apiKey) {
         responseContainer.innerHTML = formatResponse({ error: 'Please enter your API key' }, 400, 0);
+        return;
+    }
+    
+    if (!tokenMint) {
+        responseContainer.innerHTML = formatResponse({ error: 'Token configuration not loaded. Please refresh the page.' }, 400, 0);
         return;
     }
     
@@ -1662,8 +1670,8 @@ window.executeAccessCheck = async function() {
             },
             body: JSON.stringify({
                 owner: currentUser.wallet_address,
-                mint: ACTO_TOKEN_MINT,
-                minimum: ACTO_MINIMUM_BALANCE
+                mint: tokenMint,
+                minimum: minimumBalance
             })
         });
         

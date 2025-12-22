@@ -3,9 +3,27 @@
 // Test API endpoints directly from the browser
 // ============================================================
 
-// Token requirements (hardcoded - mandatory for ACTO API access)
-const ACTO_TOKEN_MINT = '9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray';
-const ACTO_MINIMUM_BALANCE = 50000;
+// Token requirements - loaded from server config
+// These are fallback defaults, actual values come from /v1/config/token-gating
+let ACTO_TOKEN_MINT = '';
+let ACTO_MINIMUM_BALANCE = 50000;
+
+// Load token gating configuration from server
+async function loadPlaygroundConfig() {
+    try {
+        const response = await fetch(`${window.API_BASE || window.location.origin}/v1/config/token-gating`);
+        if (response.ok) {
+            const config = await response.json();
+            ACTO_TOKEN_MINT = config.mint;
+            ACTO_MINIMUM_BALANCE = config.minimum;
+        }
+    } catch (error) {
+        console.error('Failed to load token gating config for playground:', error);
+    }
+}
+
+// Initialize config on module load
+loadPlaygroundConfig();
 
 // ============================================================
 // PLAYGROUND UTILITIES

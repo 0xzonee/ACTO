@@ -46,11 +46,13 @@ window.initDocumentation = function initDocumentation() {
 // Token gating configuration (loaded from API at runtime)
 // These are fallback defaults - actual values come from /v1/config/token-gating
 // Backend uses Helius RPC when ACTO_HELIUS_API_KEY is configured
+// Made global via window.tokenGatingConfig for other modules to access
 let tokenGatingConfig = {
-    mint: "9wpLm21ab8ZMVJWH3pHeqgqNJqWos73G8qDRfaEwtray",
+    mint: "",
     minimum: 50000.0,
-    rpc_url: "https://mainnet.helius-rpc.com"  // Helius (actual key added by backend)
+    rpc_url: ""
 };
+window.tokenGatingConfig = tokenGatingConfig;
 
 // Load token gating configuration from API
 async function loadTokenGatingConfig() {
@@ -59,6 +61,7 @@ async function loadTokenGatingConfig() {
         if (response.ok) {
             const config = await response.json();
             tokenGatingConfig = config;
+            window.tokenGatingConfig = config;  // Update global reference
             // Update documentation with loaded values
             updateDocumentationWithConfig();
         }
@@ -67,6 +70,9 @@ async function loadTokenGatingConfig() {
         // Use defaults if API call fails
     }
 }
+
+// Load config immediately when script loads
+loadTokenGatingConfig();
 
 // Update documentation content with loaded config values
 // Note: This function only updates existing DOM elements, does NOT re-render
