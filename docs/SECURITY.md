@@ -80,7 +80,7 @@ api_auth_enabled = true
 
 ### Rate Limiting
 
-Token bucket rate limiting with automatic cleanup of stale entries.
+Token bucket rate limiting with automatic cleanup of stale entries. Rate limits are applied **per API key** (not per IP), making it fair for robots behind NAT/proxy.
 
 **Configuration:**
 ```toml
@@ -93,6 +93,9 @@ rate_limit_cleanup_interval = 1000  # Cleanup every N requests
 
 **Features:**
 - Token bucket algorithm with configurable rate and burst
+- **API key-based limiting**: Each API key gets its own rate limit bucket
+- Supports thousands of robots without conflicts (even behind same IP/NAT)
+- Unauthenticated endpoints fall back to IP-based limiting
 - Automatic cleanup prevents memory leaks from inactive clients
 - Per-client rate limiting based on IP and endpoint
 

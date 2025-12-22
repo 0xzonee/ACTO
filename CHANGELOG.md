@@ -5,6 +5,30 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.9] - 2025-12-22
+
+### 🔧 Improvements
+
+#### Changed
+
+- **Rate Limiting: API Key-Based** - Rate limiting now uses API key instead of IP address
+  - Fairer distribution for robots behind NAT/proxy (multiple robots sharing same IP)
+  - Each API key gets its own rate limit bucket per endpoint
+  - Unauthenticated endpoints (health, config) fall back to IP-based limiting
+  - Supports thousands of robots without conflicts
+
+- **Dynamic Token Configuration** - Token mint address is now loaded from server config
+  - Frontend (Dashboard, Playground) fetches token config from `/v1/config/token-gating`
+  - No more hardcoded token addresses in JavaScript
+  - Change token via single environment variable: `ACTO_TOKEN_GATING_MINT`
+
+- **CLI Access Check** - Now uses configured defaults
+  - `--mint`, `--minimum`, and `--rpc` are now optional
+  - Falls back to configured ACTO token if not specified
+  - Simpler usage: `acto access check --owner WALLET_ADDRESS`
+
+---
+
 ## [0.9.8] - 2025-12-22
 
 ### 🚀 Performance Optimization

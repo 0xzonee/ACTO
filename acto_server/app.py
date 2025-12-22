@@ -137,8 +137,19 @@ def create_app() -> FastAPI:
         if not settings.rate_limit_enabled:
             return await call_next(request)
 
-        client = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "unknown")
-        key = f"{client}:{request.url.path}"
+        # Prefer API key for rate limiting (fairer for robots behind NAT)
+        # Fall back to IP for unauthenticated endpoints
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            # Use API key (first 16 chars for privacy in logs)
+            api_key = auth_header[7:]
+            identifier = f"key:{api_key[:16]}"
+        else:
+            # Fall back to IP address
+            client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "unknown")
+            identifier = f"ip:{client_ip}"
+        
+        key = f"{identifier}:{request.url.path}"
         try:
             limiter.check(key)
         except AccessError as e:
