@@ -204,23 +204,21 @@ httpx.post(
 
 ## 🔐 Token Gating
 
-API requests automatically verify your wallet holds sufficient tokens (via Helius RPC).
+All API requests are automatically verified server-side to ensure your wallet holds sufficient ACTO tokens.
 
-For manual balance checks via CLI:
+**How it works:**
+- The server verifies your token balance on every protected API call
+- Token mint, minimum balance, and RPC are **enforced server-side** (cannot be manipulated)
+- You only need to provide your wallet address via `X-Wallet-Address` header
+
+**Check your balance (optional):**
 
 ```bash
-# Using configured defaults (recommended)
-acto access check --owner WALLET_ADDRESS
-
-# With explicit parameters
-acto access check \
-  --owner WALLET_ADDRESS \
-  --mint TOKEN_MINT \
-  --minimum 50000 \
-  --rpc https://your-rpc-url.com
+# Quick check if your wallet has enough tokens
+acto access check --owner YOUR_WALLET_ADDRESS
 ```
 
-> **Note:** `--mint`, `--minimum`, and `--rpc` are all optional. If omitted, defaults from your configuration (environment variables or `config.toml`) are used.
+> **Security Note:** The CLI check is just a convenience tool. The actual access control happens server-side with fixed parameters that users cannot override.
 
 ---
 

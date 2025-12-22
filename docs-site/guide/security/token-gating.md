@@ -7,9 +7,13 @@ ACTO uses SPL token-based access control to gate API access.
 To use the ACTO API, you must:
 
 1. **Hold 50,000 ACTO tokens** in your Solana wallet
-2. **Provide your wallet address** with each API request
+2. **Provide your wallet address** with each API request (via `X-Wallet-Address` header)
 
 ## How It Works
+
+::: tip Server-Side Verification
+Token verification is **enforced server-side**. The token mint address, minimum balance, and RPC endpoint are configured on the server and **cannot be manipulated by clients**.
+:::
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -17,9 +21,13 @@ To use the ACTO API, you must:
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  1. Client sends request with wallet address                 │
+│     (X-Wallet-Address header)                                │
 │                    │                                         │
 │                    ▼                                         │
-│  2. Server queries Solana for token balance                  │
+│  2. Server verifies token balance using:                     │
+│     • Fixed ACTO token mint (server config)                  │
+│     • Fixed minimum: 50,000 tokens (server config)           │
+│     • Helius RPC (server config)                             │
 │                    │                                         │
 │                    ▼                                         │
 │  3. Is balance >= 50,000 ACTO?                               │
@@ -31,7 +39,16 @@ To use the ACTO API, you must:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Checking Your Balance
+## Check Your Balance (Optional)
+
+These tools let you **check** if you have enough tokens. They don't grant access - that's always verified server-side.
+
+### Via CLI
+
+```bash
+# Check if your wallet has enough ACTO tokens
+acto access check --owner YOUR_WALLET_ADDRESS
+```
 
 ### Via SDK
 
@@ -40,28 +57,13 @@ from acto.client import ACTOClient
 
 client = ACTOClient(api_key="...", wallet_address="...")
 
-result = client.check_access(
-    owner="YOUR_WALLET_ADDRESS",
-    mint="ACTO_TOKEN_MINT_ADDRESS",
-    minimum=50000
-)
+# Check your own balance
+result = client.check_access(owner="YOUR_WALLET_ADDRESS")
 
-print(f"Allowed: {result.allowed}")
-print(f"Balance: {result.balance}")
-print(f"Reason: {result.reason}")
-```
-
-### Via CLI
-
-```bash
-# Simple (uses configured ACTO token)
-acto access check --owner YOUR_WALLET_ADDRESS
-
-# With explicit parameters
-acto access check \
-  --owner YOUR_WALLET_ADDRESS \
-  --mint ACTO_TOKEN_MINT \
-  --minimum 50000
+if result.allowed:
+    print(f"✅ You have {result.balance} tokens - access granted!")
+else:
+    print(f"❌ Insufficient balance: {result.balance} tokens")
 ```
 
 ### Via API
@@ -71,12 +73,12 @@ curl -X POST https://api.actobotics.net/v1/access/check \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "X-Wallet-Address: YOUR_WALLET" \
   -H "Content-Type: application/json" \
-  -d '{
-    "owner": "YOUR_WALLET_ADDRESS",
-    "mint": "ACTO_TOKEN_MINT",
-    "minimum": 50000
-  }'
+  -d '{"owner": "YOUR_WALLET_ADDRESS"}'
 ```
+
+::: warning Balance Check ≠ Access
+The `/v1/access/check` endpoint is a convenience tool for checking balances. The actual access control on protected endpoints (like `/v1/verify`) uses server-configured values that cannot be overridden.
+:::
 
 ## Response Examples
 

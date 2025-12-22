@@ -1,12 +1,18 @@
 # acto access
 
-Check token balance for API access.
+Check your token balance before making API requests.
+
+::: warning This is a Convenience Tool
+This command only **checks** your balance locally. It does **not** grant API access.
+
+Actual access control is enforced **server-side** with fixed parameters (token mint, minimum balance) that cannot be manipulated.
+:::
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `acto access check` | Check if wallet has sufficient tokens |
+| `acto access check` | Check if wallet has sufficient ACTO tokens |
 
 ## Check Access
 
@@ -19,30 +25,20 @@ acto access check [OPTIONS]
 | Option | Description | Required |
 |--------|-------------|----------|
 | `--owner`, `-o` | Wallet address to check | Yes |
-| `--mint`, `-m` | Token mint address | No (uses configured ACTO token) |
-| `--minimum`, `-min` | Minimum required balance | No (default: 50000) |
-| `--rpc`, `-r` | Solana RPC URL | No (uses configured RPC) |
 
-::: tip Default Configuration
-If `--mint`, `--minimum`, or `--rpc` are not provided, the CLI uses defaults from your configuration (environment variables or `~/.acto/config.toml`).
-:::
+Advanced options (usually not needed):
+
+| Option | Description |
+|--------|-------------|
+| `--mint`, `-m` | Custom token mint (for testing) |
+| `--minimum`, `-min` | Custom minimum (for testing) |
+| `--rpc`, `-r` | Custom RPC URL (for testing) |
 
 ### Examples
 
 ```bash
-# Simple check (uses configured ACTO token)
+# Check if your wallet has enough ACTO tokens
 acto access check --owner 5K8vK...
-
-# With explicit token mint
-acto access check \
-  --owner 5K8vK... \
-  --mint CUSTOM_TOKEN_MINT \
-  --minimum 100000
-
-# With custom RPC
-acto access check \
-  --owner 5K8vK... \
-  --rpc https://your-rpc-url.com
 ```
 
 ### Output
@@ -64,14 +60,4 @@ Or if insufficient:
    Reason: Insufficient balance
 ```
 
-## Environment Variables
-
-The CLI uses these environment variables for defaults:
-
-| Variable | Description |
-|----------|-------------|
-| `ACTO_TOKEN_GATING_MINT` | Default token mint address |
-| `ACTO_TOKEN_GATING_MINIMUM` | Default minimum balance |
-| `ACTO_HELIUS_API_KEY` | Helius API key for RPC |
-| `ACTO_SOLANA_RPC_URL` | Custom Solana RPC URL |
 
