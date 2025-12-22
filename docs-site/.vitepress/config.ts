@@ -225,7 +225,7 @@ export default defineConfig({
 
     // Footer
     footer: {
-      message: 'Released under the MIT License.',
+      message: 'https://www.actobotics.net',
       copyright: 'Copyright © 2025 ACTO'
     },
 

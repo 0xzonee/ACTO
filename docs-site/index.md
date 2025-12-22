@@ -80,22 +80,18 @@ print(f"Valid: {result.valid}")
 
 <div class="link-cards">
   <a href="https://api.actobotics.net/dashboard" class="link-card">
-    <span class="icon">📊</span>
     <span class="title">Dashboard</span>
     <span class="desc">Manage API keys and view statistics</span>
   </a>
   <a href="https://pypi.org/project/actobotics/" class="link-card">
-    <span class="icon">📦</span>
     <span class="title">PyPI</span>
     <span class="desc">pip install actobotics</span>
   </a>
   <a href="https://github.com/actobotics/ACTO" class="link-card">
-    <span class="icon">🐙</span>
     <span class="title">GitHub</span>
     <span class="desc">Source code and issues</span>
   </a>
   <a href="https://x.com/actoboticsnet" class="link-card">
-    <span class="icon">🐦</span>
     <span class="title">X (Twitter)</span>
     <span class="desc">@actoboticsnet</span>
   </a>
