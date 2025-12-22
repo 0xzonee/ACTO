@@ -1,8 +1,36 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navigation, Footer, Logo, LoadingScreen } from './components';
-import { Home, About, Privacy, Terms } from './pages';
+import { Home, About, Privacy, Terms, Unlock } from './pages';
+
+// ============================================
+// ACCESS CONTROL - Set to false to disable
+// ============================================
+const ACCESS_REQUIRED = true;
+// ============================================
 
 function App() {
+  const [hasAccess, setHasAccess] = useState(!ACCESS_REQUIRED);
+
+  useEffect(() => {
+    // Check localStorage for access
+    if (ACCESS_REQUIRED) {
+      const access = localStorage.getItem('site_access');
+      if (access === 'granted') {
+        setHasAccess(true);
+      }
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    setHasAccess(true);
+  };
+
+  // Show unlock page if access required and not granted
+  if (ACCESS_REQUIRED && !hasAccess) {
+    return <Unlock onUnlock={handleUnlock} />;
+  }
+
   return (
     <BrowserRouter>
       <LoadingScreen imagesToPreload={['/hero.png', '/hero2.png', '/hero3.png', '/hero4.png', '/bg1.png', '/bg2.png', '/bg3.png', '/bg4.png']} />
