@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Lock, ArrowRight, AlertCircle, Github } from 'lucide-react';
 import { FaXTwitter } from 'react-icons/fa6';
-import { config } from '../config';
 
 interface UnlockProps {
   onUnlock: () => void;
