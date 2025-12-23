@@ -44,7 +44,7 @@ export function OpenSource() {
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24 relative z-10">
         {/* Header */}
-        <ScrollAnimation animation="fade-down" delay={0}>
+        <ScrollAnimation animation="blur-in" delay={0}>
           <div className="text-center mb-12 md:mb-16">
             <p className="text-sm text-gray-300 mb-4 tracking-wide uppercase">Transparency</p>
             <h2 className="text-3xl md:text-4xl font-medium mb-4 tracking-tight text-white">
@@ -62,7 +62,7 @@ export function OpenSource() {
           {highlights.map((item, index) => {
             const Icon = item.icon;
             return (
-              <ScrollAnimation key={item.title} animation="zoom-in" delay={60 + index * 60}>
+              <ScrollAnimation key={item.title} animation="blur-in" delay={60 + index * 60}>
                 <div
                   className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-xl p-6 hover:bg-white hover:shadow-lg transition-all"
                 >
@@ -78,7 +78,7 @@ export function OpenSource() {
         </div>
 
         {/* CTA Card */}
-        <ScrollAnimation animation="scale-up" delay={300}>
+        <ScrollAnimation animation="blur-in" delay={300}>
           <div className="bg-neutral-800 rounded-2xl p-8 md:p-12 text-white">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             {/* Left: Text */}

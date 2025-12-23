@@ -21,12 +21,12 @@ export function QuickInstall() {
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32">
         {/* Centered content */}
         <div className="max-w-3xl mx-auto text-center">
-          <ScrollAnimation animation="fade-down" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <p className="text-sm text-stone-500 mb-6 tracking-wide uppercase">Get Started</p>
           </ScrollAnimation>
           
           {/* Main install command - large and prominent */}
-          <ScrollAnimation animation="scale-up" delay={60}>
+          <ScrollAnimation animation="blur-in" delay={60}>
             <div className="mb-8">
               <button
                 onClick={handleCopy}
@@ -49,7 +49,7 @@ export function QuickInstall() {
           </ScrollAnimation>
 
           {/* Tagline */}
-          <ScrollAnimation animation="fade-up" delay={120}>
+          <ScrollAnimation animation="blur-in" delay={120}>
             <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight text-gray-900">
               One command. Zero configuration.
             </h2>
@@ -61,7 +61,7 @@ export function QuickInstall() {
 
           {/* Three column stats/features */}
           <div className="grid grid-cols-3 gap-8 mb-12">
-            <ScrollAnimation animation="zoom-in" delay={180}>
+            <ScrollAnimation animation="blur-in" delay={180}>
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-sm">
                   <Shield size={24} className="text-stone-600" />
@@ -70,7 +70,7 @@ export function QuickInstall() {
                 <p className="text-sm text-stone-500">Signatures</p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="zoom-in" delay={240}>
+            <ScrollAnimation animation="blur-in" delay={240}>
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-sm">
                   <Clock size={24} className="text-stone-600" />
@@ -79,7 +79,7 @@ export function QuickInstall() {
                 <p className="text-sm text-stone-500">Verification</p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="zoom-in" delay={300}>
+            <ScrollAnimation animation="blur-in" delay={300}>
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-sm">
                   <Cpu size={24} className="text-stone-600" />
@@ -92,7 +92,7 @@ export function QuickInstall() {
 
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <ScrollAnimation animation="fade-right" delay={360}>
+            <ScrollAnimation animation="blur-in" delay={360}>
               <a
                 href={config.links.docs + '/guide/quickstart'}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
@@ -101,7 +101,7 @@ export function QuickInstall() {
                 <ArrowRight size={16} />
               </a>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-left" delay={360}>
+            <ScrollAnimation animation="blur-in" delay={360}>
               <a
                 href={config.links.pypi}
                 target="_blank"

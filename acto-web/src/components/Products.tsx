@@ -70,7 +70,7 @@ export function Products() {
     <section className="py-16 md:py-24">
       {/* Header - consistent with other sections */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 mb-12 md:mb-16">
-        <ScrollAnimation animation="fade-right" delay={0}>
+        <ScrollAnimation animation="blur-in" delay={0}>
           <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight">The ACTO Ecosystem</h2>
           <p className="text-gray-500 max-w-2xl leading-relaxed">
             Everything you need to generate, verify, and manage cryptographic proofs for your autonomous systems.
@@ -84,7 +84,7 @@ export function Products() {
             const Icon = product.icon;
             
             return (
-              <ScrollAnimation key={product.name} animation="scale-up" delay={60 + index * 80}>
+              <ScrollAnimation key={product.name} animation="blur-in" delay={60 + index * 80}>
                 <div
                   className="group relative overflow-hidden border border-gray-200 rounded-2xl p-6 hover:border-gray-300 hover:shadow-xl transition-all flex flex-col"
                 >

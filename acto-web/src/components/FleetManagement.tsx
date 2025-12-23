@@ -44,7 +44,7 @@ export function FleetManagement() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Left: Content */}
           <div>
-            <ScrollAnimation animation="fade-right" delay={0}>
+            <ScrollAnimation animation="blur-in" delay={0}>
               <p className="text-sm text-gray-400 mb-4 tracking-wide uppercase">Fleet Management</p>
               <h2 className="text-3xl md:text-4xl font-medium mb-6 tracking-tight">
                 Monitor your entire robot fleet
@@ -60,7 +60,7 @@ export function FleetManagement() {
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
-                  <ScrollAnimation key={feature.title} animation="fade-right" delay={120 + index * 60}>
+                  <ScrollAnimation key={feature.title} animation="blur-in" delay={120 + index * 60}>
                     <div className="flex gap-4">
                       <div className="flex-shrink-0 w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                         <Icon className="w-5 h-5 text-gray-700" />
@@ -75,7 +75,7 @@ export function FleetManagement() {
               })}
             </div>
 
-            <ScrollAnimation animation="scale-up" delay={360}>
+            <ScrollAnimation animation="blur-in" delay={360}>
               <a
                 href={config.links.dashboard}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
@@ -87,7 +87,7 @@ export function FleetManagement() {
           </div>
 
           {/* Right: Mock Dashboard */}
-          <ScrollAnimation animation="fade-left" delay={180}>
+          <ScrollAnimation animation="blur-in" delay={180}>
             <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">

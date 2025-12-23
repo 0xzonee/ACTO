@@ -38,7 +38,7 @@ export function UseCases() {
   return (
     <section className="border-t border-gray-100">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-32">
-        <ScrollAnimation animation="fade-right" delay={0}>
+        <ScrollAnimation animation="blur-in" delay={0}>
           <h2 className="text-2xl md:text-3xl font-medium mb-4 md:mb-6 tracking-tight">Use cases</h2>
           <p className="text-base md:text-lg text-gray-600 mb-12 md:mb-16 max-w-2xl">
             From industrial automation to research, proof of execution enables trust and accountability in autonomous systems across diverse applications.
@@ -48,7 +48,7 @@ export function UseCases() {
           {useCases.map((useCase, index) => {
             const Icon = useCase.icon;
             return (
-              <ScrollAnimation key={useCase.title} animation="fade-up" delay={60 + index * 60}>
+              <ScrollAnimation key={useCase.title} animation="blur-in" delay={60 + index * 60}>
                 <div className="group">
                   <div className="mb-4 inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-gray-900 transition-colors">
                     <Icon className="w-6 h-6 text-gray-900 group-hover:text-white transition-colors" />

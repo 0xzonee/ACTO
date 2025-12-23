@@ -28,7 +28,7 @@ export function HowItWorks() {
     <section>
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-32">
         <div className="grid md:grid-cols-2 gap-12 md:gap-24">
-          <ScrollAnimation animation="fade-right" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <div>
               <h2 className="text-2xl md:text-3xl font-medium mb-4 md:mb-6 tracking-tight">How it works</h2>
               <p className="text-gray-500 leading-relaxed">
@@ -38,7 +38,7 @@ export function HowItWorks() {
           </ScrollAnimation>
           <div className="space-y-8 md:space-y-10">
             {steps.map((step, index) => (
-              <ScrollAnimation key={step.number} animation="fade-left" delay={60 + index * 60}>
+              <ScrollAnimation key={step.number} animation="blur-in" delay={60 + index * 60}>
                 <div className="flex gap-4 md:gap-6">
                   <p className="text-sm text-gray-300 font-medium w-8 flex-shrink-0">{step.number}</p>
                   <div>

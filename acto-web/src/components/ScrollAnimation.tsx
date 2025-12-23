@@ -100,7 +100,7 @@ export function ScrollAnimation({
         : 'opacity-0 scale-90',
       'blur-in': isVisible 
         ? 'opacity-100 blur-0' 
-        : 'opacity-0 blur-[2px]',
+        : 'opacity-0 blur-[8px]',
     };
 
     return `${base} ${easingClass} ${animations[animation]}`;

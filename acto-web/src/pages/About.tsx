@@ -67,18 +67,18 @@ export function About() {
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             <div>
-              <ScrollAnimation animation="fade-right" delay={0}>
+              <ScrollAnimation animation="blur-in" delay={0}>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-red-600 text-sm font-medium mb-6">
                   <AlertTriangle size={14} />
                   The Problem
                 </div>
               </ScrollAnimation>
-              <ScrollAnimation animation="fade-up" delay={60}>
+              <ScrollAnimation animation="blur-in" delay={60}>
                 <h2 className="text-3xl md:text-4xl font-medium mb-6 tracking-tight">
                   Trust is good.<br />But what if you can't trust?
                 </h2>
               </ScrollAnimation>
-              <ScrollAnimation animation="fade-up" delay={120}>
+              <ScrollAnimation animation="blur-in" delay={120}>
                 <div className="space-y-4 text-gray-600 leading-relaxed">
                   <p>
                     Autonomous systems are everywhere: delivery robots, production lines, drones, 
@@ -96,11 +96,11 @@ export function About() {
                 </div>
               </ScrollAnimation>
             </div>
-            <ScrollAnimation animation="fade-left" delay={180}>
+            <ScrollAnimation animation="blur-in" delay={180}>
               <div className="bg-gray-50 rounded-2xl p-8 md:p-10">
                 <h3 className="text-lg font-medium mb-6 text-gray-900">Traditional approaches fail:</h3>
                 <ul className="space-y-4">
-                  <ScrollAnimation animation="fade-up" delay={240}>
+                  <ScrollAnimation animation="blur-in" delay={240}>
                     <li className="flex gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
                         <span className="text-red-500 text-sm">✕</span>
@@ -111,7 +111,7 @@ export function About() {
                       </div>
                     </li>
                   </ScrollAnimation>
-                  <ScrollAnimation animation="fade-up" delay={300}>
+                  <ScrollAnimation animation="blur-in" delay={300}>
                     <li className="flex gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
                         <span className="text-red-500 text-sm">✕</span>
@@ -122,7 +122,7 @@ export function About() {
                       </div>
                     </li>
                   </ScrollAnimation>
-                  <ScrollAnimation animation="fade-up" delay={360}>
+                  <ScrollAnimation animation="blur-in" delay={360}>
                     <li className="flex gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
                         <span className="text-red-500 text-sm">✕</span>
@@ -133,7 +133,7 @@ export function About() {
                       </div>
                     </li>
                   </ScrollAnimation>
-                  <ScrollAnimation animation="fade-up" delay={420}>
+                  <ScrollAnimation animation="blur-in" delay={420}>
                     <li className="flex gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
                         <span className="text-red-500 text-sm">✕</span>
@@ -152,16 +152,24 @@ export function About() {
       </section>
 
       {/* The Solution */}
-      <section className="py-16 md:py-24 bg-gray-900 text-white">
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
+      <section id="solution-section" className="py-16 md:py-24 relative overflow-hidden text-white">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/code.png)' }}
+        />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/80 to-black/85" />
+        
+        <div className="max-w-6xl mx-auto px-4 md:px-6 relative z-10">
           <div className="text-center mb-12 md:mb-16">
-            <ScrollAnimation animation="scale-up" delay={0}>
+            <ScrollAnimation animation="blur-in" delay={0}>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-gray-300 text-sm font-medium mb-6">
                 <CheckCircle2 size={14} />
                 The Solution
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-down" delay={60}>
+            <ScrollAnimation animation="blur-in" delay={60}>
               <h2 className="text-3xl md:text-4xl font-medium mb-6 tracking-tight">
                 Cryptographic proofs.<br />Not words.
               </h2>
@@ -173,40 +181,46 @@ export function About() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            <ScrollAnimation animation="zoom-in" delay={120}>
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-6">
-                  <Lock size={24} className="text-white" />
+            <ScrollAnimation animation="blur-in" delay={120}>
+              <div className="group relative bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden">
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-gradient-to-br from-white/20 to-white/5 rounded-xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <Lock size={26} className="text-white" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl font-medium mb-3 text-white">Ed25519 Signatures</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Every proof is signed with the robot's private key. 
+                    Forgery? Mathematically impossible.
+                  </p>
                 </div>
-                <h3 className="text-xl font-medium mb-3">Ed25519 Signatures</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Every proof is signed with the robot's private key. 
-                  Forgery? Mathematically impossible.
-                </p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="zoom-in" delay={200}>
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-6">
-                  <Eye size={24} className="text-white" />
+            <ScrollAnimation animation="blur-in" delay={200}>
+              <div className="group relative bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden">
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-gradient-to-br from-white/20 to-white/5 rounded-xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <Eye size={26} className="text-white" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl font-medium mb-3 text-white">Independent Verification</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Anyone can verify a proof – without trusting the operator or us. 
+                    Trustless by design.
+                  </p>
                 </div>
-                <h3 className="text-xl font-medium mb-3">Independent Verification</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Anyone can verify a proof – without trusting the operator or us. 
-                  Trustless by design.
-                </p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="zoom-in" delay={280}>
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 md:p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-6">
-                  <Zap size={24} className="text-white" />
+            <ScrollAnimation animation="blur-in" delay={280}>
+              <div className="group relative bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden">
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-gradient-to-br from-white/20 to-white/5 rounded-xl flex items-center justify-center mb-6 transition-transform duration-300">
+                    <Zap size={26} className="text-white" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-xl font-medium mb-3 text-white">Real-time Capable</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    Proof generation in milliseconds. Verification under 50ms. 
+                    Built for the speed of autonomous systems.
+                  </p>
                 </div>
-                <h3 className="text-xl font-medium mb-3">Real-time Capable</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Proof generation in milliseconds. Verification under 50ms. 
-                  Built for the speed of autonomous systems.
-                </p>
               </div>
             </ScrollAnimation>
           </div>
@@ -216,11 +230,11 @@ export function About() {
       {/* How it works */}
       <section className="py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <ScrollAnimation animation="fade-right" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <h2 className="text-2xl md:text-3xl font-medium mb-12 tracking-tight">How it works</h2>
           </ScrollAnimation>
           <div className="grid md:grid-cols-4 gap-8">
-            <ScrollAnimation animation="fade-up" delay={60}>
+            <ScrollAnimation animation="blur-in" delay={60}>
               <div className="relative">
                 <div className="text-6xl font-light text-gray-200 mb-4">01</div>
                 <h3 className="text-lg font-medium mb-2 text-gray-900">Capture telemetry</h3>
@@ -229,7 +243,7 @@ export function About() {
                 </p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-up" delay={120}>
+            <ScrollAnimation animation="blur-in" delay={120}>
               <div className="relative">
                 <div className="text-6xl font-light text-gray-200 mb-4">02</div>
                 <h3 className="text-lg font-medium mb-2 text-gray-900">Sign locally</h3>
@@ -238,7 +252,7 @@ export function About() {
                 </p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-up" delay={180}>
+            <ScrollAnimation animation="blur-in" delay={180}>
               <div className="relative">
                 <div className="text-6xl font-light text-gray-200 mb-4">03</div>
                 <h3 className="text-lg font-medium mb-2 text-gray-900">Verify via API</h3>
@@ -247,7 +261,7 @@ export function About() {
                 </p>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-up" delay={240}>
+            <ScrollAnimation animation="blur-in" delay={240}>
               <div className="relative">
                 <div className="text-6xl font-light text-gray-200 mb-4">04</div>
                 <h3 className="text-lg font-medium mb-2 text-gray-900">Store & retrieve</h3>
@@ -268,7 +282,7 @@ export function About() {
         {/* Gradient overlay - fades to white at top and bottom */}
         <div className="absolute inset-0 bg-gradient-to-b from-white via-white/30 to-white" />
         <div className="max-w-6xl mx-auto px-4 md:px-6 relative z-10">
-          <ScrollAnimation animation="fade-down" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight">Where ACTO could be used</h2>
               <p className="text-gray-500 max-w-xl mx-auto">
@@ -280,7 +294,7 @@ export function About() {
             {useCases.map((useCase, index) => {
               const Icon = useCase.icon;
               return (
-                <ScrollAnimation key={useCase.label} animation="scale-up" delay={60 + index * 60}>
+                <ScrollAnimation key={useCase.label} animation="blur-in" delay={60 + index * 60}>
                   <div className="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg hover:border-gray-300 transition-all">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Icon size={24} className="text-gray-700" />
@@ -300,18 +314,18 @@ export function About() {
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             <div>
-              <ScrollAnimation animation="fade-right" delay={0}>
+              <ScrollAnimation animation="blur-in" delay={0}>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6">
                   <TrendingUp size={14} />
                   Why Now
                 </div>
               </ScrollAnimation>
-              <ScrollAnimation animation="fade-up" delay={60}>
+              <ScrollAnimation animation="blur-in" delay={60}>
                 <h2 className="text-3xl md:text-4xl font-medium mb-6 tracking-tight">
                   The autonomous revolution has begun.
                 </h2>
               </ScrollAnimation>
-              <ScrollAnimation animation="fade-up" delay={120}>
+              <ScrollAnimation animation="blur-in" delay={120}>
                 <div className="space-y-4 text-gray-600 leading-relaxed">
                   <p>
                     By 2030, millions of autonomous robots will be deployed – in warehouses, 
@@ -329,19 +343,19 @@ export function About() {
               </ScrollAnimation>
             </div>
             <div className="space-y-4">
-              <ScrollAnimation animation="slide-left" delay={180}>
+              <ScrollAnimation animation="blur-in" delay={180}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                   <p className="text-4xl font-medium text-gray-900 mb-2">$180B+</p>
                   <p className="text-gray-500">Expected robotics market by 2030</p>
                 </div>
               </ScrollAnimation>
-              <ScrollAnimation animation="slide-left" delay={240}>
+              <ScrollAnimation animation="blur-in" delay={240}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                   <p className="text-4xl font-medium text-gray-900 mb-2">26%</p>
                   <p className="text-gray-500">Annual growth in autonomous systems</p>
                 </div>
               </ScrollAnimation>
-              <ScrollAnimation animation="slide-left" delay={300}>
+              <ScrollAnimation animation="blur-in" delay={300}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                   <p className="text-4xl font-medium text-gray-900 mb-2">&lt;50ms</p>
                   <p className="text-gray-500">ACTO verification time</p>
@@ -355,12 +369,12 @@ export function About() {
       {/* Timeline */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <ScrollAnimation animation="fade-right" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <h2 className="text-2xl md:text-3xl font-medium mb-12 tracking-tight">Our Journey</h2>
           </ScrollAnimation>
           <div className="grid md:grid-cols-4 gap-6">
             {timeline.map((item, index) => (
-              <ScrollAnimation key={index} animation="fade-up" delay={60 + index * 80}>
+              <ScrollAnimation key={index} animation="blur-in" delay={60 + index * 80}>
                 <div className="relative">
                   <div className="text-sm text-gray-400 mb-2 font-medium">{item.year}</div>
                   <h3 className="text-lg font-medium mb-2 text-gray-900">{item.title}</h3>
@@ -382,11 +396,11 @@ export function About() {
         
         {/* What we stand for */}
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24 relative z-10">
-          <ScrollAnimation animation="fade-down" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <h2 className="text-2xl md:text-3xl font-medium mb-12 md:mb-16 tracking-tight">What we stand for</h2>
           </ScrollAnimation>
           <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-            <ScrollAnimation animation="fade-right" delay={60}>
+            <ScrollAnimation animation="blur-in" delay={60}>
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -402,7 +416,7 @@ export function About() {
                 </div>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-left" delay={60}>
+            <ScrollAnimation animation="blur-in" delay={60}>
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -418,7 +432,7 @@ export function About() {
                 </div>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-right" delay={120}>
+            <ScrollAnimation animation="blur-in" delay={120}>
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -434,7 +448,7 @@ export function About() {
                 </div>
               </div>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-left" delay={120}>
+            <ScrollAnimation animation="blur-in" delay={120}>
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-lg bg-gray-900 flex items-center justify-center">
@@ -455,7 +469,7 @@ export function About() {
 
         {/* CTA */}
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24 text-center relative z-10">
-          <ScrollAnimation animation="scale-up" delay={0}>
+          <ScrollAnimation animation="blur-in" delay={0}>
             <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight text-white">
               Ready for verifiable autonomy?
             </h2>
@@ -465,7 +479,7 @@ export function About() {
             </p>
           </ScrollAnimation>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <ScrollAnimation animation="fade-right" delay={120}>
+            <ScrollAnimation animation="blur-in" delay={120}>
               <a
                 href={config.links.docs}
                 className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
@@ -474,7 +488,7 @@ export function About() {
                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
               </a>
             </ScrollAnimation>
-            <ScrollAnimation animation="fade-left" delay={120}>
+            <ScrollAnimation animation="blur-in" delay={120}>
               <a
                 href={config.links.dashboard}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
