@@ -41,7 +41,7 @@ function Modal({ isOpen, onClose, title, children }: { isOpen: boolean; onClose:
 function PrivacyContent() {
   return (
     <div className="prose prose-sm prose-gray max-w-none">
-      <p className="text-xs text-gray-400 mb-4">Last updated: December 2024</p>
+      <p className="text-xs text-gray-400 mb-4">Last updated: December 2025</p>
       
       <h3 className="text-lg font-medium mb-3 text-gray-900">1. Introduction</h3>
       <p className="text-gray-600 text-sm leading-relaxed mb-4">
@@ -88,7 +88,7 @@ function PrivacyContent() {
 function TermsContent() {
   return (
     <div className="prose prose-sm prose-gray max-w-none">
-      <p className="text-xs text-gray-400 mb-4">Last updated: December 2024</p>
+      <p className="text-xs text-gray-400 mb-4">Last updated: December 2025</p>
       
       <h3 className="text-lg font-medium mb-3 text-gray-900">1. Agreement to Terms</h3>
       <p className="text-gray-600 text-sm leading-relaxed mb-4">
