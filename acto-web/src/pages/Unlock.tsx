@@ -99,7 +99,7 @@ export function Unlock({ onUnlock }: UnlockProps) {
 
         {/* Footer */}
         <p className="text-center text-gray-400 text-xs mt-6">
-          Don't have a code? <a href="https://x.com/actoboticsnet" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Contact us</a>
+          <a href="https://x.com/actoboticsnet" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Follow us on X</a>
         </p>
       </div>
     </div>
