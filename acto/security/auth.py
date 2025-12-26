@@ -152,6 +152,82 @@ def get_current_user_optional(request: Request) -> dict | None:
     }
 
 
+def require_jwt_or_api_key(jwt_manager: JWTManager, store: ApiKeyStore, settings: Settings):
+    """
+    Dependency that accepts either JWT token OR API key.
+    
+    This allows endpoints to be accessed via:
+    1. Dashboard (JWT from wallet login)
+    2. SDK (API key from dashboard)
+    
+    Sets request.state.user_id for downstream handlers.
+    """
+
+    async def _dep(
+        request: Request,
+        x_wallet_address: str | None = Header(None, description="Solana wallet address"),
+    ) -> dict:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing authorization header.")
+
+        token = auth_header.replace("Bearer ", "").strip()
+
+        # Try JWT first (dashboard access)
+        try:
+            payload = jwt_manager.verify_token(token, required_type="access")
+            request.state.user_id = payload.get("sub")
+            request.state.user_roles = extract_roles_from_token(payload)
+            request.state.user_scopes = extract_scopes_from_token(payload)
+            request.state.token_payload = payload
+            request.state.auth_method = "jwt"
+            return payload
+        except AccessError:
+            pass  # Not a valid JWT, try API key
+
+        # Try API key (SDK access)
+        try:
+            key_data = store.require(token)
+            endpoint = f"{request.method} {request.url.path}"
+            store.record_usage(token, endpoint)
+            
+            # Set user_id from API key owner
+            user_id = key_data.get("user_id") if isinstance(key_data, dict) else None
+            request.state.user_id = user_id
+            request.state.user_roles = ["user"]
+            request.state.user_scopes = []
+            request.state.auth_method = "api_key"
+            
+            # Check token gating if enabled and wallet address provided
+            if settings.token_gating_enabled and x_wallet_address:
+                try:
+                    gate = SolanaTokenGate(rpc_url=settings.get_solana_rpc_url())
+                    decision = gate.decide(
+                        owner=x_wallet_address,
+                        mint=settings.token_gating_mint,
+                        minimum=settings.token_gating_minimum,
+                    )
+                    if not decision.allowed:
+                        raise HTTPException(
+                            status_code=403,
+                            detail=f"Insufficient token balance. Required: {settings.token_gating_minimum}",
+                        )
+                except HTTPException:
+                    raise
+                except Exception:
+                    pass  # Token gating check failed, but API key is valid
+            
+            return {"user_id": user_id, "auth_method": "api_key"}
+        except AccessError as e:
+            raise HTTPException(status_code=401, detail=str(e)) from e
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Invalid token format.") from e
+
+    return _dep
+
+
 def require_api_key_and_token_balance(
     store: ApiKeyStore,
     settings: Settings,

@@ -814,7 +814,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
     # ============================================================
-    # Fleet Router (database-backed, JWT authenticated)
+    # Fleet Router (database-backed, JWT or API key authenticated)
     # ============================================================
     from .routers.fleet import create_fleet_router
     
@@ -822,6 +822,8 @@ def create_app() -> FastAPI:
         registry=registry,
         jwt_manager=jwt_manager,
         fleet_store=fleet_store,
+        api_key_store=api_key_store,
+        settings=settings,
     )
     app.include_router(fleet_router)
 

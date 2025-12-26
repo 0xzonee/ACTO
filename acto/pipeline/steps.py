@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from acto.crypto import load_keypair
-from acto.proof import ProofEnvelope, create_proof, verify_proof
+from acto.proof import ProofEnvelope, create_proof
+from acto.proof.engine import _verify_proof_internal
 from acto.registry import ProofRegistry
 from acto.telemetry import CsvTelemetryParser, JsonlTelemetryParser
 from acto.telemetry.models import TelemetryBundle
@@ -60,11 +61,17 @@ class ProofCreateStep:
 
 @dataclass
 class ProofVerifyStep:
+    """
+    Verify a proof envelope locally.
+    
+    Note: This uses internal verification for pipeline operations.
+    For production verification, use ACTOClient.verify() instead.
+    """
     name: str = "proof.verify"
 
     def run(self, ctx: dict[str, Any]) -> dict[str, Any]:
         env: ProofEnvelope = ctx["envelope"]
-        verify_proof(env)
+        _verify_proof_internal(env)
         ctx["verified"] = True
         return ctx
 

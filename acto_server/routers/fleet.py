@@ -1,5 +1,5 @@
 # ACTO Server - Fleet Router
-# Fleet management endpoints (JWT authenticated)
+# Fleet management endpoints (JWT or API key authenticated)
 # Features: Device Details, Groups, Rename, Health Monitoring
 # All data is persisted to database with optional fields
 
@@ -10,8 +10,10 @@ import json
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from acto.config import Settings
 from acto.registry import ProofRegistry
-from acto.security import JWTManager, get_current_user_optional, require_jwt
+from acto.security import JWTManager, get_current_user_optional, require_jwt_or_api_key
+from acto.security.api_key_store import ApiKeyStore
 from acto.fleet import FleetStore
 
 router = APIRouter(prefix="/v1/fleet", tags=["fleet"])
@@ -107,10 +109,19 @@ def create_fleet_router(
     registry: ProofRegistry,
     jwt_manager: JWTManager,
     fleet_store: FleetStore,
+    api_key_store: ApiKeyStore | None = None,
+    settings: Settings | None = None,
 ) -> APIRouter:
     """Create fleet router with dependencies."""
     
-    jwt_dep = Depends(require_jwt(jwt_manager))
+    # Use combined auth that accepts JWT or API key
+    settings = settings or Settings()
+    if api_key_store:
+        auth_dep = Depends(require_jwt_or_api_key(jwt_manager, api_key_store, settings))
+    else:
+        # Fallback to JWT only if no API key store provided
+        from acto.security import require_jwt
+        auth_dep = Depends(require_jwt(jwt_manager))
 
     # ============================================================
     # Helper Functions
@@ -148,7 +159,7 @@ def create_fleet_router(
     # Fleet Overview Endpoint
     # ============================================================
 
-    @router.get("", dependencies=[jwt_dep])
+    @router.get("", dependencies=[auth_dep])
     def get_fleet(request: Request) -> dict:
         """
         Get fleet data for the authenticated user's wallet.
@@ -188,7 +199,7 @@ def create_fleet_router(
     # Device Details Endpoint
     # ============================================================
 
-    @router.get("/devices/{device_id}", dependencies=[jwt_dep])
+    @router.get("/devices/{device_id}", dependencies=[auth_dep])
     def get_device_details(device_id: str, request: Request) -> dict:
         """
         Get detailed information for a specific device.
@@ -277,7 +288,7 @@ def create_fleet_router(
     # Device Rename Endpoint
     # ============================================================
 
-    @router.patch("/devices/{device_id}/name", dependencies=[jwt_dep])
+    @router.patch("/devices/{device_id}/name", dependencies=[auth_dep])
     def rename_device(device_id: str, req: DeviceRenameRequest, request: Request) -> dict:
         """Rename a device with a custom name."""
         try:
@@ -303,7 +314,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.delete("/devices/{device_id}", dependencies=[jwt_dep])
+    @router.delete("/devices/{device_id}", dependencies=[auth_dep])
     def delete_device(device_id: str, request: Request) -> dict:
         """Delete a device and all its associated data."""
         try:
@@ -327,7 +338,7 @@ def create_fleet_router(
     # Device Update Endpoint
     # ============================================================
 
-    @router.patch("/devices/{device_id}", dependencies=[jwt_dep])
+    @router.patch("/devices/{device_id}", dependencies=[auth_dep])
     def update_device(device_id: str, req: DeviceUpdateRequest, request: Request) -> dict:
         """Update device metadata (name, description, type)."""
         try:
@@ -357,7 +368,7 @@ def create_fleet_router(
     # Device Health Endpoints
     # ============================================================
 
-    @router.post("/devices/{device_id}/health", dependencies=[jwt_dep])
+    @router.post("/devices/{device_id}/health", dependencies=[auth_dep])
     def update_device_health(device_id: str, req: DeviceHealthUpdateRequest, request: Request) -> dict:
         """
         Update health metrics for a device.
@@ -398,7 +409,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.get("/devices/{device_id}/health", dependencies=[jwt_dep])
+    @router.get("/devices/{device_id}/health", dependencies=[auth_dep])
     def get_device_health(device_id: str, request: Request) -> dict:
         """Get current health metrics for a device."""
         try:
@@ -419,7 +430,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.get("/devices/{device_id}/health/history", dependencies=[jwt_dep])
+    @router.get("/devices/{device_id}/health/history", dependencies=[auth_dep])
     def get_device_health_history(
         device_id: str,
         request: Request,
@@ -449,7 +460,7 @@ def create_fleet_router(
     # Device Groups Endpoints
     # ============================================================
 
-    @router.get("/groups", dependencies=[jwt_dep])
+    @router.get("/groups", dependencies=[auth_dep])
     def list_groups(request: Request) -> dict:
         """List all device groups."""
         try:
@@ -469,7 +480,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.post("/groups", dependencies=[jwt_dep])
+    @router.post("/groups", dependencies=[auth_dep])
     def create_group(req: GroupCreateRequest, request: Request) -> dict:
         """Create a new device group."""
         try:
@@ -495,7 +506,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.get("/groups/{group_id}", dependencies=[jwt_dep])
+    @router.get("/groups/{group_id}", dependencies=[auth_dep])
     def get_group(group_id: str, request: Request) -> dict:
         """Get a specific device group with its devices."""
         try:
@@ -517,7 +528,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.patch("/groups/{group_id}", dependencies=[jwt_dep])
+    @router.patch("/groups/{group_id}", dependencies=[auth_dep])
     def update_group(group_id: str, req: GroupUpdateRequest, request: Request) -> dict:
         """Update a device group."""
         try:
@@ -547,7 +558,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.delete("/groups/{group_id}", dependencies=[jwt_dep])
+    @router.delete("/groups/{group_id}", dependencies=[auth_dep])
     def delete_group(group_id: str, request: Request) -> dict:
         """Delete a device group."""
         try:
@@ -567,7 +578,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.post("/groups/{group_id}/assign", dependencies=[jwt_dep])
+    @router.post("/groups/{group_id}/assign", dependencies=[auth_dep])
     def assign_devices_to_group(group_id: str, req: GroupAssignRequest, request: Request) -> dict:
         """Assign devices to a group."""
         try:
@@ -591,7 +602,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.post("/groups/{group_id}/unassign", dependencies=[jwt_dep])
+    @router.post("/groups/{group_id}/unassign", dependencies=[auth_dep])
     def unassign_devices_from_group(group_id: str, req: GroupAssignRequest, request: Request) -> dict:
         """Remove devices from a group."""
         try:
@@ -615,7 +626,7 @@ def create_fleet_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    @router.patch("/devices/order", dependencies=[jwt_dep])
+    @router.patch("/devices/order", dependencies=[auth_dep])
     def update_device_order(req: DeviceOrderUpdateRequest, request: Request) -> dict:
         """Update the sort order of devices."""
         try:

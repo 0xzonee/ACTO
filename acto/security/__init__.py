@@ -64,6 +64,7 @@ try:
         require_api_key_and_token_balance,
         require_jwt,
         require_jwt_optional,
+        require_jwt_or_api_key,
         require_permission,
         require_scope,
     )
@@ -72,6 +73,7 @@ try:
         "require_api_key",
         "require_api_key_and_token_balance",
         "require_jwt",
+        "require_jwt_or_api_key",
         "create_jwt_dependency",
         "create_jwt_dependency_optional",
         "get_current_user",

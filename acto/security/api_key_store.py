@@ -242,10 +242,33 @@ class ApiKeyStore:
                 
                 session.commit()
 
-    def require(self, key: str | None) -> None:
-        """Require a valid API key, raise AccessError if invalid."""
-        if not key or not self.is_valid(key):
+    def require(self, key: str | None) -> dict[str, Any]:
+        """
+        Require a valid API key, raise AccessError if invalid.
+        
+        Returns:
+            dict: API key data including user_id, key_id, name, etc.
+        """
+        if not key:
             raise AccessError("Invalid or missing API key. Please provide a valid Bearer token.")
+        
+        key_hash = hash_api_key(key)
+        with self.Session() as session:
+            record = session.query(ApiKeyRecord).filter(
+                ApiKeyRecord.key_hash == key_hash,
+                ApiKeyRecord.is_active == True,  # noqa: E712
+            ).first()
+            
+            if not record:
+                raise AccessError("Invalid or missing API key. Please provide a valid Bearer token.")
+            
+            return {
+                "key_id": record.key_id,
+                "name": record.name,
+                "user_id": record.user_id,
+                "created_by": record.created_by,
+                "is_active": record.is_active,
+            }
 
     def list_keys(self, user_id: str | None = None, include_inactive: bool = False) -> list[dict[str, Any]]:
         """List API keys (without the actual key values). Filter by user_id if provided."""
