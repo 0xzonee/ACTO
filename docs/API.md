@@ -685,16 +685,38 @@ Update the current user's profile. Only provided fields are updated; omitted fie
 ```
 
 **Available Industries:**
+
+*Robotics & Tech:*
 - `robotics` - Robotics & Automation
+- `ai_agents` - AI Agents & Autonomous Systems
 - `manufacturing` - Manufacturing
-- `logistics` - Logistics & Warehousing
-- `healthcare` - Healthcare
-- `agriculture` - Agriculture
-- `construction` - Construction
-- `retail` - Retail
 - `research` - Research & Development
+
+*Web3 & Crypto:*
+- `crypto` - Cryptocurrency & Trading
+- `defi` - DeFi (Decentralized Finance)
+- `nft` - NFTs & Digital Assets
+- `dao` - DAOs & Governance
+- `blockchain` - Blockchain Infrastructure
+- `web3_gaming` - Web3 Gaming & Metaverse
+
+*Finance & Business:*
+- `finance` - Finance & Banking
+- `fintech` - FinTech
+- `insurance` - Insurance
+- `retail` - Retail & E-Commerce
+
+*Industry & Infrastructure:*
+- `logistics` - Logistics & Warehousing
+- `energy` - Energy & Utilities
+- `construction` - Construction
+- `agriculture` - Agriculture
+
+*Services & Other:*
+- `healthcare` - Healthcare
 - `defense` - Defense & Security
-- `energy` - Energy
+- `education` - Education
+- `consulting` - Consulting
 - `other` - Other
 
 **Response:**
