@@ -45,12 +45,14 @@ class FleetStore:
                 # Check if column exists by trying to query it
                 session.execute(text("SELECT sort_order FROM fleet_devices LIMIT 1"))
             except Exception:
-                # Column doesn't exist, add it
+                session.rollback()
+                # Column doesn't exist, add it (nullable for SQLite compatibility)
                 try:
-                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN sort_order INTEGER DEFAULT 0 NOT NULL"))
+                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN sort_order INTEGER DEFAULT 0"))
                     session.commit()
-                except Exception:
+                except Exception as e:
                     session.rollback()
+                    print(f"Migration warning: Could not add sort_order column: {e}")
 
     # ============================================================
     # Device Operations
@@ -172,6 +174,11 @@ class FleetStore:
 
     def _device_to_dict(self, record: DeviceRecord) -> dict[str, Any]:
         """Convert device record to dictionary."""
+        # Handle sort_order safely (may be None or missing in older records)
+        sort_order = getattr(record, "sort_order", None)
+        if sort_order is None:
+            sort_order = 0
+        
         return {
             "device_id": record.device_id,
             "user_id": record.user_id,
@@ -179,7 +186,7 @@ class FleetStore:
             "description": record.description,
             "device_type": record.device_type,
             "group_id": record.group_id,
-            "sort_order": getattr(record, "sort_order", 0),
+            "sort_order": sort_order,
             "created_at": record.created_at,
             "updated_at": record.updated_at,
         }
