@@ -1325,3 +1325,65 @@
 .fleet-list.grid-view .fleet-device {
     position: relative;
 }
+
+/* ============================================
+   Device Reorder Drop Indicators
+   ============================================ */
+
+/* Drop indicator lines */
+.fleet-device.drop-before {
+    position: relative;
+}
+
+.fleet-device.drop-before::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-primary), transparent);
+    border-radius: 2px;
+    z-index: 10;
+    animation: dropIndicatorPulse 1s ease-in-out infinite;
+}
+
+.fleet-device.drop-after {
+    position: relative;
+}
+
+.fleet-device.drop-after::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-primary), transparent);
+    border-radius: 2px;
+    z-index: 10;
+    animation: dropIndicatorPulse 1s ease-in-out infinite;
+}
+
+@keyframes dropIndicatorPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Highlight target device during drag over */
+.fleet-device.drop-before,
+.fleet-device.drop-after {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: var(--color-primary);
+}
+
+/* Grid view drop indicators */
+.fleet-list.grid-view .fleet-device.drop-before::before {
+    top: -8px;
+    height: 4px;
+}
+
+.fleet-list.grid-view .fleet-device.drop-after::after {
+    bottom: -8px;
+    height: 4px;
+}

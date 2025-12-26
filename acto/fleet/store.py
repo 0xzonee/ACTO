@@ -30,10 +30,27 @@ class FleetStore:
         self._ensure_tables()
 
     def _ensure_tables(self) -> None:
-        """Ensure database tables exist."""
+        """Ensure database tables exist and apply migrations."""
         # Import models to ensure they're registered with Base
         from .models import DeviceRecord, DeviceGroupRecord, DeviceHealthRecord, DeviceGroupMemberRecord  # noqa: F401
         Base.metadata.create_all(self.engine)
+        
+        # Migrate: Add sort_order column if it doesn't exist
+        self._migrate_add_sort_order()
+
+    def _migrate_add_sort_order(self) -> None:
+        """Add sort_order column to fleet_devices if it doesn't exist."""
+        with self.Session() as session:
+            try:
+                # Check if column exists by trying to query it
+                session.execute(text("SELECT sort_order FROM fleet_devices LIMIT 1"))
+            except Exception:
+                # Column doesn't exist, add it
+                try:
+                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN sort_order INTEGER DEFAULT 0 NOT NULL"))
+                    session.commit()
+                except Exception:
+                    session.rollback()
 
     # ============================================================
     # Device Operations
@@ -162,9 +179,50 @@ class FleetStore:
             "description": record.description,
             "device_type": record.device_type,
             "group_id": record.group_id,
+            "sort_order": getattr(record, "sort_order", 0),
             "created_at": record.created_at,
             "updated_at": record.updated_at,
         }
+
+    def update_device_order(
+        self,
+        device_orders: list[dict[str, Any]],
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Update the sort order of multiple devices.
+        
+        Args:
+            device_orders: List of {"device_id": str, "sort_order": int}
+            user_id: Optional user ID for ownership verification
+            
+        Returns:
+            Success status and updated count
+        """
+        now = datetime.now(timezone.utc).isoformat()
+        updated = 0
+        
+        with self.Session() as session:
+            for item in device_orders:
+                device_id = item.get("device_id")
+                sort_order = item.get("sort_order", 0)
+                
+                if not device_id:
+                    continue
+                
+                query = session.query(DeviceRecord).filter(DeviceRecord.device_id == device_id)
+                if user_id:
+                    query = query.filter(DeviceRecord.user_id == user_id)
+                
+                device = query.first()
+                if device:
+                    device.sort_order = sort_order
+                    device.updated_at = now
+                    updated += 1
+            
+            session.commit()
+        
+        return {"success": True, "updated": updated}
 
     # ============================================================
     # Group Operations

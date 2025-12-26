@@ -54,6 +54,17 @@ class GroupAssignRequest(BaseModel):
     device_ids: list[str]
 
 
+class DeviceOrderItem(BaseModel):
+    """Single device order item."""
+    device_id: str
+    sort_order: int = Field(ge=0)
+
+
+class DeviceOrderUpdateRequest(BaseModel):
+    """Request to update device sort order."""
+    device_orders: list[DeviceOrderItem]
+
+
 class DeviceHealthUpdateRequest(BaseModel):
     """
     Request to update device health metrics.
@@ -576,6 +587,27 @@ def create_fleet_router(
             
             if not result.get("success"):
                 raise HTTPException(status_code=404, detail=result.get("error", "Group not found"))
+            
+            return result
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
+
+    @router.patch("/devices/order", dependencies=[jwt_dep])
+    def update_device_order(req: DeviceOrderUpdateRequest, request: Request) -> dict:
+        """Update the sort order of devices."""
+        try:
+            user_id = get_user_id_from_request(request)
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Not authenticated")
+            
+            device_orders = [{"device_id": item.device_id, "sort_order": item.sort_order} for item in req.device_orders]
+            result = fleet_store.update_device_order(
+                device_orders=device_orders,
+                user_id=user_id,
+            )
             
             return result
             

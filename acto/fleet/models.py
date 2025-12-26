@@ -35,6 +35,9 @@ class DeviceRecord(Base):
     # Current group assignment (optional)
     group_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("fleet_groups.group_id", ondelete="SET NULL"), nullable=True, index=True)
     
+    # Sort order for manual ordering (lower = first, default 0)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    
     # Timestamps
     created_at: Mapped[str] = mapped_column(String(64), index=True)
     updated_at: Mapped[str] = mapped_column(String(64))

@@ -24,6 +24,9 @@ const FleetState = {
     devicesPerPage: 10,
     // Drag and Drop
     draggedDeviceId: null,
+    // Device reordering
+    dropTargetDeviceId: null,
+    dropPosition: null, // 'before' or 'after'
 };
 
 const FLEET_DEVICES_PER_PAGE = 10;
@@ -212,6 +215,9 @@ function renderFleetList() {
         );
     }
     
+    // Sort by sort_order (manual ordering)
+    devices.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    
     const totalDevices = devices.length;
     
     if (totalDevices === 0) {
@@ -281,11 +287,15 @@ function renderDeviceCard(device) {
     return `
         <div class="fleet-device ${isSelected ? 'selected' : ''}" 
              data-device-id="${device.id}"
+             data-sort-order="${device.sort_order || 0}"
              draggable="true"
              ondragstart="handleDeviceDragStart(event, '${device.id}')"
              ondragend="handleDeviceDragEnd(event)"
+             ondragover="handleDeviceDragOverDevice(event, '${device.id}')"
+             ondragleave="handleDeviceDragLeaveDevice(event)"
+             ondrop="handleDeviceDrop(event, '${device.id}')"
              onclick="openDeviceModal('${device.id}')">
-            <div class="drag-handle" title="Drag to assign to group">
+            <div class="drag-handle" title="Drag to reorder or assign to group">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="9" cy="5" r="1"></circle>
                     <circle cx="9" cy="12" r="1"></circle>
@@ -1380,6 +1390,9 @@ function handleDeviceDragEnd(event) {
         card.classList.remove('drop-target', 'drag-over');
     });
     
+    // Clean up device reorder states
+    cleanupDeviceReorderStates();
+    
     // Hide drag overlay
     showDragOverlay(false);
 }
@@ -1572,6 +1585,175 @@ function showDragOverlay(show) {
     }
 }
 
+// ============================================================
+// Device Reordering Functions
+// ============================================================
+
+/**
+ * Handle drag over another device (for reordering)
+ */
+function handleDeviceDragOverDevice(event, targetDeviceId) {
+    // Don't allow dropping on self
+    if (targetDeviceId === FleetState.draggedDeviceId) return;
+    
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+    
+    const targetEl = event.target.closest('.fleet-device');
+    if (!targetEl) return;
+    
+    // Determine if dropping before or after based on mouse position
+    const rect = targetEl.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const dropPosition = event.clientY < midY ? 'before' : 'after';
+    
+    // Update state
+    FleetState.dropTargetDeviceId = targetDeviceId;
+    FleetState.dropPosition = dropPosition;
+    
+    // Remove existing drop indicators
+    document.querySelectorAll('.fleet-device').forEach(el => {
+        el.classList.remove('drop-before', 'drop-after');
+    });
+    
+    // Add drop indicator to target
+    targetEl.classList.add(dropPosition === 'before' ? 'drop-before' : 'drop-after');
+}
+
+/**
+ * Handle drag leave from a device
+ */
+function handleDeviceDragLeaveDevice(event) {
+    const targetEl = event.target.closest('.fleet-device');
+    if (targetEl && !targetEl.contains(event.relatedTarget)) {
+        targetEl.classList.remove('drop-before', 'drop-after');
+        if (FleetState.dropTargetDeviceId === targetEl.dataset.deviceId) {
+            FleetState.dropTargetDeviceId = null;
+            FleetState.dropPosition = null;
+        }
+    }
+}
+
+/**
+ * Handle drop on another device (reorder)
+ */
+async function handleDeviceDrop(event, targetDeviceId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const draggedId = event.dataTransfer.getData('text/plain') || FleetState.draggedDeviceId;
+    
+    // Don't do anything if dropped on self or no target
+    if (!draggedId || draggedId === targetDeviceId) {
+        cleanupDeviceReorderStates();
+        return;
+    }
+    
+    const dropPosition = FleetState.dropPosition || 'after';
+    
+    // Get current filtered/sorted devices
+    let devices = getFilteredDevices();
+    
+    // Find indices
+    const draggedIndex = devices.findIndex(d => d.id === draggedId);
+    const targetIndex = devices.findIndex(d => d.id === targetDeviceId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+        cleanupDeviceReorderStates();
+        return;
+    }
+    
+    // Remove dragged device from array
+    const [draggedDevice] = devices.splice(draggedIndex, 1);
+    
+    // Calculate new target index after removal
+    let newIndex = devices.findIndex(d => d.id === targetDeviceId);
+    if (dropPosition === 'after') {
+        newIndex += 1;
+    }
+    
+    // Insert at new position
+    devices.splice(newIndex, 0, draggedDevice);
+    
+    // Assign new sort_order values
+    const deviceOrders = devices.map((device, index) => ({
+        device_id: device.id,
+        sort_order: index
+    }));
+    
+    // Update local state immediately for responsive UI
+    deviceOrders.forEach(item => {
+        const device = FleetState.devices.find(d => d.id === item.device_id);
+        if (device) {
+            device.sort_order = item.sort_order;
+        }
+    });
+    
+    cleanupDeviceReorderStates();
+    renderFleetList();
+    
+    // Save to backend
+    try {
+        await fetch(`${API_BASE}/v1/fleet/devices/order`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${window.accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ device_orders: deviceOrders })
+        });
+        showAlert('Device order updated', 'success');
+    } catch (error) {
+        console.error('Failed to save device order:', error);
+        showAlert('Failed to save device order', 'error');
+    }
+}
+
+/**
+ * Get filtered devices based on current filters
+ */
+function getFilteredDevices() {
+    let devices = [...FleetState.devices];
+    
+    // Apply group filter
+    if (FleetState.activeGroupFilter) {
+        devices = devices.filter(d => d.group_id === FleetState.activeGroupFilter);
+    }
+    
+    // Apply status filter
+    if (FleetState.statusFilter && FleetState.statusFilter !== 'all') {
+        devices = devices.filter(d => d.status === FleetState.statusFilter);
+    }
+    
+    // Apply search filter
+    if (FleetState.searchQuery) {
+        const query = FleetState.searchQuery.toLowerCase();
+        devices = devices.filter(d => 
+            d.name?.toLowerCase().includes(query) ||
+            d.custom_name?.toLowerCase().includes(query) ||
+            d.id?.toLowerCase().includes(query)
+        );
+    }
+    
+    // Sort by sort_order
+    devices.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    
+    return devices;
+}
+
+/**
+ * Clean up device reorder visual states
+ */
+function cleanupDeviceReorderStates() {
+    FleetState.dropTargetDeviceId = null;
+    FleetState.dropPosition = null;
+    
+    document.querySelectorAll('.fleet-device').forEach(el => {
+        el.classList.remove('drop-before', 'drop-after');
+    });
+}
+
 // Export drag and drop functions to window
 window.handleDeviceDragStart = handleDeviceDragStart;
 window.handleDeviceDragEnd = handleDeviceDragEnd;
@@ -1579,6 +1761,9 @@ window.handleGroupDragOver = handleGroupDragOver;
 window.handleGroupDragLeave = handleGroupDragLeave;
 window.handleGroupDrop = handleGroupDrop;
 window.cleanupDragStates = cleanupDragStates;
+window.handleDeviceDragOverDevice = handleDeviceDragOverDevice;
+window.handleDeviceDragLeaveDevice = handleDeviceDragLeaveDevice;
+window.handleDeviceDrop = handleDeviceDrop;
 
 window.loadFleet = loadFleet;
 window.openDeviceModal = openDeviceModal;
