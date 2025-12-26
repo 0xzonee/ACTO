@@ -22,6 +22,8 @@ const FleetState = {
     // Pagination
     currentPage: 1,
     devicesPerPage: 10,
+    // Drag and Drop
+    draggedDeviceId: null,
 };
 
 const FLEET_DEVICES_PER_PAGE = 10;
@@ -109,10 +111,14 @@ function renderGroupsList() {
     const groups = FleetState.groups;
     const totalDevices = FleetState.devices.length;
     
-    // Build groups HTML
+    // Build groups HTML with drop zone support
     let html = `
         <div class="fleet-group-card fleet-group-all ${!FleetState.activeGroupFilter ? 'active' : ''}"
-             onclick="filterByGroup(null)">
+             onclick="filterByGroup(null)"
+             data-group-id=""
+             ondragover="handleGroupDragOver(event)"
+             ondragleave="handleGroupDragLeave(event)"
+             ondrop="handleGroupDrop(event, null)">
             <div class="fleet-group-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"></rect>
@@ -125,6 +131,7 @@ function renderGroupsList() {
                 <div class="fleet-group-name">All Devices</div>
                 <div class="fleet-group-count">${totalDevices} device${totalDevices !== 1 ? 's' : ''}</div>
             </div>
+            <div class="drop-hint">Drop to unassign</div>
         </div>
     `;
     
@@ -135,7 +142,10 @@ function renderGroupsList() {
         html += `
             <div class="fleet-group-card ${isActive ? 'active' : ''}"
                  onclick="filterByGroup('${group.id}')"
-                 data-group-id="${group.id}">
+                 data-group-id="${group.id}"
+                 ondragover="handleGroupDragOver(event)"
+                 ondragleave="handleGroupDragLeave(event)"
+                 ondrop="handleGroupDrop(event, '${group.id}')">
                 <div class="fleet-group-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -162,6 +172,7 @@ function renderGroupsList() {
                         </svg>
                     </button>
                 </div>
+                <div class="drop-hint">Drop here</div>
             </div>
         `;
     }
@@ -269,7 +280,20 @@ function renderDeviceCard(device) {
     return `
         <div class="fleet-device ${isSelected ? 'selected' : ''}" 
              data-device-id="${device.id}"
+             draggable="true"
+             ondragstart="handleDeviceDragStart(event, '${device.id}')"
+             ondragend="handleDeviceDragEnd(event)"
              onclick="openDeviceModal('${device.id}')">
+            <div class="drag-handle" title="Drag to assign to group">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="5" r="1"></circle>
+                    <circle cx="9" cy="12" r="1"></circle>
+                    <circle cx="9" cy="19" r="1"></circle>
+                    <circle cx="15" cy="5" r="1"></circle>
+                    <circle cx="15" cy="12" r="1"></circle>
+                    <circle cx="15" cy="19" r="1"></circle>
+                </svg>
+            </div>
             <input type="checkbox" class="fleet-device-checkbox" 
                    ${isSelected ? 'checked' : ''}
                    onclick="event.stopPropagation(); toggleDeviceSelection('${device.id}')">
@@ -1309,6 +1333,211 @@ window.refreshFleet = function() {
     FleetState.currentPage = 1; // Reset pagination on refresh
     loadFleet();
 };
+
+// ============================================================
+// Drag and Drop Functions
+// ============================================================
+
+/**
+ * Handle drag start on a device card
+ */
+function handleDeviceDragStart(event, deviceId) {
+    FleetState.draggedDeviceId = deviceId;
+    
+    // Set drag data
+    event.dataTransfer.setData('text/plain', deviceId);
+    event.dataTransfer.effectAllowed = 'move';
+    
+    // Add visual feedback to dragged element
+    const deviceEl = event.target.closest('.fleet-device');
+    if (deviceEl) {
+        deviceEl.classList.add('dragging');
+    }
+    
+    // Highlight all group cards as drop targets
+    document.querySelectorAll('.fleet-group-card').forEach(card => {
+        card.classList.add('drop-target');
+    });
+    
+    // Show drag overlay hint
+    showDragOverlay(true);
+}
+
+/**
+ * Handle drag end on a device card
+ */
+function handleDeviceDragEnd(event) {
+    FleetState.draggedDeviceId = null;
+    
+    // Remove dragging class
+    const deviceEl = event.target.closest('.fleet-device');
+    if (deviceEl) {
+        deviceEl.classList.remove('dragging');
+    }
+    
+    // Remove drop target highlighting from all groups
+    document.querySelectorAll('.fleet-group-card').forEach(card => {
+        card.classList.remove('drop-target', 'drag-over');
+    });
+    
+    // Hide drag overlay
+    showDragOverlay(false);
+}
+
+/**
+ * Handle drag over on a group card
+ */
+function handleGroupDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    
+    const groupCard = event.target.closest('.fleet-group-card');
+    if (groupCard) {
+        groupCard.classList.add('drag-over');
+    }
+}
+
+/**
+ * Handle drag leave on a group card
+ */
+function handleGroupDragLeave(event) {
+    const groupCard = event.target.closest('.fleet-group-card');
+    if (groupCard && !groupCard.contains(event.relatedTarget)) {
+        groupCard.classList.remove('drag-over');
+    }
+}
+
+/**
+ * Handle drop on a group card
+ */
+async function handleGroupDrop(event, groupId) {
+    event.preventDefault();
+    
+    const deviceId = event.dataTransfer.getData('text/plain') || FleetState.draggedDeviceId;
+    if (!deviceId) return;
+    
+    const device = FleetState.devices.find(d => d.id === deviceId);
+    if (!device) return;
+    
+    // Don't do anything if device is already in this group
+    if (device.group_id === groupId) {
+        // Clean up visual states
+        document.querySelectorAll('.fleet-group-card').forEach(card => {
+            card.classList.remove('drop-target', 'drag-over');
+        });
+        showDragOverlay(false);
+        return;
+    }
+    
+    // Show loading state on the group card
+    const groupCard = event.target.closest('.fleet-group-card');
+    if (groupCard) {
+        groupCard.classList.add('loading');
+    }
+    
+    try {
+        // If removing from current group
+        if (device.group_id) {
+            await fetch(`${API_BASE}/v1/fleet/groups/${device.group_id}/unassign`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ device_ids: [deviceId] })
+            });
+        }
+        
+        // If assigning to new group (groupId is not null/empty)
+        if (groupId) {
+            const response = await fetch(`${API_BASE}/v1/fleet/groups/${groupId}/assign`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ device_ids: [deviceId] })
+            });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const group = FleetState.groups.find(g => g.id === groupId);
+            device.group_id = groupId;
+            device.group_name = group?.name || null;
+            
+            // Update group device count
+            if (group && !group.device_ids) {
+                group.device_ids = [];
+            }
+            if (group && !group.device_ids.includes(deviceId)) {
+                group.device_ids.push(deviceId);
+            }
+        } else {
+            // Unassigning from all groups
+            device.group_id = null;
+            device.group_name = null;
+        }
+        
+        // Update old group device count
+        if (device.group_id !== groupId) {
+            const oldGroup = FleetState.groups.find(g => g.id === device.group_id);
+            if (oldGroup && oldGroup.device_ids) {
+                oldGroup.device_ids = oldGroup.device_ids.filter(id => id !== deviceId);
+            }
+        }
+        
+        showAlert(groupId ? 'Device assigned to group' : 'Device unassigned from group', 'success');
+        renderGroupsList();
+        renderFleetList();
+        
+    } catch (error) {
+        console.error('Failed to assign device to group:', error);
+        showAlert('Failed to assign device to group', 'error');
+    } finally {
+        // Clean up visual states
+        document.querySelectorAll('.fleet-group-card').forEach(card => {
+            card.classList.remove('drop-target', 'drag-over', 'loading');
+        });
+        showDragOverlay(false);
+    }
+}
+
+/**
+ * Show/hide the drag overlay hint
+ */
+function showDragOverlay(show) {
+    let overlay = document.getElementById('dragOverlay');
+    
+    if (show) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'dragOverlay';
+            overlay.className = 'drag-overlay';
+            overlay.innerHTML = `
+                <div class="drag-overlay-content">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <p>Drop on a group to assign</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.add('visible');
+    } else if (overlay) {
+        overlay.classList.remove('visible');
+    }
+}
+
+// Export drag and drop functions to window
+window.handleDeviceDragStart = handleDeviceDragStart;
+window.handleDeviceDragEnd = handleDeviceDragEnd;
+window.handleGroupDragOver = handleGroupDragOver;
+window.handleGroupDragLeave = handleGroupDragLeave;
+window.handleGroupDrop = handleGroupDrop;
 
 window.loadFleet = loadFleet;
 window.openDeviceModal = openDeviceModal;
