@@ -136,7 +136,8 @@ function renderGroupsList() {
     `;
     
     for (const group of groups) {
-        const deviceCount = group.device_ids?.length || 0;
+        // Count devices by checking actual device assignments (more reliable than group.device_ids)
+        const deviceCount = FleetState.devices.filter(d => d.group_id === group.id).length;
         const isActive = FleetState.activeGroupFilter === group.id;
         
         html += `
