@@ -35,13 +35,7 @@ class UserStore:
                 # Update last login
                 user.last_login_at = now
                 session.commit()
-                return {
-                    "user_id": user.user_id,
-                    "wallet_address": user.wallet_address,
-                    "created_at": user.created_at,
-                    "last_login_at": user.last_login_at,
-                    "is_active": user.is_active,
-                }
+                return self._user_to_dict(user)
             else:
                 # Create new user
                 user_id = secrets.token_urlsafe(16)
@@ -54,26 +48,14 @@ class UserStore:
                 )
                 session.add(user)
                 session.commit()
-                return {
-                    "user_id": user_id,
-                    "wallet_address": wallet_address,
-                    "created_at": now,
-                    "last_login_at": now,
-                    "is_active": True,
-                }
+                return self._user_to_dict(user)
 
     def get_user(self, user_id: str) -> dict[str, Any] | None:
         """Get user by ID."""
         with self.Session() as session:
             user = session.query(User).filter(User.user_id == user_id).first()
             if user:
-                return {
-                    "user_id": user.user_id,
-                    "wallet_address": user.wallet_address,
-                    "created_at": user.created_at,
-                    "last_login_at": user.last_login_at,
-                    "is_active": user.is_active,
-                }
+                return self._user_to_dict(user)
         return None
 
     def get_user_by_wallet(self, wallet_address: str) -> dict[str, Any] | None:
@@ -81,12 +63,73 @@ class UserStore:
         with self.Session() as session:
             user = session.query(User).filter(User.wallet_address == wallet_address).first()
             if user:
-                return {
-                    "user_id": user.user_id,
-                    "wallet_address": user.wallet_address,
-                    "created_at": user.created_at,
-                    "last_login_at": user.last_login_at,
-                    "is_active": user.is_active,
-                }
+                return self._user_to_dict(user)
+        return None
+
+    def _user_to_dict(self, user: User) -> dict[str, Any]:
+        """Convert User model to dictionary with all fields."""
+        return {
+            "user_id": user.user_id,
+            "wallet_address": user.wallet_address,
+            "created_at": user.created_at,
+            "last_login_at": user.last_login_at,
+            "is_active": user.is_active,
+            # Profile fields
+            "contact_name": user.contact_name,
+            "company_name": user.company_name,
+            "email": user.email,
+            "phone": user.phone,
+            "website": user.website,
+            "location": user.location,
+            "industry": user.industry,
+            "updated_at": user.updated_at,
+        }
+
+    def update_profile(
+        self,
+        user_id: str,
+        contact_name: str | None = None,
+        company_name: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        website: str | None = None,
+        location: str | None = None,
+        industry: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Update user profile fields. Only provided fields are updated."""
+        with self.Session() as session:
+            user = session.query(User).filter(User.user_id == user_id).first()
+            if not user:
+                return None
+            
+            now = datetime.now(timezone.utc).isoformat()
+            
+            # Update only fields that are explicitly provided (not None)
+            if contact_name is not None:
+                user.contact_name = contact_name if contact_name else None
+            if company_name is not None:
+                user.company_name = company_name if company_name else None
+            if email is not None:
+                user.email = email if email else None
+            if phone is not None:
+                user.phone = phone if phone else None
+            if website is not None:
+                user.website = website if website else None
+            if location is not None:
+                user.location = location if location else None
+            if industry is not None:
+                user.industry = industry if industry else None
+            
+            user.updated_at = now
+            session.commit()
+            
+            return self._user_to_dict(user)
+
+    def get_profile(self, user_id: str) -> dict[str, Any] | None:
+        """Get user profile by user ID."""
+        with self.Session() as session:
+            user = session.query(User).filter(User.user_id == user_id).first()
+            if user:
+                return self._user_to_dict(user)
         return None
 

@@ -60,6 +60,8 @@ curl -X POST https://api.actobotics.net/v1/proofs \
 | GET | `/v1/fleet/groups` | List groups | 🔐 JWT |
 | POST | `/v1/fleet/groups` | Create group | 🔐 JWT |
 | POST | `/v1/fleet/groups/{id}/assign` | Assign devices | 🔐 JWT |
+| GET | `/v1/profile` | Get user profile | 🔐 JWT |
+| PATCH | `/v1/profile` | Update user profile | 🔐 JWT |
 
 ---
 
@@ -76,7 +78,7 @@ GET /health
 {
   "ok": true,
   "service": "acto",
-  "version": "0.6.0"
+  "version": "0.9.11"
 }
 ```
 
@@ -625,6 +627,90 @@ DELETE /v1/fleet/groups/{group_id}
   "success": true,
   "group_id": "grp_abc123",
   "devices_unassigned": 5
+}
+```
+
+---
+
+## User Profile
+
+User profile endpoints allow you to manage your account settings and contact information. All fields are optional.
+
+### Get Profile
+
+```http
+GET /v1/profile
+```
+
+Returns the current user's profile information.
+
+**Response:**
+```json
+{
+  "user_id": "abc123...",
+  "wallet_address": "ABC123...",
+  "created_at": "2025-01-01T00:00:00Z",
+  "last_login_at": "2025-12-26T10:30:00Z",
+  "is_active": true,
+  "contact_name": "John Doe",
+  "company_name": "Acme Robotics",
+  "email": "john@acme.com",
+  "phone": "+1 555 123 4567",
+  "website": "https://acme-robotics.com",
+  "location": "San Francisco, USA",
+  "industry": "robotics",
+  "updated_at": "2025-12-26T10:30:00Z"
+}
+```
+
+### Update Profile
+
+```http
+PATCH /v1/profile
+```
+
+Update the current user's profile. Only provided fields are updated; omitted fields remain unchanged.
+
+**Request:**
+```json
+{
+  "contact_name": "Jane Doe",
+  "company_name": "Acme Robotics Inc.",
+  "email": "jane@acme.com",
+  "phone": "+1 555 987 6543",
+  "website": "https://acme-robotics.com",
+  "location": "New York, USA",
+  "industry": "manufacturing"
+}
+```
+
+**Available Industries:**
+- `robotics` - Robotics & Automation
+- `manufacturing` - Manufacturing
+- `logistics` - Logistics & Warehousing
+- `healthcare` - Healthcare
+- `agriculture` - Agriculture
+- `construction` - Construction
+- `retail` - Retail
+- `research` - Research & Development
+- `defense` - Defense & Security
+- `energy` - Energy
+- `other` - Other
+
+**Response:**
+```json
+{
+  "user_id": "abc123...",
+  "wallet_address": "ABC123...",
+  "contact_name": "Jane Doe",
+  "company_name": "Acme Robotics Inc.",
+  "email": "jane@acme.com",
+  "phone": "+1 555 987 6543",
+  "website": "https://acme-robotics.com",
+  "location": "New York, USA",
+  "industry": "manufacturing",
+  "updated_at": "2025-12-26T10:35:00Z",
+  ...
 }
 ```
 

@@ -182,3 +182,36 @@ class WalletStatsResponse(BaseModel):
     proofs_by_robot: dict[str, int]
     proofs_by_task: dict[str, int]
     activity_timeline: list[dict]
+
+
+# ============================================================
+# User Profile Schemas
+# ============================================================
+
+class ProfileUpdateRequest(BaseModel):
+    """Request for updating user profile."""
+    contact_name: str | None = None
+    company_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    website: str | None = None
+    location: str | None = None
+    industry: str | None = None
+
+
+class ProfileResponse(BaseModel):
+    """User profile response."""
+    user_id: str
+    wallet_address: str
+    created_at: str
+    last_login_at: str | None
+    is_active: bool
+    # Profile fields
+    contact_name: str | None = None
+    company_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    website: str | None = None
+    location: str | None = None
+    industry: str | None = None
+    updated_at: str | None = None

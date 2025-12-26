@@ -51,6 +51,8 @@ from .schemas import (
     ProofSearchResponse,
     ProofSubmitRequest,
     ProofSubmitResponse,
+    ProfileResponse,
+    ProfileUpdateRequest,
     TokenGatingConfigResponse,
     VerifyRequest,
     VerifyResponse,
@@ -441,6 +443,48 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="User not found")
         
         return user
+
+    # ============================================================
+    # User Profile Endpoints
+    # ============================================================
+    
+    @app.get("/v1/profile", response_model=ProfileResponse, dependencies=[Depends(require_jwt(jwt_manager))])
+    def get_profile(request: Request) -> ProfileResponse:
+        """Get current user's profile."""
+        current_user = get_current_user_optional(request)
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user ID")
+        
+        profile = user_store.get_profile(user_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        return ProfileResponse(**profile)
+
+    @app.patch("/v1/profile", response_model=ProfileResponse, dependencies=[Depends(require_jwt(jwt_manager))])
+    def update_profile(req: ProfileUpdateRequest, request: Request) -> ProfileResponse:
+        """Update current user's profile."""
+        current_user = get_current_user_optional(request)
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user ID")
+        
+        # Build update kwargs from provided fields
+        update_data = req.model_dump(exclude_unset=True)
+        
+        profile = user_store.update_profile(user_id, **update_data)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        metrics.inc("acto.profile.update")
+        return ProfileResponse(**profile)
 
     # API Key Management Endpoints
     @app.post("/v1/keys", response_model=ApiKeyCreateResponse, dependencies=[Depends(require_jwt(jwt_manager))])

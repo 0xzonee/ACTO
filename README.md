@@ -29,6 +29,7 @@ Generate deterministic, signed execution proofs from robot telemetry and logs. V
 - **REST API** - FastAPI verification service at api.actobotics.net
 - **Multi-Wallet Dashboard** - Phantom, Solflare, Backpack, Glow, Coinbase
 - **Fleet Management** - Monitor and organize your robot fleet
+- **Account Settings** - Manage profile and contact information
 - **Token Gating** - SPL token balance checks (off-chain)
 - **Async Support** - Full async/await API
 - **CLI Tools** - Interactive mode, shell completion
@@ -170,6 +171,8 @@ curl -X POST https://api.actobotics.net/v1/proofs \
 | `GET /v1/fleet` | Fleet overview |
 | `GET /v1/fleet/devices/{id}` | Device details |
 | `GET /v1/fleet/groups` | List device groups |
+| `GET /v1/profile` | Get user profile |
+| `PATCH /v1/profile` | Update user profile |
 
 📖 **Full API documentation:** [docs/API.md](docs/API.md)
 

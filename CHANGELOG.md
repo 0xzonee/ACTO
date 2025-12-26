@@ -5,6 +5,44 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.11] - 2025-12-26
+
+### 👤 Account Settings & User Profile
+
+This release introduces user profile management in the dashboard, allowing users to store optional contact and company information.
+
+#### Added
+
+- **Account Tab in Dashboard** - New section for managing user profile
+  - Contact name field for primary contact person
+  - Company/organization name
+  - Email address
+  - Phone number
+  - Website URL
+  - Location (City, Country)
+  - Industry dropdown (Robotics, Manufacturing, Logistics, Healthcare, etc.)
+  - Account information display (Wallet, User ID, created/login dates)
+
+- **User Profile API Endpoints**
+  - `GET /v1/profile` - Retrieve current user's profile
+  - `PATCH /v1/profile` - Update profile fields (partial updates supported)
+
+- **Database Schema Extension**
+  - Extended `users` table with profile fields (all nullable/optional)
+  - New fields: `contact_name`, `company_name`, `email`, `phone`, `website`, `location`, `industry`, `updated_at`
+
+- **New Files**
+  - `acto_server/static/css/account.css` - Account settings styling
+  - `acto_server/static/js/account.js` - Account tab functionality
+
+#### Technical
+
+- Profile fields are automatically included in user responses
+- PATCH endpoint only updates provided fields (null values are preserved)
+- SQLite auto-migration adds new columns on startup
+
+---
+
 ## [0.9.10] - 2025-12-23
 
 ### 🎨 Website (acto-web)

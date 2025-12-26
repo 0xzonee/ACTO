@@ -1,0 +1,290 @@
+/* ============================================================
+   Account Settings Styles
+   ============================================================ */
+
+/* Account Layout */
+.account-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Account Header Card */
+.account-header-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.account-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.account-header-info h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.account-header-info p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Account Section Headers */
+.account-section-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.account-section-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+}
+
+.account-section-header p {
+    margin: 0;
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.875rem;
+}
+
+/* Account Form */
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-row .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.account-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary, #374151);
+    font-size: 0.9rem;
+}
+
+.account-form .form-group label svg {
+    color: var(--text-secondary, #6b7280);
+    flex-shrink: 0;
+}
+
+.account-form input,
+.account-form select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: var(--bg-secondary, #f9fafb);
+    color: var(--text-primary, #1f2937);
+    transition: all 0.2s ease;
+}
+
+.account-form input:focus,
+.account-form select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: #fff;
+}
+
+.account-form input::placeholder {
+    color: var(--text-tertiary, #9ca3af);
+}
+
+.account-form select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.form-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-weight: 500;
+}
+
+.form-actions .btn svg {
+    flex-shrink: 0;
+}
+
+/* Account Info Grid */
+.account-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.account-info-item {
+    padding: 16px;
+    background: var(--bg-secondary, #f9fafb);
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.account-info-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #6b7280);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.account-info-value {
+    font-size: 0.95rem;
+    color: var(--text-primary, #1f2937);
+    font-weight: 500;
+    word-break: break-all;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.status-badge.inactive {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+/* Loading State */
+.account-form.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.account-form.loading input,
+.account-form.loading select,
+.account-form.loading button {
+    cursor: not-allowed;
+}
+
+/* Success/Error States */
+.account-form input.success {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.account-form input.error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+/* Save Button Loading State */
+#saveProfileBtn.loading {
+    position: relative;
+    color: transparent;
+}
+
+#saveProfileBtn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .account-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .account-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .account-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .account-avatar {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .account-avatar svg {
+        width: 36px;
+        height: 36px;
+    }
+}
+
