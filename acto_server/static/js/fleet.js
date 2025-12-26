@@ -1467,10 +1467,13 @@ async function handleGroupDrop(event, groupId) {
         }
     });
     
+    // Store old group ID before any changes
+    const oldGroupId = device.group_id;
+    
     try {
         // If removing from current group
-        if (device.group_id) {
-            await fetch(`${API_BASE}/v1/fleet/groups/${device.group_id}/unassign`, {
+        if (oldGroupId) {
+            await fetch(`${API_BASE}/v1/fleet/groups/${oldGroupId}/unassign`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${window.accessToken}`,
@@ -1478,6 +1481,12 @@ async function handleGroupDrop(event, groupId) {
                 },
                 body: JSON.stringify({ device_ids: [deviceId] })
             });
+            
+            // Update old group device count in local state
+            const oldGroup = FleetState.groups.find(g => g.id === oldGroupId);
+            if (oldGroup && oldGroup.device_ids) {
+                oldGroup.device_ids = oldGroup.device_ids.filter(id => id !== deviceId);
+            }
         }
         
         // If assigning to new group (groupId is not null/empty)
@@ -1493,29 +1502,21 @@ async function handleGroupDrop(event, groupId) {
             
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
-            const group = FleetState.groups.find(g => g.id === groupId);
+            const newGroup = FleetState.groups.find(g => g.id === groupId);
             device.group_id = groupId;
-            device.group_name = group?.name || null;
+            device.group_name = newGroup?.name || null;
             
-            // Update group device count
-            if (group && !group.device_ids) {
-                group.device_ids = [];
+            // Update new group device count in local state
+            if (newGroup && !newGroup.device_ids) {
+                newGroup.device_ids = [];
             }
-            if (group && !group.device_ids.includes(deviceId)) {
-                group.device_ids.push(deviceId);
+            if (newGroup && !newGroup.device_ids.includes(deviceId)) {
+                newGroup.device_ids.push(deviceId);
             }
         } else {
             // Unassigning from all groups
             device.group_id = null;
             device.group_name = null;
-        }
-        
-        // Update old group device count
-        if (device.group_id !== groupId) {
-            const oldGroup = FleetState.groups.find(g => g.id === device.group_id);
-            if (oldGroup && oldGroup.device_ids) {
-                oldGroup.device_ids = oldGroup.device_ids.filter(id => id !== deviceId);
-            }
         }
         
         showAlert(groupId ? 'Device assigned to group' : 'Device unassigned from group', 'success');
