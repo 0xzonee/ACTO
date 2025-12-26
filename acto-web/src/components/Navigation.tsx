@@ -104,7 +104,7 @@ export function Navigation() {
             <Link to="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">Home</Link>
             <Link to="/about" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">About</Link>
             <Link to="/faq" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">FAQ</Link>
-            <Link to="/comparison" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">Comparison</Link>
+            <Link to="/comparison" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">Why ACTO?</Link>
             <a href={config.links.docs} className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">Docs</a>
             <a href="https://api.actobotics.net/dashboard" className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap">Dashboard</a>
             <a href={config.social.github} className="text-gray-500 hover:text-gray-900 transition-colors" aria-label="GitHub">
