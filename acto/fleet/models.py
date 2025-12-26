@@ -39,7 +39,8 @@ class DeviceRecord(Base):
     sort_order: Mapped[int | None] = mapped_column(Integer, default=0, nullable=True)
     
     # Hidden flag for soft-delete (device still has proofs but shouldn't appear in fleet)
-    is_hidden: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
+    # Using Integer for cross-database compatibility (0=visible, 1=hidden)
+    is_hidden: Mapped[int | None] = mapped_column(Integer, default=0, nullable=True)
     
     # Timestamps
     created_at: Mapped[str] = mapped_column(String(64), index=True)

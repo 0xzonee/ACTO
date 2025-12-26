@@ -39,33 +39,40 @@ class FleetStore:
         self._migrate_add_sort_order()
 
     def _migrate_add_sort_order(self) -> None:
-        """Add sort_order column to fleet_devices if it doesn't exist."""
+        """Add new columns to fleet_devices if they don't exist."""
+        # First check if the table exists at all
         with self.Session() as session:
             try:
-                # Check if column exists by trying to query it
+                session.execute(text("SELECT 1 FROM fleet_devices LIMIT 1"))
+            except Exception:
+                session.rollback()
+                # Table doesn't exist yet, will be created by create_all
+                return
+        
+        # Add sort_order column if it doesn't exist
+        with self.Session() as session:
+            try:
                 session.execute(text("SELECT sort_order FROM fleet_devices LIMIT 1"))
             except Exception:
                 session.rollback()
-                # Column doesn't exist, add it (nullable for SQLite compatibility)
                 try:
                     session.execute(text("ALTER TABLE fleet_devices ADD COLUMN sort_order INTEGER DEFAULT 0"))
                     session.commit()
-                except Exception as e:
+                except Exception:
                     session.rollback()
-                    print(f"Migration warning: Could not add sort_order column: {e}")
         
-        # Also add is_hidden column if it doesn't exist
+        # Add is_hidden column if it doesn't exist
         with self.Session() as session:
             try:
                 session.execute(text("SELECT is_hidden FROM fleet_devices LIMIT 1"))
             except Exception:
                 session.rollback()
                 try:
-                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN is_hidden BOOLEAN DEFAULT 0"))
+                    # Use INTEGER for cross-database compatibility (SQLite, PostgreSQL)
+                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN is_hidden INTEGER DEFAULT 0"))
                     session.commit()
-                except Exception as e:
+                except Exception:
                     session.rollback()
-                    print(f"Migration warning: Could not add is_hidden column: {e}")
 
     # ============================================================
     # Device Operations
@@ -189,13 +196,13 @@ class FleetStore:
                 record = DeviceRecord(
                     device_id=device_id,
                     user_id=user_id,
-                    is_hidden=True,
+                    is_hidden=1,
                     created_at=now,
                     updated_at=now,
                 )
                 session.add(record)
             else:
-                record.is_hidden = True
+                record.is_hidden = 1
                 record.updated_at = now
             
             session.commit()
@@ -208,10 +215,9 @@ class FleetStore:
         if sort_order is None:
             sort_order = 0
         
-        # Handle is_hidden safely
-        is_hidden = getattr(record, "is_hidden", False)
-        if is_hidden is None:
-            is_hidden = False
+        # Handle is_hidden safely (stored as int: 0=visible, 1=hidden)
+        is_hidden_val = getattr(record, "is_hidden", 0)
+        is_hidden = bool(is_hidden_val) if is_hidden_val is not None else False
         
         return {
             "device_id": record.device_id,
