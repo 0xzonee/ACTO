@@ -489,7 +489,7 @@ function AutonomousCleaningLayout({ useCase, slug }: { useCase: typeof useCaseDa
         {/* Success Story */}
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-20 md:py-28 relative z-10">
           <ScrollAnimation animation="blur-in" delay={0}>
-            <div className="text-gray-500 text-sm font-medium mb-4 text-center">SUCCESS STORY</div>
+            <div className="text-gray-500 text-sm font-medium mb-4 text-center">EXAMPLES</div>
             <h2 className="text-3xl font-medium mb-8 text-center text-gray-900">{useCase.example.title}</h2>
             <p className="text-gray-600 text-lg leading-relaxed mb-8 text-center">{useCase.example.scenario}</p>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 text-left border border-gray-200 shadow-lg">

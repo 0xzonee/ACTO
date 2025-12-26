@@ -19,7 +19,7 @@ const steps = [
   {
     number: '04',
     title: 'Verification',
-    description: 'Local or network-based proof verification.',
+    description: 'Network-based proof verification.',
   },
 ];
 

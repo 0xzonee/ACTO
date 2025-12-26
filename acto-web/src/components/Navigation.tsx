@@ -60,7 +60,7 @@ export function Navigation() {
                   className="text-base text-gray-700 hover:text-gray-900 transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Comparison
+                  Why ACTO?
                 </Link>
                 <a
                   href={config.links.docs}
