@@ -16,6 +16,19 @@ from acto.registry.db import make_engine, make_session_factory
 from acto.config.settings import Settings
 
 
+class ApiKeyGroup(Base):
+    """Database model for API key groups."""
+
+    __tablename__ = "api_key_groups"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(64), index=True)
+    name: Mapped[str] = mapped_column(String(256))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[str] = mapped_column(String(64), index=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class ApiKeyRecord(Base):
     """Database model for API keys."""
 
@@ -32,6 +45,9 @@ class ApiKeyRecord(Base):
     # Usage statistics
     request_count: Mapped[int] = mapped_column(Integer, default=0, index=True)
     endpoint_usage: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON string with endpoint -> count mapping
+    # Group and ordering
+    group_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
 
 def generate_api_key(prefix: str = "acto") -> str:
@@ -120,6 +136,35 @@ class ApiKeyStore:
                     else:
                         # For other databases, try ALTER TABLE
                         conn.execute(text("ALTER TABLE api_keys ADD COLUMN user_id VARCHAR(64)"))
+                
+                # Check if group_id and sort_order columns exist
+                group_columns = ["group_id", "sort_order"]
+                for col_name in group_columns:
+                    col_exists = False
+                    if self.engine.url.drivername == "postgresql":
+                        result = conn.execute(text(f"""
+                            SELECT column_name 
+                            FROM information_schema.columns 
+                            WHERE table_name='api_keys' AND column_name='{col_name}'
+                        """))
+                        col_exists = result.fetchone() is not None
+                    elif self.engine.url.drivername.startswith("sqlite"):
+                        result = conn.execute(text("PRAGMA table_info(api_keys)"))
+                        columns = [row[1] for row in result.fetchall()]
+                        col_exists = col_name in columns
+                    else:
+                        try:
+                            conn.execute(text(f"SELECT {col_name} FROM api_keys LIMIT 1"))
+                            col_exists = True
+                        except Exception:
+                            col_exists = False
+                    
+                    if not col_exists:
+                        if col_name == "group_id":
+                            conn.execute(text("ALTER TABLE api_keys ADD COLUMN group_id VARCHAR(64)"))
+                            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_api_keys_group_id ON api_keys(group_id)"))
+                        elif col_name == "sort_order":
+                            conn.execute(text("ALTER TABLE api_keys ADD COLUMN sort_order INTEGER DEFAULT 0"))
                 
                 # Check if request_count column exists
                 stats_columns = ["request_count", "endpoint_usage"]
@@ -278,7 +323,15 @@ class ApiKeyStore:
                 query = query.filter(ApiKeyRecord.user_id == user_id)
             if not include_inactive:
                 query = query.filter(ApiKeyRecord.is_active == True)  # noqa: E712
-            records = query.order_by(ApiKeyRecord.created_at.desc()).all()
+            records = query.order_by(ApiKeyRecord.sort_order, ApiKeyRecord.created_at.desc()).all()
+
+            # Build group name lookup
+            group_names = {}
+            if user_id:
+                groups = session.query(ApiKeyGroup).filter(
+                    ApiKeyGroup.user_id == user_id
+                ).all()
+                group_names = {g.id: g.name for g in groups}
 
             return [
                 {
@@ -291,6 +344,9 @@ class ApiKeyStore:
                     "user_id": record.user_id,
                     "request_count": record.request_count or 0,
                     "endpoint_usage": json.loads(record.endpoint_usage) if record.endpoint_usage else {},
+                    "group_id": getattr(record, 'group_id', None),
+                    "group_name": group_names.get(getattr(record, 'group_id', None) or ''),
+                    "sort_order": getattr(record, 'sort_order', 0) or 0,
                 }
                 for record in records
             ]
@@ -365,4 +421,217 @@ class ApiKeyStore:
                     "is_active": record.is_active,
                 }
         return None
+
+    # ============================================================
+    # API Key Group Methods
+    # ============================================================
+
+    def create_group(self, name: str, user_id: str, description: str | None = None) -> dict[str, Any]:
+        """Create a new API key group."""
+        group_id = secrets.token_urlsafe(16)
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Get max sort_order for this user's groups
+        with self.Session() as session:
+            max_order = session.query(ApiKeyGroup).filter(
+                ApiKeyGroup.user_id == user_id
+            ).count()
+            
+            record = ApiKeyGroup(
+                id=group_id,
+                user_id=user_id,
+                name=name,
+                description=description,
+                created_at=now,
+                sort_order=max_order,
+            )
+            session.add(record)
+            session.commit()
+        
+        return {
+            "id": group_id,
+            "name": name,
+            "description": description,
+            "created_at": now,
+            "sort_order": max_order,
+            "key_ids": [],
+        }
+
+    def list_groups(self, user_id: str) -> list[dict[str, Any]]:
+        """List all groups for a user with their associated key IDs."""
+        with self.Session() as session:
+            groups = session.query(ApiKeyGroup).filter(
+                ApiKeyGroup.user_id == user_id
+            ).order_by(ApiKeyGroup.sort_order).all()
+            
+            result = []
+            for group in groups:
+                # Get key IDs for this group
+                keys = session.query(ApiKeyRecord.key_id).filter(
+                    ApiKeyRecord.group_id == group.id,
+                    ApiKeyRecord.user_id == user_id,
+                ).all()
+                key_ids = [k[0] for k in keys]
+                
+                result.append({
+                    "id": group.id,
+                    "name": group.name,
+                    "description": group.description,
+                    "created_at": group.created_at,
+                    "sort_order": group.sort_order,
+                    "key_ids": key_ids,
+                })
+            
+            return result
+
+    def get_group(self, group_id: str, user_id: str) -> dict[str, Any] | None:
+        """Get a specific group by ID."""
+        with self.Session() as session:
+            group = session.query(ApiKeyGroup).filter(
+                ApiKeyGroup.id == group_id,
+                ApiKeyGroup.user_id == user_id,
+            ).first()
+            
+            if not group:
+                return None
+            
+            # Get key IDs for this group
+            keys = session.query(ApiKeyRecord.key_id).filter(
+                ApiKeyRecord.group_id == group_id,
+                ApiKeyRecord.user_id == user_id,
+            ).all()
+            key_ids = [k[0] for k in keys]
+            
+            return {
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "created_at": group.created_at,
+                "sort_order": group.sort_order,
+                "key_ids": key_ids,
+            }
+
+    def update_group(
+        self, 
+        group_id: str, 
+        user_id: str, 
+        name: str | None = None, 
+        description: str | None = None
+    ) -> dict[str, Any] | None:
+        """Update a group's name or description."""
+        with self.Session() as session:
+            group = session.query(ApiKeyGroup).filter(
+                ApiKeyGroup.id == group_id,
+                ApiKeyGroup.user_id == user_id,
+            ).first()
+            
+            if not group:
+                return None
+            
+            if name is not None:
+                group.name = name
+            if description is not None:
+                group.description = description
+            
+            session.commit()
+            
+            # Get key IDs for this group
+            keys = session.query(ApiKeyRecord.key_id).filter(
+                ApiKeyRecord.group_id == group_id,
+                ApiKeyRecord.user_id == user_id,
+            ).all()
+            key_ids = [k[0] for k in keys]
+            
+            return {
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "created_at": group.created_at,
+                "sort_order": group.sort_order,
+                "key_ids": key_ids,
+            }
+
+    def delete_group(self, group_id: str, user_id: str) -> bool:
+        """Delete a group and unassign all keys from it."""
+        with self.Session() as session:
+            group = session.query(ApiKeyGroup).filter(
+                ApiKeyGroup.id == group_id,
+                ApiKeyGroup.user_id == user_id,
+            ).first()
+            
+            if not group:
+                return False
+            
+            # Unassign all keys from this group
+            session.query(ApiKeyRecord).filter(
+                ApiKeyRecord.group_id == group_id,
+                ApiKeyRecord.user_id == user_id,
+            ).update({"group_id": None})
+            
+            session.delete(group)
+            session.commit()
+            return True
+
+    def assign_keys_to_group(self, group_id: str | None, key_ids: list[str], user_id: str) -> bool:
+        """Assign multiple keys to a group. If group_id is None, unassign from any group."""
+        with self.Session() as session:
+            # Verify group exists if group_id is provided
+            if group_id:
+                group = session.query(ApiKeyGroup).filter(
+                    ApiKeyGroup.id == group_id,
+                    ApiKeyGroup.user_id == user_id,
+                ).first()
+                if not group:
+                    return False
+            
+            # Update keys
+            session.query(ApiKeyRecord).filter(
+                ApiKeyRecord.key_id.in_(key_ids),
+                ApiKeyRecord.user_id == user_id,
+            ).update({"group_id": group_id}, synchronize_session="fetch")
+            
+            session.commit()
+            return True
+
+    def unassign_keys_from_group(self, group_id: str, key_ids: list[str], user_id: str) -> bool:
+        """Unassign keys from a specific group."""
+        with self.Session() as session:
+            session.query(ApiKeyRecord).filter(
+                ApiKeyRecord.key_id.in_(key_ids),
+                ApiKeyRecord.group_id == group_id,
+                ApiKeyRecord.user_id == user_id,
+            ).update({"group_id": None}, synchronize_session="fetch")
+            
+            session.commit()
+            return True
+
+    def update_key_order(self, key_orders: list[dict[str, Any]], user_id: str) -> bool:
+        """Update the sort order for multiple keys."""
+        with self.Session() as session:
+            for item in key_orders:
+                key_id = item.get("key_id")
+                sort_order = item.get("sort_order", 0)
+                
+                session.query(ApiKeyRecord).filter(
+                    ApiKeyRecord.key_id == key_id,
+                    ApiKeyRecord.user_id == user_id,
+                ).update({"sort_order": sort_order})
+            
+            session.commit()
+            return True
+
+    def update_group_order(self, group_orders: list[dict[str, Any]], user_id: str) -> bool:
+        """Update the sort order for multiple groups."""
+        with self.Session() as session:
+            for item in group_orders:
+                group_id = item.get("group_id")
+                sort_order = item.get("sort_order", 0)
+                
+                session.query(ApiKeyGroup).filter(
+                    ApiKeyGroup.id == group_id,
+                    ApiKeyGroup.user_id == user_id,
+                ).update({"sort_order": sort_order})
+            
+            session.commit()
+            return True
 

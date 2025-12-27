@@ -8,10 +8,21 @@ from acto.security import JWTManager, get_current_user_optional, require_jwt
 from acto.security.api_key_store import ApiKeyStore
 
 from ..schemas import (
+    ApiKeyAssignRequest,
+    ApiKeyAssignResponse,
     ApiKeyCreateRequest,
     ApiKeyCreateResponse,
     ApiKeyDeleteResponse,
+    ApiKeyGroupCreateRequest,
+    ApiKeyGroupDeleteResponse,
+    ApiKeyGroupListResponse,
+    ApiKeyGroupOrderRequest,
+    ApiKeyGroupResponse,
+    ApiKeyGroupUpdateRequest,
+    ApiKeyGroupUpdateResponse,
     ApiKeyListResponse,
+    ApiKeyOrderRequest,
+    ApiKeyOrderResponse,
     ApiKeyStatsResponse,
     ApiKeyToggleResponse,
     ApiKeyUpdateRequest,
@@ -155,6 +166,202 @@ def create_keys_router(
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to toggle API key: {str(e)}") from e
+
+    # ============================================================
+    # API Key Group Endpoints
+    # ============================================================
+
+    @router.get("/groups", response_model=ApiKeyGroupListResponse, dependencies=[jwt_dep])
+    def list_key_groups(request: Request) -> ApiKeyGroupListResponse:
+        """List all API key groups for the current user."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            groups = api_key_store.list_groups(user_id=str(user_id))
+            
+            return ApiKeyGroupListResponse(
+                groups=[ApiKeyGroupResponse(**g) for g in groups],
+                total_groups=len(groups),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to list groups: {str(e)}") from e
+
+    @router.post("/groups", response_model=ApiKeyGroupUpdateResponse, dependencies=[jwt_dep])
+    def create_key_group(req: ApiKeyGroupCreateRequest, request: Request) -> ApiKeyGroupUpdateResponse:
+        """Create a new API key group."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            result = api_key_store.create_group(
+                name=req.name,
+                user_id=str(user_id),
+                description=req.description,
+            )
+            
+            metrics.inc("acto.keys.groups.create")
+            return ApiKeyGroupUpdateResponse(
+                success=True,
+                group=ApiKeyGroupResponse(**result),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to create group: {str(e)}") from e
+
+    @router.patch("/groups/{group_id}", response_model=ApiKeyGroupUpdateResponse, dependencies=[jwt_dep])
+    def update_key_group(group_id: str, req: ApiKeyGroupUpdateRequest, request: Request) -> ApiKeyGroupUpdateResponse:
+        """Update an API key group."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            result = api_key_store.update_group(
+                group_id=group_id,
+                user_id=str(user_id),
+                name=req.name,
+                description=req.description,
+            )
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="Group not found")
+            
+            metrics.inc("acto.keys.groups.update")
+            return ApiKeyGroupUpdateResponse(
+                success=True,
+                group=ApiKeyGroupResponse(**result),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update group: {str(e)}") from e
+
+    @router.delete("/groups/{group_id}", response_model=ApiKeyGroupDeleteResponse, dependencies=[jwt_dep])
+    def delete_key_group(group_id: str, request: Request) -> ApiKeyGroupDeleteResponse:
+        """Delete an API key group. Keys will be unassigned but not deleted."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            success = api_key_store.delete_group(group_id=group_id, user_id=str(user_id))
+            
+            if not success:
+                raise HTTPException(status_code=404, detail="Group not found")
+            
+            metrics.inc("acto.keys.groups.delete")
+            return ApiKeyGroupDeleteResponse(success=True, group_id=group_id)
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete group: {str(e)}") from e
+
+    @router.post("/groups/{group_id}/assign", response_model=ApiKeyAssignResponse, dependencies=[jwt_dep])
+    def assign_keys_to_group(group_id: str, req: ApiKeyAssignRequest, request: Request) -> ApiKeyAssignResponse:
+        """Assign API keys to a group."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            success = api_key_store.assign_keys_to_group(
+                group_id=group_id,
+                key_ids=req.key_ids,
+                user_id=str(user_id),
+            )
+            
+            if not success:
+                raise HTTPException(status_code=404, detail="Group not found")
+            
+            metrics.inc("acto.keys.groups.assign")
+            return ApiKeyAssignResponse(success=True, assigned_count=len(req.key_ids))
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to assign keys: {str(e)}") from e
+
+    @router.post("/groups/{group_id}/unassign", response_model=ApiKeyAssignResponse, dependencies=[jwt_dep])
+    def unassign_keys_from_group(group_id: str, req: ApiKeyAssignRequest, request: Request) -> ApiKeyAssignResponse:
+        """Unassign API keys from a group."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            success = api_key_store.unassign_keys_from_group(
+                group_id=group_id,
+                key_ids=req.key_ids,
+                user_id=str(user_id),
+            )
+            
+            metrics.inc("acto.keys.groups.unassign")
+            return ApiKeyAssignResponse(success=True, assigned_count=len(req.key_ids))
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to unassign keys: {str(e)}") from e
+
+    @router.patch("/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
+    def update_key_order(req: ApiKeyOrderRequest, request: Request) -> ApiKeyOrderResponse:
+        """Update the sort order for API keys."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            api_key_store.update_key_order(key_orders=req.key_orders, user_id=str(user_id))
+            
+            return ApiKeyOrderResponse(success=True)
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update key order: {str(e)}") from e
+
+    @router.patch("/groups/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
+    def update_group_order(req: ApiKeyGroupOrderRequest, request: Request) -> ApiKeyOrderResponse:
+        """Update the sort order for API key groups."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            api_key_store.update_group_order(group_orders=req.group_orders, user_id=str(user_id))
+            
+            return ApiKeyOrderResponse(success=True)
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update group order: {str(e)}") from e
 
     return router
 

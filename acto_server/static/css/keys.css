@@ -265,3 +265,481 @@
     letter-spacing: 0.5px;
 }
 
+/* ============================================
+   Keys Header Top
+   ============================================ */
+
+.keys-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.keys-header-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Key Groups Section
+   ============================================ */
+
+.key-groups-section {
+    margin-bottom: 24px;
+}
+
+.key-groups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.key-groups-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.key-groups-hint {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+}
+
+.key-groups-list {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.key-group-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 180px;
+    position: relative;
+}
+
+.key-group-card:hover {
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.key-group-card.active {
+    border-color: var(--color-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.key-group-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.key-group-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.key-group-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.key-group-count {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+}
+
+.key-group-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.key-group-card:hover .key-group-actions {
+    opacity: 1;
+}
+
+.key-action-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+}
+
+.key-action-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--color-text-primary);
+}
+
+/* All Keys Badge */
+.key-group-all {
+    background: var(--color-bg-secondary);
+    border-style: dashed;
+}
+
+.key-group-all .key-group-icon {
+    background: rgba(107, 114, 128, 0.1);
+    color: var(--color-text-tertiary);
+}
+
+/* Key Group Badge on Key Items */
+.key-group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.key-group-badge svg {
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Key Group Modal
+   ============================================ */
+
+.key-group-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.key-group-modal.show {
+    display: flex;
+}
+
+.key-group-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.key-group-modal-content {
+    position: relative;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    margin: 20px;
+    box-shadow: var(--shadow-xl);
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.key-group-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.key-group-modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.key-group-modal-body {
+    padding: 24px;
+}
+
+.key-group-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border-light);
+    background: var(--color-bg-primary);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* ============================================
+   Drag and Drop Styles for Keys
+   ============================================ */
+
+/* Drag Handle */
+.key-item .drag-handle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    cursor: grab;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.key-item:hover .drag-handle {
+    opacity: 1;
+}
+
+.key-item .drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Dragging State */
+.key-item.dragging {
+    opacity: 0.5;
+    border-style: dashed;
+    border-color: var(--color-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+/* Drop indicators for reordering */
+.key-item.drop-before {
+    position: relative;
+}
+
+.key-item.drop-before::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    animation: dropIndicatorPulse 0.8s ease-in-out infinite;
+}
+
+.key-item.drop-after {
+    position: relative;
+}
+
+.key-item.drop-after::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    animation: dropIndicatorPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes dropIndicatorPulse {
+    0%, 100% { opacity: 1; transform: scaleX(1); }
+    50% { opacity: 0.7; transform: scaleX(0.98); }
+}
+
+/* Group card drop targets */
+.key-group-card.drop-target {
+    border-style: dashed;
+    border-color: var(--color-text-tertiary);
+    position: relative;
+}
+
+.key-group-card.drop-target::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.key-group-card.drag-over {
+    border-color: var(--color-primary);
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+.key-group-card.drag-over::after {
+    opacity: 1;
+}
+
+/* Drop Hint Text */
+.key-group-card .drop-hint {
+    display: none;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: absolute;
+    right: 12px;
+}
+
+.key-group-card.drop-target .drop-hint {
+    display: block;
+    opacity: 0.5;
+}
+
+.key-group-card.drag-over .drop-hint {
+    opacity: 1;
+}
+
+/* Hide group actions when dragging */
+.key-group-card.drop-target .key-group-actions {
+    display: none;
+}
+
+/* Loading state for group after drop */
+.key-group-card.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.key-group-card.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Drag Overlay */
+.drag-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.drag-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.drag-overlay-content {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 24px 32px;
+    text-align: center;
+    box-shadow: var(--shadow-xl);
+    border: 2px dashed var(--color-primary);
+}
+
+.drag-overlay-content svg {
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+.drag-overlay-content p {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+/* Assign Group Button */
+.btn-assign-group {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.btn-assign-group:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================
+   Responsive for Key Groups
+   ============================================ */
+
+@media (max-width: 768px) {
+    .key-groups-list {
+        flex-direction: column;
+    }
+    
+    .key-group-card {
+        width: 100%;
+    }
+    
+    .key-groups-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .keys-header-top {
+        flex-direction: column;
+    }
+    
+    .keys-header-actions {
+        width: 100%;
+    }
+    
+    .keys-header-actions .btn {
+        flex: 1;
+    }
+}
+

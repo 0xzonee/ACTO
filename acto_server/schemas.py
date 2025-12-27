@@ -58,6 +58,7 @@ class ApiKeyDeleteResponse(BaseModel):
 
 class ApiKeyUpdateRequest(BaseModel):
     name: str | None = None
+    group_id: str | None = None
 
 
 class ApiKeyUpdateResponse(BaseModel):
@@ -71,6 +72,65 @@ class ApiKeyToggleResponse(BaseModel):
     success: bool
     key_id: str
     is_active: bool
+
+
+# ============================================================
+# API Key Group Schemas
+# ============================================================
+
+class ApiKeyGroupCreateRequest(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class ApiKeyGroupResponse(BaseModel):
+    id: str
+    name: str
+    description: str | None
+    created_at: str
+    sort_order: int
+    key_ids: list[str]
+
+
+class ApiKeyGroupListResponse(BaseModel):
+    groups: list[ApiKeyGroupResponse]
+    total_groups: int
+
+
+class ApiKeyGroupUpdateRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
+class ApiKeyGroupUpdateResponse(BaseModel):
+    success: bool
+    group: ApiKeyGroupResponse
+
+
+class ApiKeyGroupDeleteResponse(BaseModel):
+    success: bool
+    group_id: str
+
+
+class ApiKeyAssignRequest(BaseModel):
+    key_ids: list[str]
+
+
+class ApiKeyAssignResponse(BaseModel):
+    success: bool
+    assigned_count: int
+
+
+class ApiKeyOrderRequest(BaseModel):
+    key_orders: list[dict]
+
+
+class ApiKeyOrderResponse(BaseModel):
+    success: bool
+
+
+class ApiKeyGroupOrderRequest(BaseModel):
+    group_orders: list[dict]
 
 
 class WalletConnectRequest(BaseModel):

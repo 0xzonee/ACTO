@@ -182,7 +182,19 @@
             <!-- API Keys Tab -->
             <div id="tab-keys" class="tab-content active">
                 <div class="card">
-                    <h2>Create New API Key</h2>
+                    <div class="keys-header-top">
+                        <div>
+                            <h2>Create New API Key</h2>
+                        </div>
+                        <div class="keys-header-actions">
+                            <button class="btn btn-secondary" onclick="openCreateKeyGroupModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                                </svg>
+                                New Group
+                            </button>
+                        </div>
+                    </div>
                     <form id="createKeyForm">
                         <div class="form-group">
                             <label for="keyName">Key Name</label>
@@ -218,6 +230,17 @@
                     </div>
                 </div>
                 
+                <!-- Key Groups Section -->
+                <div class="card key-groups-section">
+                    <div class="key-groups-header">
+                        <h3>Key Groups</h3>
+                        <p class="key-groups-hint">Drag keys to groups to organize them</p>
+                    </div>
+                    <div class="key-groups-list" id="keyGroupsList">
+                        <!-- Groups will be rendered here by JavaScript -->
+                    </div>
+                </div>
+                
                 <div class="card">
                     <div class="keys-header">
                         <h2>Your API Keys</h2>
@@ -238,6 +261,7 @@
                             </select>
                             <!-- Sort -->
                             <select id="keysSort" onchange="filterAndRenderKeys()">
+                                <option value="manual">Manual Order</option>
                                 <option value="created_desc">Newest First</option>
                                 <option value="created_asc">Oldest First</option>
                                 <option value="name_asc">Name A-Z</option>

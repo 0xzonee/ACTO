@@ -5,6 +5,52 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.14] - 2025-12-27
+
+### 🔑 API Key Groups & Reordering
+
+This release adds group management for API keys in the dashboard, allowing you to organize keys into groups and reorder them via drag-and-drop (same functionality as Fleet devices).
+
+#### Added
+
+- **API Key Groups**
+  - Create groups with name and description (e.g., "Production", "Development", "Testing")
+  - Assign/unassign keys to groups via dropdown or drag-and-drop
+  - Filter key list by group
+  - Edit and delete groups
+  - Group badges on key items
+
+- **Drag-and-Drop Key Management**
+  - Drag keys directly onto groups to assign them
+  - Drop on "All Keys" to unassign from groups
+  - Drag keys up/down to reorder within the list
+  - Visual drop indicators and overlay hints
+  - Order is persisted in database across sessions
+
+- **New API Endpoints**
+  - `GET /v1/keys/groups` - List all key groups
+  - `POST /v1/keys/groups` - Create new group
+  - `PATCH /v1/keys/groups/{id}` - Update group
+  - `DELETE /v1/keys/groups/{id}` - Delete group
+  - `POST /v1/keys/groups/{id}/assign` - Assign keys to group
+  - `POST /v1/keys/groups/{id}/unassign` - Unassign keys from group
+  - `PATCH /v1/keys/order` - Update key sort order
+  - `PATCH /v1/keys/groups/order` - Update group sort order
+
+- **Database Schema**
+  - New `api_key_groups` table for group management
+  - Added `group_id` and `sort_order` fields to `api_keys` table
+  - Automatic schema migration for existing databases
+
+- **Dashboard UI**
+  - Key Groups section with drag-and-drop targets
+  - "New Group" button in API Keys tab header
+  - "Manual Order" sort option
+  - Group assignment button on key items
+  - Key group modal for create/edit/assign operations
+
+---
+
 ## [0.9.13] - 2025-12-26
 
 ### 🔐 SDK Fleet Authentication Fix
