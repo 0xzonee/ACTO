@@ -41,6 +41,10 @@ def create_keys_router(
     
     jwt_dep = Depends(require_jwt(jwt_manager))
 
+    # ============================================================
+    # Static routes MUST come before dynamic routes with path params
+    # ============================================================
+
     @router.post("", response_model=ApiKeyCreateResponse, dependencies=[jwt_dep])
     def create_api_key(req: ApiKeyCreateRequest, request: Request) -> ApiKeyCreateResponse:
         """Create a new API key."""
@@ -75,100 +79,32 @@ def create_keys_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to list API keys: {str(e)}") from e
 
-    @router.delete("/{key_id}", response_model=ApiKeyDeleteResponse, dependencies=[jwt_dep])
-    def delete_api_key(key_id: str, request: Request) -> ApiKeyDeleteResponse:
-        """Deactivate an API key."""
-        try:
-            current_user = get_current_user_optional(request)
-            if not current_user:
-                raise HTTPException(status_code=401, detail="Authentication required")
-            
-            user_id = current_user.get("user_id")
-            success = api_key_store.delete_key(key_id, user_id=user_id)
-            if not success:
-                raise HTTPException(status_code=404, detail="API key not found")
-            metrics.inc("acto.keys.delete")
-            return ApiKeyDeleteResponse(success=True, key_id=key_id)
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to delete API key: {str(e)}") from e
+    # ============================================================
+    # Static /order route - MUST come before /{key_id}
+    # ============================================================
 
-    @router.get("/{key_id}/stats", response_model=ApiKeyStatsResponse, dependencies=[jwt_dep])
-    def get_api_key_stats(key_id: str, request: Request) -> ApiKeyStatsResponse:
-        """Get usage statistics for a specific API key."""
+    @router.patch("/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
+    def update_key_order(req: ApiKeyOrderRequest, request: Request) -> ApiKeyOrderResponse:
+        """Update the sort order for API keys."""
         try:
             current_user = get_current_user_optional(request)
             if not current_user:
                 raise HTTPException(status_code=401, detail="Authentication required")
             
             user_id = current_user.get("user_id")
-            key_data = api_key_store.get_key(key_id, user_id=user_id)
-            if not key_data:
-                raise HTTPException(status_code=404, detail="API key not found")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            api_key_store.update_key_order(key_orders=req.key_orders, user_id=str(user_id))
             
-            return ApiKeyStatsResponse(
-                key_id=key_data["key_id"],
-                request_count=key_data.get("request_count", 0),
-                endpoint_usage=key_data.get("endpoint_usage", {}),
-                last_used_at=key_data.get("last_used_at"),
-            )
+            metrics.inc("acto.keys.order.update")
+            return ApiKeyOrderResponse(success=True)
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to get API key statistics: {str(e)}") from e
-
-    @router.patch("/{key_id}", response_model=ApiKeyUpdateResponse, dependencies=[jwt_dep])
-    def update_api_key(key_id: str, req: ApiKeyUpdateRequest, request: Request) -> ApiKeyUpdateResponse:
-        """Update an API key's name."""
-        try:
-            current_user = get_current_user_optional(request)
-            if not current_user:
-                raise HTTPException(status_code=401, detail="Authentication required")
-            
-            user_id = current_user.get("user_id")
-            result = api_key_store.update_key(key_id, name=req.name, user_id=user_id)
-            if not result:
-                raise HTTPException(status_code=404, detail="API key not found")
-            
-            metrics.inc("acto.keys.update")
-            return ApiKeyUpdateResponse(
-                success=True,
-                key_id=result["key_id"],
-                name=result["name"],
-                is_active=result["is_active"],
-            )
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update API key: {str(e)}") from e
-
-    @router.post("/{key_id}/toggle", response_model=ApiKeyToggleResponse, dependencies=[jwt_dep])
-    def toggle_api_key(key_id: str, request: Request) -> ApiKeyToggleResponse:
-        """Toggle an API key's active state (enable/disable)."""
-        try:
-            current_user = get_current_user_optional(request)
-            if not current_user:
-                raise HTTPException(status_code=401, detail="Authentication required")
-            
-            user_id = current_user.get("user_id")
-            result = api_key_store.toggle_key(key_id, user_id=user_id)
-            if not result:
-                raise HTTPException(status_code=404, detail="API key not found")
-            
-            metrics.inc("acto.keys.toggle")
-            return ApiKeyToggleResponse(
-                success=True,
-                key_id=result["key_id"],
-                is_active=result["is_active"],
-            )
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to toggle API key: {str(e)}") from e
+            raise HTTPException(status_code=500, detail=f"Failed to update key order: {str(e)}") from e
 
     # ============================================================
-    # API Key Group Endpoints
+    # API Key Group Endpoints - Static routes first
     # ============================================================
 
     @router.get("/groups", response_model=ApiKeyGroupListResponse, dependencies=[jwt_dep])
@@ -220,6 +156,28 @@ def create_keys_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to create group: {str(e)}") from e
 
+    # Static /groups/order - MUST come before /groups/{group_id}
+    @router.patch("/groups/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
+    def update_group_order(req: ApiKeyGroupOrderRequest, request: Request) -> ApiKeyOrderResponse:
+        """Update the sort order for API key groups."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="User ID not found")
+            api_key_store.update_group_order(group_orders=req.group_orders, user_id=str(user_id))
+            
+            metrics.inc("acto.keys.groups.order.update")
+            return ApiKeyOrderResponse(success=True)
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update group order: {str(e)}") from e
+
+    # Dynamic /groups/{group_id} routes - AFTER static routes
     @router.patch("/groups/{group_id}", response_model=ApiKeyGroupUpdateResponse, dependencies=[jwt_dep])
     def update_key_group(group_id: str, req: ApiKeyGroupUpdateRequest, request: Request) -> ApiKeyGroupUpdateResponse:
         """Update an API key group."""
@@ -325,43 +283,100 @@ def create_keys_router(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to unassign keys: {str(e)}") from e
 
-    @router.patch("/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
-    def update_key_order(req: ApiKeyOrderRequest, request: Request) -> ApiKeyOrderResponse:
-        """Update the sort order for API keys."""
-        try:
-            current_user = get_current_user_optional(request)
-            if not current_user:
-                raise HTTPException(status_code=401, detail="Authentication required")
-            
-            user_id = current_user.get("user_id")
-            if not user_id:
-                raise HTTPException(status_code=401, detail="User ID not found")
-            api_key_store.update_key_order(key_orders=req.key_orders, user_id=str(user_id))
-            
-            return ApiKeyOrderResponse(success=True)
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update key order: {str(e)}") from e
+    # ============================================================
+    # Dynamic /{key_id} routes - MUST come LAST
+    # ============================================================
 
-    @router.patch("/groups/order", response_model=ApiKeyOrderResponse, dependencies=[jwt_dep])
-    def update_group_order(req: ApiKeyGroupOrderRequest, request: Request) -> ApiKeyOrderResponse:
-        """Update the sort order for API key groups."""
+    @router.delete("/{key_id}", response_model=ApiKeyDeleteResponse, dependencies=[jwt_dep])
+    def delete_api_key(key_id: str, request: Request) -> ApiKeyDeleteResponse:
+        """Deactivate an API key."""
         try:
             current_user = get_current_user_optional(request)
             if not current_user:
                 raise HTTPException(status_code=401, detail="Authentication required")
             
             user_id = current_user.get("user_id")
-            if not user_id:
-                raise HTTPException(status_code=401, detail="User ID not found")
-            api_key_store.update_group_order(group_orders=req.group_orders, user_id=str(user_id))
-            
-            return ApiKeyOrderResponse(success=True)
+            success = api_key_store.delete_key(key_id, user_id=user_id)
+            if not success:
+                raise HTTPException(status_code=404, detail="API key not found")
+            metrics.inc("acto.keys.delete")
+            return ApiKeyDeleteResponse(success=True, key_id=key_id)
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update group order: {str(e)}") from e
+            raise HTTPException(status_code=500, detail=f"Failed to delete API key: {str(e)}") from e
+
+    @router.get("/{key_id}/stats", response_model=ApiKeyStatsResponse, dependencies=[jwt_dep])
+    def get_api_key_stats(key_id: str, request: Request) -> ApiKeyStatsResponse:
+        """Get usage statistics for a specific API key."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            key_data = api_key_store.get_key(key_id, user_id=user_id)
+            if not key_data:
+                raise HTTPException(status_code=404, detail="API key not found")
+            
+            return ApiKeyStatsResponse(
+                key_id=key_data["key_id"],
+                request_count=key_data.get("request_count", 0),
+                endpoint_usage=key_data.get("endpoint_usage", {}),
+                last_used_at=key_data.get("last_used_at"),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to get API key statistics: {str(e)}") from e
+
+    @router.patch("/{key_id}", response_model=ApiKeyUpdateResponse, dependencies=[jwt_dep])
+    def update_api_key(key_id: str, req: ApiKeyUpdateRequest, request: Request) -> ApiKeyUpdateResponse:
+        """Update an API key's name."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            result = api_key_store.update_key(key_id, name=req.name, user_id=user_id)
+            if not result:
+                raise HTTPException(status_code=404, detail="API key not found")
+            
+            metrics.inc("acto.keys.update")
+            return ApiKeyUpdateResponse(
+                success=True,
+                key_id=result["key_id"],
+                name=result["name"],
+                is_active=result["is_active"],
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update API key: {str(e)}") from e
+
+    @router.post("/{key_id}/toggle", response_model=ApiKeyToggleResponse, dependencies=[jwt_dep])
+    def toggle_api_key(key_id: str, request: Request) -> ApiKeyToggleResponse:
+        """Toggle an API key's active state (enable/disable)."""
+        try:
+            current_user = get_current_user_optional(request)
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Authentication required")
+            
+            user_id = current_user.get("user_id")
+            result = api_key_store.toggle_key(key_id, user_id=user_id)
+            if not result:
+                raise HTTPException(status_code=404, detail="API key not found")
+            
+            metrics.inc("acto.keys.toggle")
+            return ApiKeyToggleResponse(
+                success=True,
+                key_id=result["key_id"],
+                is_active=result["is_active"],
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to toggle API key: {str(e)}") from e
 
     return router
-
