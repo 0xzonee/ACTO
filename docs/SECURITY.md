@@ -4,7 +4,45 @@ This document describes the security features and best practices for ACTO.
 
 ## Overview
 
-ACTO v0.3.1 includes comprehensive security enhancements designed for production deployments. All security features are optional and can be enabled via configuration.
+ACTO v1.0.0 includes comprehensive security enhancements designed for production deployments. All security features are optional and can be enabled via configuration.
+
+## User Data Isolation (v1.0.0)
+
+ACTO implements **complete user data isolation** via wallet-based ownership. Each user can only access their own data.
+
+### How It Works
+
+- Every proof, device, and group is tagged with `owner_wallet`
+- All database queries filter by `owner_wallet`
+- Users cannot see or access data belonging to other wallets
+- Works with both JWT (Dashboard) and API Key (SDK) authentication
+
+### Ownership Assignment
+
+**SDK/API Key Authentication:**
+```http
+Authorization: Bearer YOUR_API_KEY
+X-Wallet-Address: YOUR_WALLET  # <- This becomes owner_wallet
+```
+
+**JWT Authentication (Dashboard):**
+- Wallet address extracted from JWT token payload
+- Automatically set when you connect your wallet
+
+### Data Affected
+
+| Table | Isolation Field |
+|-------|-----------------|
+| `proofs` | `owner_wallet` |
+| `fleet_devices` | `owner_wallet` |
+| `fleet_groups` | `owner_wallet` |
+
+### Security Guarantees
+
+- ✅ No cross-user data leakage
+- ✅ Query-level enforcement (cannot be bypassed)
+- ✅ Wallet-based ownership (cryptographically verifiable)
+- ✅ Works with API keys and JWT tokens
 
 ## Authentication & Authorization
 

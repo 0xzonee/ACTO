@@ -182,6 +182,10 @@ acto_server/
 
 ## Database Schema
 
+### Multi-Tenant Architecture (v1.0.0)
+
+All user data is isolated via `owner_wallet` field. Users can only access their own data.
+
 ### Proofs Table
 
 ```sql
@@ -193,16 +197,18 @@ CREATE TABLE proofs (
     signer_public_key TEXT NOT NULL,
     envelope_json TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    wallet_address TEXT NOT NULL
+    owner_wallet TEXT              -- Owner's Solana wallet (v1.0.0)
 );
+
+CREATE INDEX idx_owner_wallet ON proofs (owner_wallet);
 ```
 
 ### Fleet Tables
 
 ```sql
 CREATE TABLE fleet_devices (
-    id TEXT PRIMARY KEY,           -- robot_id
-    wallet_address TEXT NOT NULL,
+    id TEXT PRIMARY KEY,           -- device_id
+    owner_wallet TEXT,             -- Owner's Solana wallet (v1.0.0)
     custom_name TEXT,
     group_id TEXT REFERENCES fleet_groups(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -210,7 +216,7 @@ CREATE TABLE fleet_devices (
 
 CREATE TABLE fleet_groups (
     id TEXT PRIMARY KEY,
-    wallet_address TEXT NOT NULL,
+    owner_wallet TEXT,             -- Owner's Solana wallet (v1.0.0)
     name TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -248,6 +254,7 @@ Defense in depth:
 - Token gating for access control
 - Rate limiting
 - Audit logging
+- **User data isolation** via `owner_wallet` (v1.0.0)
 
 ### Modular Design
 

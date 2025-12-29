@@ -15,6 +15,55 @@ Principles:
 - Optional Solana integrations are isolated behind lazy imports
 - Security-first design with comprehensive authentication and authorization
 - Modular codebase for maintainability and reusability
+- **Multi-tenant architecture** with wallet-based user isolation (v1.0.0)
+
+## Multi-Tenant Architecture (v1.0.0)
+
+ACTO supports multiple users with complete data isolation:
+
+### User Isolation via `owner_wallet`
+
+All user data is tagged with the owner's Solana wallet address:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     ACTO Database                            │
+├─────────────────────────────────────────────────────────────┤
+│  proofs          │  fleet_devices    │  fleet_groups        │
+│  ├─ owner_wallet │  ├─ owner_wallet  │  ├─ owner_wallet     │
+│  ├─ proof_id     │  ├─ device_id     │  ├─ group_id         │
+│  └─ ...          │  └─ ...           │  └─ ...              │
+└─────────────────────────────────────────────────────────────┘
+
+User A (wallet: ABC...) sees only their data
+User B (wallet: XYZ...) sees only their data
+```
+
+### Authentication Flow
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│    Client    │     │     API      │     │   Database   │
+└──────────────┘     └──────────────┘     └──────────────┘
+       │                    │                    │
+       │  API Key +         │                    │
+       │  X-Wallet-Address  │                    │
+       │───────────────────▶│                    │
+       │                    │                    │
+       │                    │  Extract wallet    │
+       │                    │  from JWT or       │
+       │                    │  header            │
+       │                    │                    │
+       │                    │  Query with        │
+       │                    │  owner_wallet      │
+       │                    │───────────────────▶│
+       │                    │                    │
+       │                    │  Filtered results  │
+       │                    │◄───────────────────│
+       │                    │                    │
+       │  User's data only  │                    │
+       │◄───────────────────│                    │
+```
 
 ## Dashboard Architecture (v0.7.2)
 

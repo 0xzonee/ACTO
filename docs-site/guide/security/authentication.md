@@ -10,6 +10,31 @@ ACTO uses multiple authentication mechanisms for different scenarios.
 | **JWT** | Dashboard/Fleet | Wallet signature verification |
 | **Token Gating** | Access control | SPL token balance check |
 
+## User Data Isolation (v1.0.0)
+
+All user data is isolated by wallet address. Users can only see and access their own data.
+
+### How It Works
+
+1. **Every request includes wallet** - via JWT token or `X-Wallet-Address` header
+2. **Data tagged with `owner_wallet`** - proofs, devices, groups
+3. **Queries filter by wallet** - automatic, cannot be bypassed
+
+```python
+# SDK automatically sends your wallet address
+client = ACTOClient(
+    api_key="acto_xxx...",
+    wallet_address="YOUR_WALLET"  # Sent as X-Wallet-Address
+)
+
+# You only see YOUR proofs
+proofs = client.list_proofs()  # Filtered by your wallet
+```
+
+::: tip Security
+User isolation happens at the database query level. There is no way for users to access data belonging to other wallets.
+:::
+
 ## API Key Authentication
 
 Used for programmatic API access (SDK, scripts).

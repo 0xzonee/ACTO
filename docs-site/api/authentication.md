@@ -9,7 +9,11 @@ Every authenticated request must include:
 | Header | Value | Description |
 |--------|-------|-------------|
 | `Authorization` | `Bearer YOUR_API_KEY` | Your ACTO API key |
-| `X-Wallet-Address` | `YOUR_WALLET_ADDRESS` | Your Solana wallet |
+| `X-Wallet-Address` | `YOUR_WALLET_ADDRESS` | Your Solana wallet (used for data ownership) |
+
+::: tip User Data Isolation (v1.0.0)
+The `X-Wallet-Address` header is used to tag all your data (proofs, devices, groups). You can only access data that belongs to your wallet address.
+:::
 
 ```http
 Authorization: Bearer acto_abc123...
