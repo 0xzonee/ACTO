@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Navigation, Footer, Logo, LoadingScreen, ScrollToTop, ScrollRestoration } from './components';
+import { Navigation, Footer, Logo, LoadingScreen, ScrollToTop, ScrollRestoration, PageTransition, ScrollProgress } from './components';
 import { Home, About, Privacy, Terms, Unlock, NotFound, UseCaseDetail, FAQ, Comparison } from './pages';
 
 // ============================================
@@ -36,21 +36,24 @@ function App() {
     <HelmetProvider>
       <BrowserRouter>
         <ScrollRestoration />
-        <LoadingScreen imagesToPreload={['/hero.png', '/hero2.png', '/hero3.png', '/hero4.png', '/bg1.png', '/bg2.png', '/bg3.png', '/bg4.png']} />
+        <LoadingScreen imagesToPreload={['/hero.png', '/hero2.png', '/hero3.png', '/hero4.png', '/bg1.png', '/bg2.png', '/bg3.png', '/bg4.png', '/bg5.png', '/bg6.png']} />
         <div className="min-h-screen bg-white text-gray-900">
+          <ScrollProgress />
           <Logo />
           <Navigation />
           <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/comparison" element={<Comparison />} />
-              <Route path="/use-cases/:slug" element={<UseCaseDetail />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <PageTransition>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/comparison" element={<Comparison />} />
+                <Route path="/use-cases/:slug" element={<UseCaseDetail />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PageTransition>
           </main>
           <Footer />
           <ScrollToTop />

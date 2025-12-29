@@ -314,7 +314,7 @@ function RoboticsAsAServiceLayout({ useCase, slug }: { useCase: typeof useCaseDa
         {/* Case Study */}
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-20 md:py-28 relative z-10">
           <ScrollAnimation animation="blur-in" delay={0}>
-            <div className="text-sm font-mono text-gray-500 mb-4 text-center">CASE STUDY</div>
+            <div className="text-sm font-mono text-gray-500 mb-4 text-center">Examples</div>
             <h2 className="text-3xl font-medium mb-8 text-center text-gray-900">{useCase.example.title}</h2>
             <p className="text-gray-600 text-lg mb-8 text-center">{useCase.example.scenario}</p>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 text-left border border-gray-200 shadow-lg">
@@ -790,7 +790,7 @@ function IndustrialAuditingLayout({ useCase, slug }: { useCase: typeof useCaseDa
         {/* Case Study */}
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-20 md:py-28 relative z-10">
           <ScrollAnimation animation="blur-in" delay={0}>
-            <div className="text-gray-500 text-sm font-medium mb-4 uppercase tracking-wider text-center">Case Study</div>
+            <div className="text-gray-500 text-sm font-medium mb-4 uppercase tracking-wider text-center">Examples</div>
             <h2 className="text-3xl font-medium mb-8 text-center text-gray-900">{useCase.example.title}</h2>
             
             <div className="grid md:grid-cols-2 gap-8">
@@ -957,7 +957,7 @@ function ResearchEnvironmentsLayout({ useCase, slug }: { useCase: typeof useCase
         {/* Case Study */}
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-20 md:py-28 relative z-10">
           <ScrollAnimation animation="blur-in" delay={0}>
-            <h2 className="text-2xl font-medium mb-2 text-center text-gray-900">Case Study</h2>
+            <h2 className="text-2xl font-medium mb-2 text-center text-gray-900">Examples</h2>
             <h3 className="text-xl text-gray-600 mb-8 text-center">{useCase.example.title}</h3>
             
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 space-y-6 border border-gray-200 shadow-lg">

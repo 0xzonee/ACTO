@@ -25,8 +25,14 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
-      <div className="px-4 md:px-8 lg:px-12 xl:px-16 py-12 md:py-16">
+    <footer className="relative overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-gray-100 to-gray-50" />
+      
+      {/* Animated gradient border at top */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gray-400 to-transparent animate-gradient-x z-20" />
+
+      <div className="relative z-10 px-4 md:px-8 lg:px-12 xl:px-16 py-12 md:py-16">
         {/* Main Footer */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12">
           {/* Brand */}

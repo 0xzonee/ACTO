@@ -5,6 +5,75 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.15] - 2025-12-29
+
+### 🎨 Website Visual Enhancements (acto-web)
+
+This release brings significant visual improvements to the ACTO website with new animations, effects, and design refinements.
+
+#### Added
+
+- **Framer Motion Animations**
+  - Smooth page transitions with fade, blur, and slide effects
+  - Animated navigation underlines on hover
+  - Spring-physics scroll progress indicator
+
+- **Spotlight Effect on Cards**
+  - Cursor-following light effect on Product cards
+  - Subtle hover interactions with grayscale tones
+
+- **"How It Works" Section Overhaul**
+  - Complete redesign with dark theme and scroll-driven animations
+  - Animated connecting line that grows as you scroll
+  - Step icons (Bot, Database, Shield, CheckCircle) with active states
+  - Progress counter showing current step (01/04)
+  - Background image with dark overlay
+
+- **Background Image Effects**
+  - Use Cases section: `bg2.png` with gradient fade overlay
+  - Feature Matrix (Comparison page): `bg5.png` with gradient overlay
+  - Gradient overlays fade from white at top/bottom for seamless blending
+
+- **Footer Enhancements**
+  - Animated gradient border at top
+  - Subtle background gradient (gray-50 → gray-100 → gray-50)
+
+- **Scroll Progress Indicator**
+  - Thin black bar at top of viewport
+  - Shows page scroll progress with smooth spring animation
+
+- **Dynamic Logo Color**
+  - Logo automatically switches to white in dark sections
+  - Detects Hero and "How It Works" sections
+
+#### Changed
+
+- **Color Palette Refinement**
+  - Replaced `gray-*` colors with `neutral-*` to remove blue undertones
+  - Scroll-to-Top button now uses neutral black
+  - "How It Works" inactive elements use neutral grays
+
+- **Navigation Improvements**
+  - Pull-down navigation now fully hides (only "Pull me" tab visible)
+  - Smooth underline animations on nav links using Framer Motion
+
+- **Image Preloading**
+  - Added `bg5.png` and `bg6.png` to preload list
+  - Now preloads 10 images for faster perceived loading
+
+#### New Components
+
+- `SpotlightCard.tsx` - Card with cursor-following light effect
+- `PageTransition.tsx` - Animated page transitions wrapper
+- `AnimatedLink.tsx` - Links with smooth underline animations
+- `ScrollProgress.tsx` - Page scroll progress indicator
+
+#### Dependencies
+
+- Added `framer-motion` for advanced animations
+
+---
+
 ## [0.9.14] - 2025-12-27
 
 ### 🔑 API Key Groups & Reordering

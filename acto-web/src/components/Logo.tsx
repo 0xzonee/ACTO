@@ -8,6 +8,7 @@ export function Logo() {
     const handleScroll = () => {
       const heroSection = document.querySelector('section');
       const solutionSection = document.getElementById('solution-section');
+      const howItWorksSection = document.getElementById('how-it-works-section');
       
       // Check if we're in the dark solution section
       if (solutionSection) {
@@ -15,6 +16,17 @@ export function Logo() {
         const isInSolutionSection = rect.top <= 100 && rect.bottom >= 100;
         
         if (isInSolutionSection) {
+          setLogoColor('white');
+          return;
+        }
+      }
+
+      // Check if we're in the dark "How it works" section
+      if (howItWorksSection) {
+        const rect = howItWorksSection.getBoundingClientRect();
+        const isInHowItWorksSection = rect.top <= 100 && rect.bottom >= 100;
+        
+        if (isInHowItWorksSection) {
           setLogoColor('white');
           return;
         }

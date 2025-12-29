@@ -43,8 +43,15 @@ const useCases = [
 
 export function UseCases() {
   return (
-    <section id="use-cases" className="border-t border-gray-100">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-32">
+    <section 
+      id="use-cases" 
+      className="relative bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: 'url(/bg2.png)' }}
+    >
+      {/* Gradient overlay - fades to white at top and bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-white/60 to-white" />
+      
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-32 relative z-10">
         <ScrollAnimation animation="blur-in" delay={0}>
           <h2 className="text-2xl md:text-3xl font-medium mb-4 md:mb-6 tracking-tight">Use cases</h2>
           <p className="text-base md:text-lg text-gray-600 mb-12 md:mb-16 max-w-2xl">
@@ -58,7 +65,7 @@ export function UseCases() {
               <ScrollAnimation key={useCase.title} animation="blur-in" delay={60 + index * 60} className="h-full">
                 <Link 
                   to={`/use-cases/${useCase.slug}`}
-                  className="group flex flex-col h-full border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-lg transition-all"
+                  className="group flex flex-col h-full bg-white/60 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-lg transition-all"
                 >
                   <div className="mb-4 inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-gray-900 transition-colors">
                     <Icon className="w-6 h-6 text-gray-900 group-hover:text-white transition-colors" />

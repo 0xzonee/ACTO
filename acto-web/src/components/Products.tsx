@@ -1,6 +1,7 @@
 import { Code2, Server, LayoutDashboard, Terminal, ArrowRight } from 'lucide-react';
 import { config } from '../config';
 import { ScrollAnimation } from './ScrollAnimation';
+import { SpotlightCard } from './SpotlightCard';
 
 const products = [
   {
@@ -85,55 +86,55 @@ export function Products() {
             
             return (
               <ScrollAnimation key={product.name} animation="blur-in" delay={60 + index * 80}>
-                <div
-                  className="group relative overflow-hidden border border-gray-200 rounded-2xl p-6 hover:border-gray-300 hover:shadow-xl transition-all flex flex-col"
+                <SpotlightCard 
+                  className="group border border-gray-200 rounded-2xl p-6 hover:border-gray-300 hover:shadow-xl transition-all flex flex-col h-full"
                 >
-                {/* Background Image */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${product.bg})` }}
-                />
-                {/* White overlay for 50% visibility */}
-                <div className="absolute inset-0 bg-white/50" />
-                
-                {/* Content */}
-                <div className="relative z-10 flex flex-col h-full">
-                {/* Icon */}
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-gray-900 transition-colors">
-                  <Icon className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors" />
-                </div>
+                  {/* Background Image */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat rounded-2xl"
+                    style={{ backgroundImage: `url(${product.bg})` }}
+                  />
+                  {/* White overlay for 50% visibility */}
+                  <div className="absolute inset-0 bg-white/50 rounded-2xl" />
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col h-full">
+                    {/* Icon */}
+                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-gray-900 transition-colors duration-300">
+                      <Icon className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors duration-300" />
+                    </div>
 
-                {/* Title */}
-                <h3 className="text-xl font-medium text-gray-900 mb-1">{product.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">{product.tagline}</p>
+                    {/* Title */}
+                    <h3 className="text-xl font-medium text-gray-900 mb-1">{product.name}</h3>
+                    <p className="text-sm text-gray-500 mb-4">{product.tagline}</p>
 
-                {/* Description */}
-                <p className="text-sm text-gray-600 leading-relaxed mb-5 flex-grow">
-                  {product.description}
-                </p>
+                    {/* Description */}
+                    <p className="text-sm text-gray-600 leading-relaxed mb-5 flex-grow">
+                      {product.description}
+                    </p>
 
-                {/* Features */}
-                <ul className="space-y-2 mb-6">
-                  {product.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-xs text-gray-600">
-                      <div className="w-1 h-1 bg-gray-400 rounded-full flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                    {/* Features */}
+                    <ul className="space-y-2 mb-6">
+                      {product.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-2 text-xs text-gray-600">
+                          <div className="w-1 h-1 bg-gray-400 rounded-full flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
 
-                {/* CTA */}
-                <a
-                  href={product.ctaLink}
-                  target={product.ctaLink.startsWith('http') ? '_blank' : undefined}
-                  rel={product.ctaLink.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors mt-auto"
-                >
-                  {product.cta}
-                  <ArrowRight size={14} />
-                </a>
-                </div>
-                </div>
+                    {/* CTA */}
+                    <a
+                      href={product.ctaLink}
+                      target={product.ctaLink.startsWith('http') ? '_blank' : undefined}
+                      rel={product.ctaLink.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors mt-auto group/cta"
+                    >
+                      {product.cta}
+                      <ArrowRight size={14} className="group-hover/cta:translate-x-1 transition-transform" />
+                    </a>
+                  </div>
+                </SpotlightCard>
               </ScrollAnimation>
             );
           })}

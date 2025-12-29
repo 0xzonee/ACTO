@@ -182,8 +182,14 @@ export function Comparison() {
         </section>
 
         {/* Feature Matrix */}
-        <section className="py-20 md:py-28 bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 md:px-6">
+        <section 
+          className="py-20 md:py-28 relative bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/bg5.png)' }}
+        >
+          {/* Gradient overlay - fades to white at top and bottom */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/60 to-white" />
+          
+          <div className="max-w-5xl mx-auto px-4 md:px-6 relative z-10">
             <ScrollAnimation animation="blur-in" delay={0}>
               <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight text-gray-900 text-center">
                 Feature Matrix

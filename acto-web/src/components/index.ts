@@ -18,3 +18,7 @@ export { ScrollRestoration } from './ScrollRestoration';
 export { AnimatedCounter } from './AnimatedCounter';
 export { ParallaxSection } from './ParallaxSection';
 export { ImageWithSkeleton } from './ImageWithSkeleton';
+export { SpotlightCard } from './SpotlightCard';
+export { PageTransition } from './PageTransition';
+export { AnimatedLink, AnimatedAnchor } from './AnimatedLink';
+export { ScrollProgress } from './ScrollProgress';
