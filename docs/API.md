@@ -48,7 +48,7 @@ curl -X POST https://api.actobotics.net/v1/proofs \
 | POST | `/v1/verify` | Verify a proof | ✅ |
 | POST | `/v1/verify/batch` | Batch verify | ✅ |
 | POST | `/v1/score` | Score a proof | ✅ |
-| GET | `/v1/stats/wallet/{addr}` | Wallet stats | ✅ |
+| GET | `/v1/stats/wallet/{addr}` | Wallet stats | 🔐 JWT |
 | POST | `/v1/access/check` | Check token balance | ✅ |
 | POST | `/v1/keys` | Create API key | 🔐 JWT |
 | GET | `/v1/keys` | List API keys | 🔐 JWT |

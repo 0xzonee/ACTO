@@ -57,7 +57,7 @@ All endpoints are prefixed with `/v1/` (e.g., `/v1/proofs`).
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | POST | `/v1/score` | Score a proof | API Key |
-| GET | `/v1/stats/wallet/{addr}` | Wallet stats | API Key |
+| GET | `/v1/stats/wallet/{addr}` | Wallet stats | JWT |
 | POST | `/v1/access/check` | Check token balance | API Key |
 
 ## Request Format

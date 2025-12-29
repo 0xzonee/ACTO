@@ -99,7 +99,7 @@ POST /v1/auth/wallet/verify
 {
   "wallet_address": "5K8vK...",
   "signature": "base64_signature...",
-  "message": "challenge_message"
+  "challenge": "challenge_message"
 }
 
 # Returns JWT token

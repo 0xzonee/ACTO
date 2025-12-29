@@ -258,17 +258,25 @@ body {
    Tables - Dashboard Style
    ----------------------------------------------------------------------------- */
 .vp-doc table {
+  width: 100%;
+  display: table;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
+  border-collapse: separate;
+  border-spacing: 0;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
 }
 
-
 .vp-doc tr {
   border-top: 1px solid var(--vp-c-divider);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.vp-doc tr:first-child {
+  border-top: none;
 }
 
 .vp-doc th {
@@ -279,6 +287,10 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--vp-c-text-2);
+}
+
+.vp-doc td {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .vp-doc td, .vp-doc th {
