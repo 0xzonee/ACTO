@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Navigation, Footer, Logo, LoadingScreen, ScrollToTop, ScrollRestoration, PageTransition, ScrollProgress } from './components';
-import { Home, About, Privacy, Terms, Unlock, NotFound, UseCaseDetail, FAQ, Comparison } from './pages';
+import { Home, About, Contact, Privacy, Terms, Unlock, NotFound, UseCaseDetail, FAQ, Comparison } from './pages';
 
 // ============================================
 // ACCESS CONTROL - Set to false to disable
 // ============================================
-const ACCESS_REQUIRED = true;
+const ACCESS_REQUIRED = false;
 // ============================================
 
 function App() {
@@ -48,6 +48,7 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/comparison" element={<Comparison />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/use-cases/:slug" element={<UseCaseDetail />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

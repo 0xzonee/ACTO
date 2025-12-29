@@ -16,6 +16,7 @@ const footerLinks = {
   ],
   company: [
     { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
     { label: 'GitHub', href: config.social.github },
     { label: 'X (Twitter)', href: config.social.x },
   ],

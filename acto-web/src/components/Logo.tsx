@@ -9,6 +9,13 @@ export function Logo() {
       const heroSection = document.querySelector('section');
       const solutionSection = document.getElementById('solution-section');
       const howItWorksSection = document.getElementById('how-it-works-section');
+      const contactHero = document.getElementById('contact-hero');
+      
+      // Check if we're on the contact page (light background)
+      if (contactHero) {
+        setLogoColor('black');
+        return;
+      }
       
       // Check if we're in the dark solution section
       if (solutionSection) {
