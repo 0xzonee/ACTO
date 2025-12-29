@@ -162,16 +162,8 @@ jobs:
         safety check --json --output safety-report.json || true
         safety check || true
     
-    - name: Upload security reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-          safety-report.json
-        if-no-files-found: ignore
-        retention-days: 1
+    # Artifact upload disabled to avoid storage quota issues
+    # Security reports are printed to console instead
 
   coverage:
     name: Coverage Report
@@ -197,14 +189,8 @@ jobs:
       run: |
         pytest tests/ -v --cov=acto --cov=acto_cli --cov=acto_server --cov-report=html --cov-report=xml --cov-report=term-missing -m "not slow" || true
     
-    - name: Upload coverage HTML
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-html
-        path: htmlcov/
-        if-no-files-found: ignore
-        retention-days: 1
+    # Artifact upload disabled to avoid storage quota issues
+    # Coverage is reported via Codecov instead
 
   build:
     name: Build Package
@@ -230,13 +216,8 @@ jobs:
       run: |
         python -m build
     
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist
-        path: dist/
-        if-no-files-found: ignore
-        retention-days: 1
+    # Artifact upload disabled to avoid storage quota issues
+    # PyPI publishing happens via separate publish.yml workflow on release
 
   load-test:
     name: Load Testing
