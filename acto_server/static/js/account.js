@@ -123,7 +123,8 @@ function formatDateTime(isoString) {
     if (!isoString) return '-';
     try {
         const date = new Date(isoString);
-        return date.toLocaleDateString('en-US', {
+        // Use browser locale for date/time formatting
+        return date.toLocaleString(undefined, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',

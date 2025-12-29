@@ -38,10 +38,10 @@ window.createActivityLineChart = function(canvasId, timeline, periodDays = 30) {
     
     const ctx = canvas.getContext('2d');
     
-    // Prepare data
+    // Prepare data - use browser locale for date formatting
     const labels = timeline.map(t => {
         const date = new Date(t.date);
-        return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+        return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
     });
     
     const data = timeline.map(t => t.proof_count);
