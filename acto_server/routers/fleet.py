@@ -127,11 +127,10 @@ def create_fleet_router(
     # Helper Functions
     # ============================================================
 
-    def get_user_id_from_request(request: Request) -> str | None:
-        """Extract user_id from JWT token in request."""
-        current_user = get_current_user_optional(request)
-        if current_user:
-            return current_user.get("user_id")
+    def get_owner_wallet_from_request(request: Request) -> str | None:
+        """Extract owner wallet address from JWT token in request."""
+        if hasattr(request.state, "token_payload"):
+            return request.state.token_payload.get("wallet_address")
         return None
 
     def build_device_logs(proofs: list, device_id: str, limit: int = 50) -> list[dict]:
@@ -168,15 +167,13 @@ def create_fleet_router(
         Note: Uses optimized SQL aggregations for better performance.
         """
         try:
-            current_user = get_current_user_optional(request)
-            if not current_user:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            user_id = current_user.get("user_id")
-            
-            # Get aggregated stats instead of all proofs
-            robot_ids = registry.get_unique_robot_ids()
-            proofs_by_robot = registry.count_by_robot()
+            # Get aggregated stats instead of all proofs (filtered by owner_wallet)
+            robot_ids = registry.get_unique_robot_ids(owner_wallet=owner_wallet)
+            proofs_by_robot = registry.count_by_robot(owner_wallet=owner_wallet)
             
             # Build minimal proof data for fleet_store
             # Only include aggregated data, not full proof records
@@ -186,7 +183,7 @@ def create_fleet_router(
             }
             
             # Get fleet data (uses aggregated data instead of full proofs)
-            fleet_data = fleet_store.get_fleet_data_optimized(user_id, aggregated_data, registry)
+            fleet_data = fleet_store.get_fleet_data_optimized(owner_wallet, aggregated_data, registry)
             
             return fleet_data
             
@@ -208,16 +205,16 @@ def create_fleet_router(
         Note: Uses optimized SQL aggregations for better performance.
         """
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            # Check if device exists using optimized query
-            if not registry.exists_by_robot(device_id):
+            # Check if device exists using optimized query (with owner filter)
+            if not registry.exists_by_robot(device_id, owner_wallet=owner_wallet):
                 raise HTTPException(status_code=404, detail="Device not found")
             
-            # Get aggregated device stats using SQL
-            device_stats = registry.get_device_stats(device_id)
+            # Get aggregated device stats using SQL (filtered by owner)
+            device_stats = registry.get_device_stats(device_id, owner_wallet=owner_wallet)
             
             proof_count = device_stats["proof_count"]
             task_ids = device_stats["task_ids"]
@@ -225,7 +222,7 @@ def create_fleet_router(
             last_activity = device_stats["last_activity"]
             
             # Get stored device data
-            stored = fleet_store.get_device(device_id, user_id) or {}
+            stored = fleet_store.get_device(device_id, owner_wallet) or {}
             custom_name = stored.get("custom_name")
             default_name = device_id.replace("-", " ").replace("_", " ").title()
             
@@ -233,7 +230,7 @@ def create_fleet_router(
             group_id = stored.get("group_id")
             group_name = None
             if group_id:
-                group = fleet_store.get_group(group_id, user_id)
+                group = fleet_store.get_group(group_id, owner_wallet)
                 if group:
                     group_name = group.get("name")
             
@@ -244,7 +241,7 @@ def create_fleet_router(
             from acto.registry.search import SearchFilter
             search_filter = SearchFilter()
             search_filter.robot_id = device_id
-            recent_proofs = registry.list(limit=100, search_filter=search_filter)
+            recent_proofs = registry.list(limit=100, search_filter=search_filter, owner_wallet=owner_wallet)
             logs = build_device_logs(recent_proofs, device_id, limit=100)
             
             # Calculate status
@@ -292,16 +289,16 @@ def create_fleet_router(
     def rename_device(device_id: str, req: DeviceRenameRequest, request: Request) -> dict:
         """Rename a device with a custom name."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             # Verify device exists using optimized query
-            if not registry.exists_by_robot(device_id):
+            if not registry.exists_by_robot(device_id, owner_wallet=owner_wallet):
                 raise HTTPException(status_code=404, detail="Device not found")
             
             # Update device in store
-            result = fleet_store.rename_device(device_id, req.name.strip(), user_id)
+            result = fleet_store.rename_device(device_id, req.name.strip(), owner_wallet)
             
             return {
                 "success": True,
@@ -318,11 +315,11 @@ def create_fleet_router(
     def delete_device(device_id: str, request: Request) -> dict:
         """Delete a device and all its associated data."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            result = fleet_store.delete_device(device_id, user_id)
+            result = fleet_store.delete_device(device_id, owner_wallet)
             
             if not result.get("success"):
                 raise HTTPException(status_code=404, detail=result.get("error", "Device not found"))
@@ -342,13 +339,13 @@ def create_fleet_router(
     def update_device(device_id: str, req: DeviceUpdateRequest, request: Request) -> dict:
         """Update device metadata (name, description, type)."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             result = fleet_store.update_device(
                 device_id=device_id,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 custom_name=req.custom_name,
                 description=req.description,
                 device_type=req.device_type,
@@ -375,11 +372,11 @@ def create_fleet_router(
         All fields are optional - devices only send metrics they support.
         """
         try:
-            user_id = get_user_id_from_request(request)
+            owner_wallet = get_owner_wallet_from_request(request)
             
             health = fleet_store.record_health(
                 device_id=device_id,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 cpu_percent=req.cpu_percent,
                 cpu_temperature=req.cpu_temperature,
                 memory_percent=req.memory_percent,
@@ -413,8 +410,8 @@ def create_fleet_router(
     def get_device_health(device_id: str, request: Request) -> dict:
         """Get current health metrics for a device."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             health = fleet_store.get_latest_health(device_id)
@@ -439,8 +436,8 @@ def create_fleet_router(
     ) -> dict:
         """Get health history for a device."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             history = fleet_store.get_health_history(device_id, hours=hours, limit=limit)
@@ -464,11 +461,11 @@ def create_fleet_router(
     def list_groups(request: Request) -> dict:
         """List all device groups."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            groups = fleet_store.list_groups(user_id)
+            groups = fleet_store.list_groups(owner_wallet)
             
             return {
                 "groups": groups,
@@ -484,13 +481,13 @@ def create_fleet_router(
     def create_group(req: GroupCreateRequest, request: Request) -> dict:
         """Create a new device group."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             group = fleet_store.create_group(
                 name=req.name.strip(),
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 description=req.description.strip() if req.description else None,
                 color=req.color,
                 icon=req.icon,
@@ -510,11 +507,11 @@ def create_fleet_router(
     def get_group(group_id: str, request: Request) -> dict:
         """Get a specific device group with its devices."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            group = fleet_store.get_group(group_id, user_id)
+            group = fleet_store.get_group(group_id, owner_wallet)
             if not group:
                 raise HTTPException(status_code=404, detail="Group not found")
             
@@ -532,13 +529,13 @@ def create_fleet_router(
     def update_group(group_id: str, req: GroupUpdateRequest, request: Request) -> dict:
         """Update a device group."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             group = fleet_store.update_group(
                 group_id=group_id,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 name=req.name.strip() if req.name else None,
                 description=req.description.strip() if req.description else None,
                 color=req.color,
@@ -562,11 +559,11 @@ def create_fleet_router(
     def delete_group(group_id: str, request: Request) -> dict:
         """Delete a device group."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
-            result = fleet_store.delete_group(group_id, user_id)
+            result = fleet_store.delete_group(group_id, owner_wallet)
             
             if not result.get("success"):
                 raise HTTPException(status_code=404, detail="Group not found")
@@ -582,14 +579,14 @@ def create_fleet_router(
     def assign_devices_to_group(group_id: str, req: GroupAssignRequest, request: Request) -> dict:
         """Assign devices to a group."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             result = fleet_store.assign_devices_to_group(
                 group_id=group_id,
                 device_ids=req.device_ids,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
             )
             
             if not result.get("success"):
@@ -606,14 +603,14 @@ def create_fleet_router(
     def unassign_devices_from_group(group_id: str, req: GroupAssignRequest, request: Request) -> dict:
         """Remove devices from a group."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             result = fleet_store.unassign_devices_from_group(
                 group_id=group_id,
                 device_ids=req.device_ids,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
             )
             
             if not result.get("success"):
@@ -630,14 +627,14 @@ def create_fleet_router(
     def update_device_order(req: DeviceOrderUpdateRequest, request: Request) -> dict:
         """Update the sort order of devices."""
         try:
-            user_id = get_user_id_from_request(request)
-            if not user_id:
+            owner_wallet = get_owner_wallet_from_request(request)
+            if not owner_wallet:
                 raise HTTPException(status_code=401, detail="Not authenticated")
             
             device_orders = [{"device_id": item.device_id, "sort_order": item.sort_order} for item in req.device_orders]
             result = fleet_store.update_device_order(
                 device_orders=device_orders,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
             )
             
             return result

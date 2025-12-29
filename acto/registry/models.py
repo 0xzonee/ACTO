@@ -26,6 +26,10 @@ class ProofRecord(Base):
     # Multi-Tenant-Support
     tenant_id: Mapped[str | None] = mapped_column(String(256), nullable=True, index=True)
 
+    # Owner wallet address (Solana) - for user-based data isolation
+    # Proofs without owner_wallet are hidden (legacy data)
+    owner_wallet: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+
     # Volltextsuche: Indizierte Metadaten für Suche
     metadata_search: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -41,5 +45,6 @@ class ProofRecord(Base):
         Index("idx_signer_created", "signer_public_key_b64", "created_at"),
         # Index for tenant queries
         Index("idx_tenant_created", "tenant_id", "created_at"),
-        # Index for fulltext search (SQLite FTS5 würde hier verwendet werden)
+        # Index for owner wallet queries (user data isolation)
+        Index("idx_owner_wallet_created", "owner_wallet", "created_at"),
     )

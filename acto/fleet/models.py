@@ -20,7 +20,10 @@ class DeviceRecord(Base):
     # Primary key is the device/robot ID from proofs
     device_id: Mapped[str] = mapped_column(String(256), primary_key=True)
     
-    # User who owns this device (from JWT wallet)
+    # Owner wallet address (Solana) - for user-based data isolation
+    owner_wallet: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    
+    # Legacy: User ID (deprecated, use owner_wallet instead)
     user_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     
     # Custom name set by user (optional)
@@ -57,6 +60,7 @@ class DeviceRecord(Base):
     )
 
     __table_args__ = (
+        Index("idx_fleet_device_owner_wallet", "owner_wallet"),
         Index("idx_fleet_device_user", "user_id"),
         Index("idx_fleet_device_group", "group_id"),
     )
@@ -71,7 +75,10 @@ class DeviceGroupRecord(Base):
 
     group_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     
-    # User who owns this group
+    # Owner wallet address (Solana) - for user-based data isolation
+    owner_wallet: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    
+    # Legacy: User ID (deprecated, use owner_wallet instead)
     user_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     
     # Group name (required)
@@ -98,6 +105,7 @@ class DeviceGroupRecord(Base):
     )
 
     __table_args__ = (
+        Index("idx_fleet_group_owner_wallet", "owner_wallet"),
         Index("idx_fleet_group_user", "user_id"),
     )
 

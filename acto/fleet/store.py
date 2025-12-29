@@ -39,7 +39,7 @@ class FleetStore:
         self._migrate_add_sort_order()
 
     def _migrate_add_sort_order(self) -> None:
-        """Add new columns to fleet_devices if they don't exist."""
+        """Add new columns to fleet_devices and fleet_groups if they don't exist."""
         # First check if the table exists at all
         with self.Session() as session:
             try:
@@ -73,26 +73,52 @@ class FleetStore:
                     session.commit()
                 except Exception:
                     session.rollback()
+        
+        # Add owner_wallet column to fleet_devices if it doesn't exist
+        with self.Session() as session:
+            try:
+                session.execute(text("SELECT owner_wallet FROM fleet_devices LIMIT 1"))
+            except Exception:
+                session.rollback()
+                try:
+                    session.execute(text("ALTER TABLE fleet_devices ADD COLUMN owner_wallet VARCHAR(128)"))
+                    session.execute(text("CREATE INDEX idx_fleet_device_owner_wallet ON fleet_devices (owner_wallet)"))
+                    session.commit()
+                except Exception:
+                    session.rollback()
+        
+        # Add owner_wallet column to fleet_groups if it doesn't exist
+        with self.Session() as session:
+            try:
+                session.execute(text("SELECT owner_wallet FROM fleet_groups LIMIT 1"))
+            except Exception:
+                session.rollback()
+                try:
+                    session.execute(text("ALTER TABLE fleet_groups ADD COLUMN owner_wallet VARCHAR(128)"))
+                    session.execute(text("CREATE INDEX idx_fleet_group_owner_wallet ON fleet_groups (owner_wallet)"))
+                    session.commit()
+                except Exception:
+                    session.rollback()
 
     # ============================================================
     # Device Operations
     # ============================================================
 
-    def get_device(self, device_id: str, user_id: str | None = None) -> dict[str, Any] | None:
-        """Get device data by ID."""
+    def get_device(self, device_id: str, owner_wallet: str | None = None) -> dict[str, Any] | None:
+        """Get device data by ID (filtered by owner_wallet for isolation)."""
         with self.Session() as session:
             query = session.query(DeviceRecord).filter(DeviceRecord.device_id == device_id)
-            if user_id:
-                query = query.filter(DeviceRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if record:
                 return self._device_to_dict(record)
         return None
 
-    def get_or_create_device(self, device_id: str, user_id: str | None = None) -> dict[str, Any]:
+    def get_or_create_device(self, device_id: str, owner_wallet: str | None = None) -> dict[str, Any]:
         """Get device data or create a new record if it doesn't exist."""
-        existing = self.get_device(device_id, user_id)
+        existing = self.get_device(device_id, owner_wallet)
         if existing:
             return existing
         
@@ -101,7 +127,7 @@ class FleetStore:
         with self.Session() as session:
             record = DeviceRecord(
                 device_id=device_id,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 custom_name=None,
                 description=None,
                 device_type=None,
@@ -117,7 +143,7 @@ class FleetStore:
     def update_device(
         self,
         device_id: str,
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
         custom_name: str | None = None,
         description: str | None = None,
         device_type: str | None = None,
@@ -128,15 +154,15 @@ class FleetStore:
         
         with self.Session() as session:
             query = session.query(DeviceRecord).filter(DeviceRecord.device_id == device_id)
-            if user_id:
-                query = query.filter(DeviceRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if not record:
                 # Create new record
                 record = DeviceRecord(
                     device_id=device_id,
-                    user_id=user_id,
+                    owner_wallet=owner_wallet,
                     custom_name=custom_name,
                     description=description,
                     device_type=device_type,
@@ -162,23 +188,24 @@ class FleetStore:
             session.refresh(record)
             return self._device_to_dict(record)
 
-    def rename_device(self, device_id: str, name: str, user_id: str | None = None) -> dict[str, Any] | None:
+    def rename_device(self, device_id: str, name: str, owner_wallet: str | None = None) -> dict[str, Any] | None:
         """Rename a device with a custom name."""
-        return self.update_device(device_id, user_id=user_id, custom_name=name)
+        return self.update_device(device_id, owner_wallet=owner_wallet, custom_name=name)
 
-    def list_devices(self, user_id: str | None = None, group_id: str | None = None) -> list[dict[str, Any]]:
-        """List all devices, optionally filtered by user or group."""
+    def list_devices(self, owner_wallet: str | None = None, group_id: str | None = None) -> list[dict[str, Any]]:
+        """List all devices, filtered by owner_wallet for isolation."""
+        if not owner_wallet:
+            return []  # No data without owner_wallet (strict isolation)
+            
         with self.Session() as session:
-            query = session.query(DeviceRecord)
-            if user_id:
-                query = query.filter(DeviceRecord.user_id == user_id)
+            query = session.query(DeviceRecord).filter(DeviceRecord.owner_wallet == owner_wallet)
             if group_id:
                 query = query.filter(DeviceRecord.group_id == group_id)
             
             records = query.order_by(DeviceRecord.updated_at.desc()).all()
             return [self._device_to_dict(r) for r in records]
 
-    def delete_device(self, device_id: str, user_id: str | None = None) -> dict[str, Any]:
+    def delete_device(self, device_id: str, owner_wallet: str | None = None) -> dict[str, Any]:
         """
         Hide a device from the fleet list (soft delete).
         The device's proofs are preserved, but it won't appear in the fleet.
@@ -187,15 +214,15 @@ class FleetStore:
         
         with self.Session() as session:
             query = session.query(DeviceRecord).filter(DeviceRecord.device_id == device_id)
-            if user_id:
-                query = query.filter(DeviceRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if not record:
                 # Device might not have a record yet - create one and mark as hidden
                 record = DeviceRecord(
                     device_id=device_id,
-                    user_id=user_id,
+                    owner_wallet=owner_wallet,
                     is_hidden=1,
                     created_at=now,
                     updated_at=now,
@@ -221,7 +248,8 @@ class FleetStore:
         
         return {
             "device_id": record.device_id,
-            "user_id": record.user_id,
+            "owner_wallet": getattr(record, "owner_wallet", None),
+            "user_id": record.user_id,  # Legacy field
             "custom_name": record.custom_name,
             "description": record.description,
             "device_type": record.device_type,
@@ -235,18 +263,21 @@ class FleetStore:
     def update_device_order(
         self,
         device_orders: list[dict[str, Any]],
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
     ) -> dict[str, Any]:
         """
         Update the sort order of multiple devices.
         
         Args:
             device_orders: List of {"device_id": str, "sort_order": int}
-            user_id: Optional user ID for ownership verification
+            owner_wallet: Required for ownership verification
             
         Returns:
             Success status and updated count
         """
+        if not owner_wallet:
+            return {"success": False, "updated": 0, "error": "owner_wallet required"}
+            
         now = datetime.now(timezone.utc).isoformat()
         updated = 0
         
@@ -259,8 +290,7 @@ class FleetStore:
                     continue
                 
                 query = session.query(DeviceRecord).filter(DeviceRecord.device_id == device_id)
-                if user_id:
-                    query = query.filter(DeviceRecord.user_id == user_id)
+                query = query.filter(DeviceRecord.owner_wallet == owner_wallet)
                 
                 device = query.first()
                 if device:
@@ -279,7 +309,7 @@ class FleetStore:
     def create_group(
         self,
         name: str,
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
         description: str | None = None,
         color: str | None = None,
         icon: str | None = None,
@@ -291,7 +321,7 @@ class FleetStore:
         with self.Session() as session:
             record = DeviceGroupRecord(
                 group_id=group_id,
-                user_id=user_id,
+                owner_wallet=owner_wallet,
                 name=name,
                 description=description,
                 color=color,
@@ -304,12 +334,12 @@ class FleetStore:
             session.refresh(record)
             return self._group_to_dict(record)
 
-    def get_group(self, group_id: str, user_id: str | None = None) -> dict[str, Any] | None:
-        """Get group data by ID."""
+    def get_group(self, group_id: str, owner_wallet: str | None = None) -> dict[str, Any] | None:
+        """Get group data by ID (filtered by owner_wallet for isolation)."""
         with self.Session() as session:
             query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.group_id == group_id)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if record:
@@ -319,7 +349,7 @@ class FleetStore:
     def update_group(
         self,
         group_id: str,
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
         name: str | None = None,
         description: str | None = None,
         color: str | None = None,
@@ -330,8 +360,8 @@ class FleetStore:
         
         with self.Session() as session:
             query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.group_id == group_id)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if not record:
@@ -351,12 +381,12 @@ class FleetStore:
             session.refresh(record)
             return self._group_to_dict(record)
 
-    def delete_group(self, group_id: str, user_id: str | None = None) -> dict[str, Any]:
+    def delete_group(self, group_id: str, owner_wallet: str | None = None) -> dict[str, Any]:
         """Delete a group. Returns info about unassigned devices."""
         with self.Session() as session:
             query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.group_id == group_id)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             record = query.first()
             
             if not record:
@@ -375,12 +405,13 @@ class FleetStore:
                 "devices_unassigned": device_count,
             }
 
-    def list_groups(self, user_id: str | None = None) -> list[dict[str, Any]]:
-        """List all groups, optionally filtered by user."""
+    def list_groups(self, owner_wallet: str | None = None) -> list[dict[str, Any]]:
+        """List all groups, filtered by owner_wallet for isolation."""
+        if not owner_wallet:
+            return []  # No data without owner_wallet (strict isolation)
+            
         with self.Session() as session:
-            query = session.query(DeviceGroupRecord)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             
             records = query.order_by(DeviceGroupRecord.name).all()
             return [self._group_to_dict(r, include_device_count=True, session=session) for r in records]
@@ -389,16 +420,16 @@ class FleetStore:
         self,
         group_id: str,
         device_ids: list[str],
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
     ) -> dict[str, Any]:
         """Assign devices to a group."""
         now = datetime.now(timezone.utc).isoformat()
         
         with self.Session() as session:
-            # Verify group exists
+            # Verify group exists and belongs to owner
             query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.group_id == group_id)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             group = query.first()
             
             if not group:
@@ -413,7 +444,7 @@ class FleetStore:
                     # Create device record
                     device = DeviceRecord(
                         device_id=device_id,
-                        user_id=user_id,
+                        owner_wallet=owner_wallet,
                         group_id=group_id,
                         created_at=now,
                         updated_at=now,
@@ -438,16 +469,16 @@ class FleetStore:
         self,
         group_id: str,
         device_ids: list[str],
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
     ) -> dict[str, Any]:
         """Remove devices from a group."""
         now = datetime.now(timezone.utc).isoformat()
         
         with self.Session() as session:
-            # Verify group exists
+            # Verify group exists and belongs to owner
             query = session.query(DeviceGroupRecord).filter(DeviceGroupRecord.group_id == group_id)
-            if user_id:
-                query = query.filter(DeviceGroupRecord.user_id == user_id)
+            if owner_wallet:
+                query = query.filter(DeviceGroupRecord.owner_wallet == owner_wallet)
             group = query.first()
             
             if not group:
@@ -485,7 +516,8 @@ class FleetStore:
         result = {
             "id": record.group_id,
             "group_id": record.group_id,
-            "user_id": record.user_id,
+            "owner_wallet": getattr(record, "owner_wallet", None),
+            "user_id": record.user_id,  # Legacy field
             "name": record.name,
             "description": record.description,
             "color": record.color,
@@ -511,7 +543,7 @@ class FleetStore:
     def record_health(
         self,
         device_id: str,
-        user_id: str | None = None,
+        owner_wallet: str | None = None,
         cpu_percent: float | None = None,
         cpu_temperature: float | None = None,
         memory_percent: float | None = None,
@@ -543,7 +575,7 @@ class FleetStore:
             if not device:
                 device = DeviceRecord(
                     device_id=device_id,
-                    user_id=user_id,
+                    owner_wallet=owner_wallet,
                     created_at=now,
                     updated_at=now,
                 )
@@ -653,7 +685,7 @@ class FleetStore:
 
     def get_fleet_data(
         self,
-        user_id: str | None,
+        owner_wallet: str | None,
         all_proofs: list[dict],
     ) -> dict[str, Any]:
         """
@@ -698,8 +730,8 @@ class FleetStore:
                     device["first_activity"] = created_at
         
         # Get stored device data and groups
-        stored_devices = {d["device_id"]: d for d in self.list_devices(user_id)}
-        groups_list = self.list_groups(user_id)
+        stored_devices = {d["device_id"]: d for d in self.list_devices(owner_wallet)}
+        groups_list = self.list_groups(owner_wallet)
         groups_map = {g["group_id"]: g for g in groups_list}
         
         # Build final device list
@@ -780,7 +812,7 @@ class FleetStore:
 
     def get_fleet_data_optimized(
         self,
-        user_id: str | None,
+        owner_wallet: str | None,
         aggregated_data: dict[str, Any],
         registry: Any,
     ) -> dict[str, Any]:
@@ -789,7 +821,7 @@ class FleetStore:
         This is much more efficient than get_fleet_data() for large datasets.
         
         Args:
-            user_id: User ID for filtering stored device data
+            owner_wallet: Wallet address for filtering stored device data
             aggregated_data: Dict containing:
                 - robot_ids: List of unique robot IDs
                 - proofs_by_robot: Dict mapping robot_id to proof count
@@ -799,13 +831,13 @@ class FleetStore:
         proofs_by_robot = aggregated_data.get("proofs_by_robot", {})
         
         # Get stored device data and groups
-        stored_devices = {d["device_id"]: d for d in self.list_devices(user_id)}
-        groups_list = self.list_groups(user_id)
+        stored_devices = {d["device_id"]: d for d in self.list_devices(owner_wallet)}
+        groups_list = self.list_groups(owner_wallet)
         groups_map = {g["group_id"]: g for g in groups_list}
         
         # Calculate total proofs and tasks using SQL aggregations
         total_proofs = sum(proofs_by_robot.values())
-        task_counts = registry.count_by_task()
+        task_counts = registry.count_by_task(owner_wallet=owner_wallet)
         all_tasks = list(task_counts.keys())
         
         # Build final device list
@@ -828,7 +860,7 @@ class FleetStore:
                 continue
             
             # Get device stats from registry (uses SQL aggregation)
-            device_stats = registry.get_device_stats(device_id)
+            device_stats = registry.get_device_stats(device_id, owner_wallet=owner_wallet)
             
             # Get default name
             default_name = device_id.replace("-", " ").replace("_", " ").title()

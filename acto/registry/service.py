@@ -63,6 +63,29 @@ class ProofRegistry:
         self.SessionLocal = make_session_factory(self.engine)
         self.cache = get_cache_backend(self.settings)
         Base.metadata.create_all(self.engine)
+        self._migrate_add_owner_wallet()
+
+    def _migrate_add_owner_wallet(self) -> None:
+        """Add owner_wallet column to proofs table if it doesn't exist."""
+        from sqlalchemy import text, inspect
+        
+        try:
+            inspector = inspect(self.engine)
+            if "proofs" not in inspector.get_table_names():
+                return
+            
+            existing_columns = {col["name"] for col in inspector.get_columns("proofs")}
+            
+            if "owner_wallet" not in existing_columns:
+                with self.engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE proofs ADD COLUMN owner_wallet VARCHAR(128)"))
+                    # Create index for performance
+                    try:
+                        conn.execute(text("CREATE INDEX idx_owner_wallet_created ON proofs (owner_wallet, created_at)"))
+                    except Exception:
+                        pass  # Index might already exist
+        except Exception:
+            pass  # Migration failed, will work with next restart
 
     def __enter__(self) -> ProofRegistry:
         """Enter context manager."""
@@ -73,13 +96,19 @@ class ProofRegistry:
         if self.engine:
             self.engine.dispose()
 
-    def upsert(self, envelope: ProofEnvelope, tenant_id: str | None = None) -> str:
+    def upsert(
+        self,
+        envelope: ProofEnvelope,
+        tenant_id: str | None = None,
+        owner_wallet: str | None = None,
+    ) -> str:
         """
         Upsert a proof envelope into the registry.
 
         Args:
             envelope: Proof envelope to store or update
             tenant_id: Optional tenant ID for multi-tenant scenarios
+            owner_wallet: Wallet address of the owner (required for user isolation)
 
         Returns:
             str: Proof ID (derived from payload hash)
@@ -90,7 +119,7 @@ class ProofRegistry:
             from acto.proof import ProofEnvelope
 
             registry = ProofRegistry()
-            proof_id = registry.upsert(envelope)
+            proof_id = registry.upsert(envelope, owner_wallet="ABC123...")
             print(f"Stored proof: {proof_id}")
             ```
         """
@@ -108,6 +137,8 @@ class ProofRegistry:
                     existing.metadata_search = metadata_search
                     if tenant_id:
                         existing.tenant_id = tenant_id
+                    if owner_wallet:
+                        existing.owner_wallet = owner_wallet
                 else:
                     rec = ProofRecord(
                         proof_id=proof_id,
@@ -121,6 +152,7 @@ class ProofRegistry:
                         envelope_json=envelope_json_str,
                         anchor_ref=envelope.anchor_ref,
                         tenant_id=tenant_id,
+                        owner_wallet=owner_wallet,
                         metadata_search=metadata_search,
                     )
                     session.add(rec)
@@ -136,18 +168,19 @@ class ProofRegistry:
         except Exception as e:
             raise RegistryError(str(e)) from e
 
-    def get(self, proof_id: str) -> ProofEnvelope:
+    def get(self, proof_id: str, owner_wallet: str | None = None) -> ProofEnvelope:
         """
         Get a proof by ID from the registry.
 
         Args:
             proof_id: Proof ID to retrieve
+            owner_wallet: If provided, verify the proof belongs to this wallet
 
         Returns:
             ProofEnvelope: Retrieved proof envelope
 
         Raises:
-            RegistryError: If proof not found
+            RegistryError: If proof not found or access denied
 
         Example:
             ```python
@@ -155,29 +188,27 @@ class ProofRegistry:
 
             registry = ProofRegistry()
             try:
-                proof = registry.get("abc123...")
+                proof = registry.get("abc123...", owner_wallet="ABC...")
                 print(f"Found proof: {proof.payload.subject.task_id}")
             except RegistryError as e:
                 print(f"Proof not found: {e}")
             ```
         """
-        # Try cache first
-        cache_key = _cache_key_proof(proof_id)
-        if self.cache:
-            cached = self.cache.get(cache_key)
-            if cached is not None:
-                return ProofEnvelope.model_validate(cached)
-
-        # Cache miss, fetch from database
+        # Cache miss, fetch from database (cache disabled for ownership checks)
         with self.SessionLocal() as session:
             rec = session.get(ProofRecord, proof_id)
             if not rec:
                 raise RegistryError("Proof not found.")
+            
+            # Check ownership if owner_wallet is provided
+            if owner_wallet and rec.owner_wallet != owner_wallet:
+                raise RegistryError("Access denied: proof belongs to another user.")
+            
+            # Hide legacy proofs without owner_wallet (Option 3: versteckt)
+            if owner_wallet and not rec.owner_wallet:
+                raise RegistryError("Access denied: legacy proof without owner.")
+            
             envelope = ProofEnvelope.model_validate(orjson.loads(rec.envelope_json))
-
-        # Store in cache
-        if self.cache:
-            self.cache.set(cache_key, envelope.model_dump(), ttl=self.settings.cache_ttl)
 
         return envelope
 
@@ -188,11 +219,34 @@ class ProofRegistry:
         search_filter: SearchFilter | None = None,
         sort_field: str = SortField.CREATED_AT,
         sort_order: str = SortOrder.DESC,
+        owner_wallet: str | None = None,
     ) -> list[dict]:
+        """
+        List proofs with optional filtering.
+        
+        Args:
+            limit: Maximum number of results
+            offset: Number of results to skip
+            search_filter: Optional search filter
+            sort_field: Field to sort by
+            sort_order: Sort order (asc/desc)
+            owner_wallet: Required for user isolation - only returns proofs owned by this wallet
+            
+        Returns:
+            list: List of proof summaries
+        """
         with self.SessionLocal() as session:
             stmt = select(ProofRecord)
 
-            # Wende Filter an
+            # WICHTIG: Filter nach owner_wallet für User-Isolation
+            # Ohne owner_wallet werden keine Daten zurückgegeben (Sicherheit)
+            if owner_wallet:
+                stmt = stmt.where(ProofRecord.owner_wallet == owner_wallet)
+            else:
+                # Ohne owner_wallet keine Daten zurückgeben (strenge Isolation)
+                return []
+
+            # Wende zusätzliche Filter an
             if search_filter:
                 stmt = stmt.where(search_filter.to_sqlalchemy_filter())
 
@@ -213,6 +267,7 @@ class ProofRegistry:
                     "payload_hash": r.payload_hash,
                     "anchor_ref": r.anchor_ref,
                     "tenant_id": r.tenant_id,
+                    "owner_wallet": r.owner_wallet,
                 }
                 for r in rows
             ]
@@ -223,12 +278,13 @@ class ProofRegistry:
         limit: int = 50,
         offset: int = 0,
         tenant_id: str | None = None,
+        owner_wallet: str | None = None,
     ) -> list[dict]:
-        """Full-text search in proofs."""
+        """Full-text search in proofs (filtered by owner_wallet for isolation)."""
         filter_obj = SearchFilter()
         filter_obj.search_text = search_text
         filter_obj.tenant_id = tenant_id
-        return self.list(limit=limit, offset=offset, search_filter=filter_obj)
+        return self.list(limit=limit, offset=offset, search_filter=filter_obj, owner_wallet=owner_wallet)
 
     def get_by_hash(self, payload_hash: str) -> ProofEnvelope:
         """Get a proof by payload hash."""
@@ -308,7 +364,11 @@ class ProofRegistry:
     # Optimized Aggregation Methods (SQL-level, no full data loading)
     # =========================================================================
 
-    def count(self, search_filter: SearchFilter | None = None) -> int:
+    def count(
+        self,
+        search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
+    ) -> int:
         """
         Count proofs matching the filter using SQL COUNT.
         
@@ -316,31 +376,49 @@ class ProofRegistry:
         
         Args:
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
             int: Number of matching proofs
         """
         with self.SessionLocal() as session:
             stmt = select(func.count()).select_from(ProofRecord)
+            
+            # User isolation filter
+            if owner_wallet:
+                stmt = stmt.where(ProofRecord.owner_wallet == owner_wallet)
+            else:
+                return 0  # No data without owner_wallet
+            
             if search_filter:
                 stmt = stmt.where(search_filter.to_sqlalchemy_filter())
             result = session.execute(stmt).scalar()
             return result or 0
 
-    def count_by_robot(self, search_filter: SearchFilter | None = None) -> dict[str, int]:
+    def count_by_robot(
+        self,
+        search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
+    ) -> dict[str, int]:
         """
         Count proofs grouped by robot_id using SQL GROUP BY.
         
         Args:
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
             dict: Mapping of robot_id to proof count
         """
+        if not owner_wallet:
+            return {}  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
             stmt = select(
                 ProofRecord.robot_id,
                 func.count().label("count")
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
             ).group_by(ProofRecord.robot_id)
             
             if search_filter:
@@ -352,20 +430,30 @@ class ProofRegistry:
                 for row in rows
             }
 
-    def count_by_task(self, search_filter: SearchFilter | None = None) -> dict[str, int]:
+    def count_by_task(
+        self,
+        search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
+    ) -> dict[str, int]:
         """
         Count proofs grouped by task_id using SQL GROUP BY.
         
         Args:
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
             dict: Mapping of task_id to proof count
         """
+        if not owner_wallet:
+            return {}  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
             stmt = select(
                 ProofRecord.task_id,
                 func.count().label("count")
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
             ).group_by(ProofRecord.task_id)
             
             if search_filter:
@@ -381,6 +469,7 @@ class ProofRegistry:
         self,
         days: int = 30,
         search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
     ) -> list[dict[str, str | int]]:
         """
         Count proofs grouped by date for the last N days.
@@ -388,14 +477,24 @@ class ProofRegistry:
         Args:
             days: Number of days to include (default: 30)
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
-            list: List of {"date": "YYYY-MM-DD", "count": N} dicts
+            list: List of {"date": "YYYY-MM-DD", "proof_count": N} dicts
         """
         from datetime import datetime, timedelta, timezone
         
         # Calculate date range
         now = datetime.now(timezone.utc)
+        
+        # Return empty timeline without owner_wallet
+        if not owner_wallet:
+            timeline = []
+            for i in range(days):
+                date = (now - timedelta(days=days - 1 - i)).strftime("%Y-%m-%d")
+                timeline.append({"date": date, "proof_count": 0})
+            return timeline
+        
         start_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
         
         with self.SessionLocal() as session:
@@ -406,6 +505,8 @@ class ProofRegistry:
                 func.count().label("count")
             ).where(
                 ProofRecord.created_at >= start_date
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
             ).group_by(
                 func.substr(ProofRecord.created_at, 1, 10)
             ).order_by(
@@ -432,21 +533,26 @@ class ProofRegistry:
     def get_activity_range(
         self,
         search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
     ) -> tuple[str | None, str | None]:
         """
         Get first and last activity timestamps using SQL MIN/MAX.
         
         Args:
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
             tuple: (first_activity, last_activity) ISO timestamps or (None, None)
         """
+        if not owner_wallet:
+            return (None, None)  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
             stmt = select(
                 func.min(ProofRecord.created_at).label("first"),
                 func.max(ProofRecord.created_at).label("last")
-            )
+            ).where(ProofRecord.owner_wallet == owner_wallet)
             
             if search_filter:
                 stmt = stmt.where(search_filter.to_sqlalchemy_filter())
@@ -454,7 +560,7 @@ class ProofRegistry:
             row = session.execute(stmt).one()
             return (row.first, row.last)
 
-    def exists_by_robot(self, robot_id: str) -> bool:
+    def exists_by_robot(self, robot_id: str, owner_wallet: str | None = None) -> bool:
         """
         Check if any proofs exist for a robot_id.
         
@@ -462,29 +568,45 @@ class ProofRegistry:
         
         Args:
             robot_id: Robot ID to check
+            owner_wallet: Required for user isolation
             
         Returns:
             bool: True if proofs exist for this robot
         """
+        if not owner_wallet:
+            return False  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
             stmt = select(func.count()).select_from(ProofRecord).where(
                 ProofRecord.robot_id == robot_id
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
             ).limit(1)
             result = session.execute(stmt).scalar()
             return (result or 0) > 0
 
-    def get_unique_robot_ids(self, search_filter: SearchFilter | None = None) -> list[str]:
+    def get_unique_robot_ids(
+        self,
+        search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
+    ) -> list[str]:
         """
         Get list of unique robot IDs.
         
         Args:
             search_filter: Optional filter to apply
+            owner_wallet: Required for user isolation
             
         Returns:
             list: Unique robot IDs
         """
+        if not owner_wallet:
+            return []  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
-            stmt = select(ProofRecord.robot_id).distinct()
+            stmt = select(ProofRecord.robot_id).distinct().where(
+                ProofRecord.owner_wallet == owner_wallet
+            )
             
             if search_filter:
                 stmt = stmt.where(search_filter.to_sqlalchemy_filter())
@@ -496,6 +618,7 @@ class ProofRegistry:
         self,
         robot_id: str | None = None,
         search_filter: SearchFilter | None = None,
+        owner_wallet: str | None = None,
     ) -> list[str]:
         """
         Get list of unique task IDs, optionally filtered by robot.
@@ -503,12 +626,18 @@ class ProofRegistry:
         Args:
             robot_id: Optional robot ID to filter by
             search_filter: Optional additional filter
+            owner_wallet: Required for user isolation
             
         Returns:
             list: Unique task IDs
         """
+        if not owner_wallet:
+            return []  # No data without owner_wallet
+            
         with self.SessionLocal() as session:
-            stmt = select(ProofRecord.task_id).distinct()
+            stmt = select(ProofRecord.task_id).distinct().where(
+                ProofRecord.owner_wallet == owner_wallet
+            )
             
             if robot_id:
                 stmt = stmt.where(ProofRecord.robot_id == robot_id)
@@ -519,16 +648,26 @@ class ProofRegistry:
             rows = session.execute(stmt).scalars().all()
             return [r for r in rows if r is not None]
 
-    def get_device_stats(self, robot_id: str) -> dict:
+    def get_device_stats(self, robot_id: str, owner_wallet: str | None = None) -> dict:
         """
         Get aggregated statistics for a specific device/robot.
         
         Args:
             robot_id: Robot ID to get stats for
+            owner_wallet: Required for user isolation
             
         Returns:
             dict: Device statistics including counts and activity range
         """
+        if not owner_wallet:
+            return {
+                "proof_count": 0,
+                "task_count": 0,
+                "first_activity": None,
+                "last_activity": None,
+                "task_ids": [],
+            }
+            
         with self.SessionLocal() as session:
             # Single query for count, first/last activity, and unique tasks
             stmt = select(
@@ -536,13 +675,19 @@ class ProofRegistry:
                 func.min(ProofRecord.created_at).label("first_activity"),
                 func.max(ProofRecord.created_at).label("last_activity"),
                 func.count(func.distinct(ProofRecord.task_id)).label("task_count"),
-            ).where(ProofRecord.robot_id == robot_id)
+            ).where(
+                ProofRecord.robot_id == robot_id
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
+            )
             
             row = session.execute(stmt).one()
             
             # Get unique task IDs (separate query for the actual values)
             task_stmt = select(ProofRecord.task_id).distinct().where(
                 ProofRecord.robot_id == robot_id
+            ).where(
+                ProofRecord.owner_wallet == owner_wallet
             )
             task_ids = [r for r in session.execute(task_stmt).scalars().all() if r]
             

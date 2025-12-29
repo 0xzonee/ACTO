@@ -207,10 +207,17 @@ def create_app() -> FastAPI:
     def prometheus_metrics() -> Response:
         return Response(content=metrics.render_prometheus(), media_type="text/plain; version=0.0.4")
 
+    def _get_owner_wallet(request: Request) -> str | None:
+        """Extract owner wallet address from JWT token payload."""
+        if hasattr(request.state, "token_payload"):
+            return request.state.token_payload.get("wallet_address")
+        return None
+
     @app.get("/v1/proofs", dependencies=[auth_dependency()])
-    def list_proofs(limit: int = 50) -> dict:
+    def list_proofs(request: Request, limit: int = 50) -> dict:
+        owner_wallet = _get_owner_wallet(request)
         metrics.inc("acto.proofs.list")
-        return {"items": registry.list(limit=limit)}
+        return {"items": registry.list(limit=limit, owner_wallet=owner_wallet)}
 
     @app.post("/v1/proofs", response_model=ProofSubmitResponse, dependencies=[auth_dependency()])
     def submit(
@@ -219,13 +226,14 @@ def create_app() -> FastAPI:
     ) -> ProofSubmitResponse:
         # Get current user from request state (set by JWT middleware if authenticated)
         current_user = get_current_user_optional(request)
+        owner_wallet = _get_owner_wallet(request)
         try:
             # RBAC check
             if rbac_manager and current_user:
                 rbac_manager.require_permission(current_user.get("roles", []), Permission.PROOF_WRITE)
 
             verify_proof(req.envelope)
-            proof_id = registry.upsert(req.envelope)
+            proof_id = registry.upsert(req.envelope, owner_wallet=owner_wallet)
             metrics.inc("acto.proofs.submit")
 
             # Audit log
@@ -266,13 +274,14 @@ def create_app() -> FastAPI:
     ) -> dict:
         # Get current user from request state (set by JWT middleware if authenticated)
         current_user = get_current_user_optional(request)
+        owner_wallet = _get_owner_wallet(request)
         try:
             # RBAC check
             if rbac_manager and current_user:
                 rbac_manager.require_permission(current_user.get("roles", []), Permission.PROOF_READ)
 
             metrics.inc("acto.proofs.get")
-            env = registry.get(proof_id)
+            env = registry.get(proof_id, owner_wallet=owner_wallet)
 
             # Audit log
             if audit_logger:
@@ -518,6 +527,7 @@ def create_app() -> FastAPI:
         - created_before: Filter proofs created before this date (ISO format)
         - search_text: Full-text search across all fields
         """
+        owner_wallet = _get_owner_wallet(request)
         try:
             # Build search filter
             search_filter = SearchFilter()
@@ -546,15 +556,15 @@ def create_app() -> FastAPI:
                 search_filter=search_filter,
                 sort_field=sort_field,
                 sort_order=sort_order,
+                owner_wallet=owner_wallet,
             )
             
             has_more = len(items) > req.limit
             if has_more:
                 items = items[:req.limit]
             
-            # Get total count (simplified - in production use COUNT query)
-            all_items = registry.list(limit=10000, search_filter=search_filter)
-            total = len(all_items)
+            # Get total count using SQL COUNT
+            total = registry.count(search_filter=search_filter, owner_wallet=owner_wallet)
             
             metrics.inc("acto.proofs.search")
             
@@ -633,16 +643,18 @@ def create_app() -> FastAPI:
         
         Note: Uses optimized SQL aggregations instead of loading all proofs.
         """
+        owner_wallet = _get_owner_wallet(request)
         try:
             # Validate days parameter (between 1 and 365)
             days = max(1, min(365, days))
             
             # Use optimized SQL aggregations instead of loading all proofs
-            total_proofs = registry.count()
-            proofs_by_robot = registry.count_by_robot()
-            proofs_by_task = registry.count_by_task()
-            activity_timeline = registry.count_by_date(days=days)
-            first_activity, last_activity = registry.get_activity_range()
+            # Filter by owner_wallet for user isolation
+            total_proofs = registry.count(owner_wallet=owner_wallet)
+            proofs_by_robot = registry.count_by_robot(owner_wallet=owner_wallet)
+            proofs_by_task = registry.count_by_task(owner_wallet=owner_wallet)
+            activity_timeline = registry.count_by_date(days=days, owner_wallet=owner_wallet)
+            first_activity, last_activity = registry.get_activity_range(owner_wallet=owner_wallet)
             
             # Get user stats from API key store
             user = user_store.get_user_by_wallet(wallet_address)
