@@ -128,9 +128,18 @@ def create_fleet_router(
     # ============================================================
 
     def get_owner_wallet_from_request(request: Request) -> str | None:
-        """Extract owner wallet address from JWT token in request."""
+        """Extract owner wallet address from JWT token or X-Wallet-Address header."""
+        # 1. Try JWT token payload first (most secure)
         if hasattr(request.state, "token_payload"):
-            return request.state.token_payload.get("wallet_address")
+            wallet = request.state.token_payload.get("wallet_address")
+            if wallet:
+                return wallet
+        
+        # 2. Fall back to X-Wallet-Address header (for API key auth)
+        wallet_header = request.headers.get("X-Wallet-Address")
+        if wallet_header:
+            return wallet_header
+        
         return None
 
     def build_device_logs(proofs: list, device_id: str, limit: int = 50) -> list[dict]:

@@ -208,9 +208,18 @@ def create_app() -> FastAPI:
         return Response(content=metrics.render_prometheus(), media_type="text/plain; version=0.0.4")
 
     def _get_owner_wallet(request: Request) -> str | None:
-        """Extract owner wallet address from JWT token payload."""
+        """Extract owner wallet address from JWT token payload or X-Wallet-Address header."""
+        # 1. Try JWT token payload first (most secure)
         if hasattr(request.state, "token_payload"):
-            return request.state.token_payload.get("wallet_address")
+            wallet = request.state.token_payload.get("wallet_address")
+            if wallet:
+                return wallet
+        
+        # 2. Fall back to X-Wallet-Address header (for API key auth)
+        wallet_header = request.headers.get("X-Wallet-Address")
+        if wallet_header:
+            return wallet_header
+        
         return None
 
     @app.get("/v1/proofs", dependencies=[auth_dependency()])
