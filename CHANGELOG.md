@@ -5,6 +5,69 @@ All notable changes to ACTO will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-12-29
+
+### 🎉 First Stable Release - Multi-User Production Ready
+
+This major release introduces complete **user data isolation** via wallet-based ownership, making ACTO production-ready for multi-tenant deployments.
+
+#### 🔒 User Isolation (Breaking Change)
+
+- **`owner_wallet` Field** - All proofs, devices, and groups are now tied to the owner's Solana wallet address
+- **Automatic Filtering** - Users can only see and access their own data
+- **API-Key + Wallet Header** - SDK clients send `X-Wallet-Address` header for ownership association
+- **JWT + Header Fallback** - API extracts wallet from JWT token or `X-Wallet-Address` header
+- **Legacy Data Hidden** - Proofs without `owner_wallet` are not visible (migration required)
+
+#### Added
+
+- **`owner_wallet` Column** to database tables:
+  - `proofs` - Links proofs to wallet owner
+  - `fleet_devices` - Links devices to wallet owner
+  - `fleet_groups` - Links device groups to wallet owner
+  
+- **Automatic Database Migration** - New columns are created on server startup
+
+- **User Isolation in All Queries**:
+  - `ProofRegistry.list()`, `get()`, `search()`, `count()` - All filtered by owner
+  - `FleetStore.list_devices()`, `get_device()`, `list_groups()` - All filtered by owner
+  - API endpoints extract wallet from request and pass to all queries
+
+#### Changed
+
+- **`_get_owner_wallet()`** - Now reads from JWT token OR `X-Wallet-Address` header
+- **All Fleet Endpoints** - Require wallet authentication, return only user's data
+- **All Proof Endpoints** - Filter by owner wallet for data isolation
+
+#### Migration Guide
+
+**For existing users with proofs:**
+
+```sql
+-- Run in Neon SQL Console to claim your existing data
+UPDATE proofs SET owner_wallet = 'YOUR_WALLET_ADDRESS' WHERE owner_wallet IS NULL;
+UPDATE fleet_devices SET owner_wallet = 'YOUR_WALLET_ADDRESS' WHERE owner_wallet IS NULL;
+UPDATE fleet_groups SET owner_wallet = 'YOUR_WALLET_ADDRESS' WHERE owner_wallet IS NULL;
+```
+
+**SDK clients automatically send wallet:**
+```python
+# The SDK already sends X-Wallet-Address header
+client = ACTOClient(
+    api_key="acto_xxx...",
+    wallet_address="YOUR_WALLET"  # Sent as X-Wallet-Address header
+)
+```
+
+#### Security
+
+- ✅ Complete user data isolation at database query level
+- ✅ No cross-user data leakage possible
+- ✅ Wallet-based ownership (cryptographically verifiable)
+- ✅ Works with both JWT (dashboard) and API-key (SDK) authentication
+
+---
+
 ## [0.9.17] - 2025-12-29
 
 ### 🚀 Streamlined Architecture & Zero External Dependencies
