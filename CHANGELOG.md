@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Technical
 
-- Web3Forms API key configured via `VITE_WEB3FORMS_KEY` environment variable
+- Web3Forms API key configured via environment variable
 - Seamless section transitions with gradient overlays
 
 ---

@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { ArrowRight, ArrowUpRight, Copy, Check, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { config } from '../config';
@@ -7,6 +7,17 @@ import { ScrollAnimation } from '../components/ScrollAnimation';
 
 // Web3Forms Access Key - set via environment variable in Vercel
 const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY;
+// Web3Forms hCaptcha Sitekey
+const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2';
+
+// Extend window for hcaptcha
+declare global {
+  interface Window {
+    hcaptcha?: {
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
 
 export function Contact() {
   const [copied, setCopied] = useState(false);
@@ -16,6 +27,20 @@ export function Contact() {
     email: '',
     message: '',
   });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Load hCaptcha script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://web3forms.com/client/script.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const copyEmail = () => {
     navigator.clipboard.writeText('info@actobotics.net');
@@ -28,18 +53,16 @@ export function Contact() {
     setFormState('submitting');
 
     try {
+      const form = formRef.current;
+      if (!form) return;
+
+      const formDataObj = new FormData(form);
+      formDataObj.append('access_key', WEB3FORMS_KEY);
+      formDataObj.append('subject', `[ACTO Contact] Message from ${formData.name}`);
+
       const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-          subject: `[ACTO Contact] Message from ${formData.name}`,
-        }),
+        body: formDataObj,
       });
 
       const data = await response.json();
@@ -47,6 +70,10 @@ export function Contact() {
       if (data.success) {
         setFormState('success');
         setFormData({ name: '', email: '', message: '' });
+        // Reset hCaptcha
+        if (window.hcaptcha) {
+          window.hcaptcha.reset();
+        }
       } else {
         setFormState('error');
       }
@@ -164,6 +191,7 @@ export function Contact() {
                     ) : (
                       <motion.form 
                         key="form"
+                        ref={formRef}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -228,6 +256,13 @@ export function Contact() {
                             <p className="text-sm">Something went wrong. Please try again.</p>
                           </motion.div>
                         )}
+
+                        {/* hCaptcha Widget */}
+                        <div 
+                          className="h-captcha" 
+                          data-captcha="true"
+                          data-sitekey={HCAPTCHA_SITEKEY}
+                        />
 
                         <button
                           type="submit"
