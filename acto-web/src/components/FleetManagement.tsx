@@ -10,8 +10,8 @@ const features = [
   },
   {
     icon: FolderTree,
-    title: 'Device Groups',
-    description: 'Organize robots into logical groups like "Warehouse A", "Production Line 2", or "Test Fleet". Filter and manage devices by group for easier operations.',
+    title: 'Key & Device Groups',
+    description: 'Organize API keys and devices into logical groups like "Warehouse A", "Production Line 2", or "Test Fleet". Drag and drop to easily move items between groups.',
   },
   {
     icon: Activity,

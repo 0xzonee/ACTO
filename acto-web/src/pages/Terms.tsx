@@ -24,7 +24,7 @@ export function Terms() {
             <h2 className="text-2xl font-medium mb-4 text-gray-900">1. Agreement to Terms</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
               These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") 
-              and ACTO ("Company," "we," "us," or "our") governing your access to and use of the ACTO platform, including 
+              and Actobotics LLC ("ACTO," "Company," "we," "us," or "our") governing your access to and use of the ACTO platform, including 
               our website (actobotics.net), API services (api.actobotics.net), dashboard, Python SDK, CLI tools, and any 
               related services (collectively, the "Services").
             </p>
@@ -328,6 +328,7 @@ export function Terms() {
               For questions about these Terms, please contact us:
             </p>
             <ul className="text-gray-600 space-y-2">
+              <li><strong>Company:</strong> <a href="/llc/actoboticsllc.pdf" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">Actobotics LLC</a></li>
               <li><strong>Email:</strong> legal@actobotics.net</li>
               <li><strong>GitHub:</strong> github.com/actobotics/ACTO/issues</li>
             </ul>

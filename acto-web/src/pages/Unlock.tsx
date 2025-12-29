@@ -46,7 +46,7 @@ function PrivacyContent() {
       <section className="mb-8">
         <h3 className="text-lg font-medium mb-3 text-gray-900">1. Introduction</h3>
         <p className="text-gray-600 text-sm leading-relaxed mb-2">
-          ACTO ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, 
+          <a href="/llc/actoboticsllc.pdf" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">Actobotics LLC</a> ("ACTO," "we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, 
           use, disclose, and safeguard your information when you use our proof-of-execution platform, including our website 
           (actobotics.net), API services (api.actobotics.net), dashboard, SDK, and CLI tools (collectively, the "Services").
         </p>
@@ -183,7 +183,7 @@ function TermsContent() {
         <h3 className="text-lg font-medium mb-3 text-gray-900">1. Agreement to Terms</h3>
         <p className="text-gray-600 text-sm leading-relaxed mb-2">
           These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") 
-          and ACTO ("Company," "we," "us," or "our") governing your access to and use of the ACTO platform, including 
+          and <a href="/llc/actoboticsllc.pdf" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">Actobotics LLC</a> ("ACTO," "Company," "we," "us," or "our") governing your access to and use of the ACTO platform, including 
           our website (actobotics.net), API services (api.actobotics.net), dashboard, Python SDK, CLI tools, and any 
           related services (collectively, the "Services").
         </p>

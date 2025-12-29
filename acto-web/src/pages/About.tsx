@@ -4,6 +4,8 @@ import { SEO } from '../components/SEO';
 import { ScrollAnimation } from '../components/ScrollAnimation';
 import { ParallaxSection } from '../components/ParallaxSection';
 import { ImageWithSkeleton } from '../components/ImageWithSkeleton';
+import { AnimatedCounter } from '../components/AnimatedCounter';
+import { LineReveal } from '../components/TextReveal';
 
 const timeline = [
   {
@@ -52,15 +54,23 @@ export function About() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32 relative z-10">
-          <p className="text-sm text-gray-300 mb-6 md:mb-8 tracking-wide uppercase">About ACTO</p>
+          <LineReveal delay={0}>
+            <p className="text-sm text-gray-300 mb-6 md:mb-8 tracking-wide uppercase">About ACTO</p>
+          </LineReveal>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.1] tracking-tight mb-8 max-w-4xl text-white">
-            Machines do what they want.<br />
-            <span className="text-gray-400">We make them prove it.</span>
+            <LineReveal delay={100}>
+              <span className="block">Machines do what they want.</span>
+            </LineReveal>
+            <LineReveal delay={200}>
+              <span className="block text-gray-400">We make them prove it.</span>
+            </LineReveal>
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-2xl leading-relaxed">
-            ACTO is the infrastructure for verifiable autonomy. We enable autonomous systems to 
-            cryptographically prove what they did – independently, tamper-proof, in real-time.
-          </p>
+          <LineReveal delay={400}>
+            <p className="text-lg md:text-xl text-gray-300 max-w-2xl leading-relaxed">
+              ACTO is the infrastructure for verifiable autonomy. We enable autonomous systems to 
+              cryptographically prove what they did – independently, tamper-proof, in real-time.
+            </p>
+          </LineReveal>
         </div>
       </section>
 
@@ -350,19 +360,25 @@ export function About() {
             <div className="space-y-4">
               <ScrollAnimation animation="blur-in" delay={180}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                  <p className="text-4xl font-medium text-gray-900 mb-2">$180B+</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-2">
+                    $<AnimatedCounter end={180} duration={2000} suffix="B+" />
+                  </p>
                   <p className="text-gray-500">Expected robotics market by 2030</p>
                 </div>
               </ScrollAnimation>
               <ScrollAnimation animation="blur-in" delay={240}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                  <p className="text-4xl font-medium text-gray-900 mb-2">26%</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-2">
+                    <AnimatedCounter end={26} duration={1500} suffix="%" />
+                  </p>
                   <p className="text-gray-500">Annual growth in autonomous systems</p>
                 </div>
               </ScrollAnimation>
               <ScrollAnimation animation="blur-in" delay={300}>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                  <p className="text-4xl font-medium text-gray-900 mb-2">&lt;50ms</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-2">
+                    &lt;<AnimatedCounter end={50} duration={1200} suffix="ms" />
+                  </p>
                   <p className="text-gray-500">ACTO verification time</p>
                 </div>
               </ScrollAnimation>

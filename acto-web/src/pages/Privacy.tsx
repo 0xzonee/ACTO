@@ -23,7 +23,7 @@ export function Privacy() {
           <section className="mb-12">
             <h2 className="text-2xl font-medium mb-4 text-gray-900">1. Introduction</h2>
             <p className="text-gray-600 leading-relaxed mb-4">
-              ACTO ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, 
+              Actobotics LLC ("ACTO," "we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, 
               use, disclose, and safeguard your information when you use our proof-of-execution platform, including our website 
               (actobotics.net), API services (api.actobotics.net), dashboard, SDK, and CLI tools (collectively, the "Services").
             </p>
@@ -186,6 +186,7 @@ export function Privacy() {
               If you have questions or concerns about this Privacy Policy or our data practices, please contact us:
             </p>
             <ul className="text-gray-600 space-y-2">
+              <li><strong>Company:</strong> <a href="/llc/actoboticsllc.pdf" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">Actobotics LLC</a></li>
               <li><strong>Email:</strong> privacy@actobotics.net</li>
               <li><strong>GitHub:</strong> github.com/actobotics/ACTO/issues</li>
             </ul>

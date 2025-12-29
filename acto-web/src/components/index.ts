@@ -22,3 +22,4 @@ export { SpotlightCard } from './SpotlightCard';
 export { PageTransition } from './PageTransition';
 export { AnimatedLink, AnimatedAnchor } from './AnimatedLink';
 export { ScrollProgress } from './ScrollProgress';
+export { TextReveal, LineReveal, SplitLineReveal } from './TextReveal';

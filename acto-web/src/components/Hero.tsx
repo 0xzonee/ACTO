@@ -1,5 +1,7 @@
 import { Github, ArrowRight, Key } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { config } from '../config';
+import { LineReveal } from './TextReveal';
 
 export function Hero() {
   return (
@@ -10,15 +12,29 @@ export function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32 relative z-10">
-        <p className="text-sm text-gray-200 mb-6 md:mb-8 tracking-wide uppercase">Proof of Execution</p>
+        <LineReveal delay={0}>
+          <p className="text-sm text-gray-200 mb-6 md:mb-8 tracking-wide uppercase">Proof of Execution</p>
+        </LineReveal>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.15] tracking-tight mb-6 md:mb-8 max-w-3xl text-white">
-          Verify that robots<br />actually executed.
+          <LineReveal delay={100}>
+            <span className="block">Verify that robots</span>
+          </LineReveal>
+          <LineReveal delay={200}>
+            <span className="block">actually executed.</span>
+          </LineReveal>
         </h1>
-        <p className="text-lg md:text-xl text-gray-200 mb-8 md:mb-12 max-w-xl leading-relaxed">
-          Trust is good. Cryptographic proof is better.<br />
-          Turn every robotic action into undeniable, verifiable truth.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+        <LineReveal delay={400}>
+          <p className="text-lg md:text-xl text-gray-200 mb-8 md:mb-12 max-w-xl leading-relaxed">
+            Trust is good. Cryptographic proof is better.<br />
+            Turn every robotic action into undeniable, verifiable truth.
+          </p>
+        </LineReveal>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          className="flex flex-col sm:flex-row gap-3 md:gap-4"
+        >
           <a
             href={config.links.dashboard}
             className="group px-6 py-3 bg-white text-gray-900 text-sm font-medium rounded-md hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2"
@@ -40,7 +56,7 @@ export function Hero() {
             <Github size={16} />
             GitHub
           </a>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
