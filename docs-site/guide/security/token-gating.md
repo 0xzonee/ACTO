@@ -169,9 +169,13 @@ This threshold was chosen to:
 - Prevent spam and abuse
 - Create sustainable economics
 
+### Can I create multiple API keys?
+
+Yes! You can create as many API keys as you need from a single wallet. All keys share the same wallet's token balance for access control.
+
 ### Can I use multiple wallets?
 
-Yes, each API key is tied to a specific wallet. Create separate keys for different wallets.
+Yes, but each wallet requires a separate login. API keys created under one wallet cannot be used with a different wallet address.
 
 ### What if my balance drops below 50,000?
 
