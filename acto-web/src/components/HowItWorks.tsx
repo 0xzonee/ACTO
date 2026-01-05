@@ -24,7 +24,7 @@ const steps = [
   {
     number: '04',
     title: 'Verification',
-    description: 'Network-based proof verification. Anyone can independently verify the proof without trusting the operator.',
+    description: 'Network-based proof verification. Authorized parties can independently verify the proof without trusting the operator.',
     icon: CheckCircle2,
   },
 ];

@@ -12,7 +12,7 @@ const features = [
   {
     number: '02',
     title: 'Trust no one',
-    description: "Verification that doesn't rely on the operator's word. Anyone can check. No one can fake it.",
+    description: "Verification that doesn't rely on the operator's word. Authorized parties can check. No one can fake it.",
     bgImage: '/bg5.png',
   },
   {
@@ -112,8 +112,14 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
 
 export function Features() {
   return (
-    <section className="border-t border-neutral-100">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32">
+    <section 
+      className="relative border-t border-neutral-100 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: 'url(/bg3.png)' }}
+    >
+      {/* Gradient overlay - fades to white at top and bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
+      
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-32 relative z-10">
         {/* Section hint */}
         <ScrollAnimation animation="blur-in" delay={0}>
           <p className="text-xs tracking-[0.3em] text-neutral-400 uppercase mb-16 md:mb-20">

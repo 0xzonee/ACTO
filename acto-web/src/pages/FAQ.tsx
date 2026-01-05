@@ -1,4 +1,5 @@
 import { useState, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import { ScrollAnimation } from '../components/ScrollAnimation';
@@ -28,7 +29,7 @@ const faqData: FAQItem[] = [
           <li>The hash is signed with the robot's private key using Ed25519</li>
           <li>The proof is submitted to our API for verification and storage</li>
         </ol>
-        <p className="mt-3">Anyone can verify the proof using the robot's public key.</p>
+        <p className="mt-3">Authorized parties can verify the proof using the robot's public key.</p>
       </>
     )
   },
@@ -150,7 +151,7 @@ const faqData: FAQItem[] = [
     question: 'What industries use ACTO?',
     answer: (
       <>
-        <p className="mb-3">ACTO is used in various industries:</p>
+        <p className="mb-3">ACTO can be used in various industries:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>Robotics-as-a-Service</li>
           <li>Autonomous cleaning</li>
@@ -176,7 +177,11 @@ const faqData: FAQItem[] = [
   {
     category: 'Support',
     question: 'What support options are available?',
-    answer: 'Support is provided through our X (Twitter) page where you can reach out to our team. We also offer comprehensive documentation including quickstart guides, API references, and integration examples. For urgent issues, contact us via X.'
+    answer: (
+      <>
+        Support is provided through our X (Twitter) page where you can reach out to our team. We also offer comprehensive documentation including quickstart guides, API references, and integration examples. You can also reach us via email at info@actobotics.net or through our <Link to="/contact" className="text-gray-900 underline hover:no-underline">contact form</Link>.
+      </>
+    )
   },
   {
     category: 'Support',
@@ -307,10 +312,16 @@ export function FAQ() {
         </section>
 
         {/* Still have questions CTA */}
-        <section className="py-16 md:py-24 bg-gray-50 border-t border-gray-100">
-          <div className="max-w-4xl mx-auto px-4 md:px-6 text-center">
+        <section 
+          className="relative py-16 md:py-24 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/bg1.png)' }}
+        >
+          {/* Gradient overlay - fades from white at top to dark at bottom */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-black/60" />
+          
+          <div className="max-w-4xl mx-auto px-4 md:px-6 text-center relative z-10">
             <ScrollAnimation animation="blur-in" delay={0}>
-              <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-medium mb-4 tracking-tight text-gray-900">
                 Still have questions?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
