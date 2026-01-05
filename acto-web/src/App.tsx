@@ -7,7 +7,7 @@ import { Home, About, Contact, Privacy, Terms, Unlock, NotFound, UseCaseDetail, 
 // ============================================
 // ACCESS CONTROL - Set to false to disable
 // ============================================
-const ACCESS_REQUIRED = false;
+const ACCESS_REQUIRED = true;
 // ============================================
 
 function App() {
