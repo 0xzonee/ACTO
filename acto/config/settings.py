@@ -107,11 +107,11 @@ class Settings(BaseSettings):
 
     # Token Gating
     token_gating_enabled: bool = True
-    token_gating_mint: str = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    token_gating_mint: str = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     token_gating_minimum: float = 50000.0
     
     # Solana RPC - Helius recommended for production
-    # If helius_api_key is set, it will be used automatically
+    # If helius_api_key is set, it will be used automatically!
     helius_api_key: str = ""
     solana_rpc_url: str = ""  # Custom RPC URL (overrides Helius if set)
     
