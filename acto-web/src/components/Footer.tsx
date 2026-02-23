@@ -120,9 +120,14 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p className="text-sm text-gray-400">
-              © {currentYear} ACTO. All rights reserved.
-            </p>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-gray-400">
+                © {currentYear} ACTO. All rights reserved.
+              </p>
+              <p className="text-xs text-gray-400 font-mono">
+                CA: BHwLYTQQL7LDcaoGm5jp1KktUx1YnbE6JytKB9H5Acto
+              </p>
+            </div>
             <div className="flex gap-6">
               <a href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Privacy Policy
