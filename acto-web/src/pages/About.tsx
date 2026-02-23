@@ -19,7 +19,7 @@ const timeline = [
     description: 'Ed25519-based signatures, Python SDK, local proof generation. The foundation for verifiable autonomy.',
   },
   {
-    year: '2025',
+    year: '2026',
     title: 'Ecosystem Launch',
     description: 'Hosted API, dashboard, fleet management. From a tool to a platform for the entire robotics industry.',
   },
