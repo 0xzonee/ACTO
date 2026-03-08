@@ -6,8 +6,8 @@ export const config = {
   links: {
     docs: 'https://github.com/actobotics/ACTO/blob/main/README.md',
     repository: 'https://github.com/actobotics/ACTO',
-    dashboard: 'http://127.0.0.1:8080/dashboard',
+    dashboard: 'https://acto-production.up.railway.app/dashboard',
     pypi: 'https://pypi.org/project/actobotics/',
-    api: 'http://localhost:8080',
+    api: 'https://acto-production.up.railway.app',
   },
 };
