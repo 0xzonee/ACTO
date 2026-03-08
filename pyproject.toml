@@ -107,7 +107,7 @@ dev = [
 ]
 
 # Legacy alias - installs everything including dev tools
-all = ["actobotics[full,dev]"]
+all = ["actobotics[server]"]
 
 [project.scripts]
 acto = "acto_cli.main:app"
