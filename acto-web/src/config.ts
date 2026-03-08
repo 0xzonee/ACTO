@@ -4,7 +4,7 @@ export const config = {
     github: 'https://github.com/0xzonee/ACTO',
   },
   links: {
-    docs: 'https://github.com/0xzonee/ACTO/blob/main/README.md',
+    docs: 'https://github.com/0xzonee/ACTO#readme',
     repository: 'https://github.com/0xzonee/ACTO',
     dashboard: 'https://acto-production.up.railway.app/dashboard',
     pypi: 'https://pypi.org/project/actobotics/',
