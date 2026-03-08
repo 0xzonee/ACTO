@@ -19,6 +19,7 @@ const footerLinks = {
     { label: 'Contact', href: '/contact' },
     { label: 'GitHub', href: config.social.github },
     { label: 'X (Twitter)', href: config.social.x },
+    { label: 'Takeover', href: 'https://takeover.fun/coin/0x1d247658af573e010fbf12e27abe8790ed525486' },
   ],
 };
 
@@ -125,7 +126,7 @@ export function Footer() {
                 © {currentYear} ACTO. All rights reserved.
               </p>
               <p className="text-xs text-gray-400 font-mono">
-                CA: BHwLYTQQL7LDcaoGm5jp1KktUx1YnbE6JytKB9H5Acto
+                CA: 0x1d247658af573e010fbf12e27abe8790ed525486
               </p>
             </div>
             <div className="flex gap-6">

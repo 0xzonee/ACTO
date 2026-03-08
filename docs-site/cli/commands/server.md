@@ -6,7 +6,7 @@ Run the ACTO server locally for development.
 This command is **only for ACTO contributors** developing the codebase locally.
 
 **Regular users should NOT run their own server.** Use the hosted platform:
-- **Dashboard:** [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)  
+- **Dashboard:** [api.actobotics.net/dashboard](http://127.0.0.1:8080/dashboard)  
 - **API:** `https://api.actobotics.net`
 :::
 

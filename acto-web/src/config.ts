@@ -1,13 +1,13 @@
 export const config = {
   social: {
-    x: 'https://x.com/actoboticsnet',
+    x: ' https://x.com/actobotgg?s=21',
     github: 'https://github.com/actobotics/ACTO',
   },
   links: {
-    docs: 'https://docs.actobotics.net',
+    docs: 'https://github.com/actobotics/ACTO/blob/main/README.md',
     repository: 'https://github.com/actobotics/ACTO',
-    dashboard: 'https://api.actobotics.net/dashboard',
+    dashboard: 'http://127.0.0.1:8080/dashboard',
     pypi: 'https://pypi.org/project/actobotics/',
-    api: 'https://api.actobotics.net',
+    api: 'http://localhost:8080',
   },
 };
