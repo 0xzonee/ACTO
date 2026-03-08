@@ -40,7 +40,7 @@ export default defineConfig({
           { text: 'Dashboard', link: 'https://api.actobotics.net/dashboard' },
           { text: 'Website', link: 'https://actobotics.net' },
           { text: 'PyPI', link: 'https://pypi.org/project/actobotics/' },
-          { text: 'GitHub', link: 'https://github.com/actobotics/ACTO' },
+          { text: 'GitHub', link: 'https://github.com/0xzonee/ACTO' },
         ]
       }
     ],
@@ -205,7 +205,7 @@ export default defineConfig({
 
     // Social links
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/actobotics/ACTO' },
+      { icon: 'github', link: 'https://github.com/0xzonee/ACTO' },
       { icon: 'x', link: 'https://x.com/actoboticsnet' }
     ],
 
@@ -219,7 +219,7 @@ export default defineConfig({
 
     // Edit link
     editLink: {
-      pattern: 'https://github.com/actobotics/ACTO/edit/main/docs-site/:path',
+      pattern: 'https://github.com/0xzonee/ACTO/edit/main/docs-site/:path',
       text: 'Edit this page on GitHub'
     },
 

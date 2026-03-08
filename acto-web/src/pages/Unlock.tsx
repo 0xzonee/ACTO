@@ -166,7 +166,7 @@ function PrivacyContent() {
         <h3 className="text-lg font-medium mb-3 text-gray-900">11. Contact Us</h3>
         <p className="text-gray-600 text-sm leading-relaxed">
           If you have questions or concerns about this Privacy Policy, please contact us at privacy@actobotics.net 
-          or via GitHub at github.com/actobotics/ACTO/issues.
+          or via GitHub at github.com/0xzonee/ACTO/issues.
         </p>
       </section>
     </div>
@@ -355,7 +355,7 @@ function TermsContent() {
         <h3 className="text-lg font-medium mb-3 text-gray-900">16. Contact Information</h3>
         <p className="text-gray-600 text-sm leading-relaxed">
           For questions about these Terms, please contact us at legal@actobotics.net or via GitHub at 
-          github.com/actobotics/ACTO/issues.
+          github.com/0xzonee/ACTO/issues.
         </p>
       </section>
     </div>

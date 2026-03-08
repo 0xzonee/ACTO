@@ -22,7 +22,7 @@ def run() -> None:
         print("The server command is only available when running from the full repository.")
         print("For self-hosted deployments, clone the repo and install with:")
         print("")
-        print("  [cyan]git clone https://github.com/actobotics/ACTO.git[/cyan]")
+        print("  [cyan]git clone https://github.com/0xzonee/ACTO.git[/cyan]")
         print("  [cyan]pip install -e \".[dev]\"[/cyan]")
         print("")
         print("For SDK users: Use the hosted API at [cyan]https://api.actobotics.net[/cyan]")

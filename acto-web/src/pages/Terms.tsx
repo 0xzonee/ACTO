@@ -330,7 +330,7 @@ export function Terms() {
             <ul className="text-gray-600 space-y-2">
               <li><strong>Company:</strong> <a href="/llc/actoboticsllc.pdf" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">Actobotics LLC</a></li>
               <li><strong>Email:</strong> legal@actobotics.net</li>
-              <li><strong>GitHub:</strong> github.com/actobotics/ACTO/issues</li>
+              <li><strong>GitHub:</strong> github.com/0xzonee/ACTO/issues</li>
             </ul>
           </section>
         </div>

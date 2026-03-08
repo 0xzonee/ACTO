@@ -23,7 +23,7 @@ If you're contributing to the ACTO project and need to run the server locally fo
 
 ```bash
 # Clone the repository
-git clone https://github.com/actobotics/ACTO.git
+git clone https://github.com/0xzonee/ACTO.git
 cd ACTO
 
 # Create virtual environment
@@ -79,6 +79,6 @@ The production ACTO infrastructure is managed by the ACTO team and includes:
 
 ## Questions?
 
-- **Contributing:** See [CONTRIBUTING.md](https://github.com/actobotics/ACTO/blob/main/CONTRIBUTING.md)
+- **Contributing:** See [CONTRIBUTING.md](https://github.com/0xzonee/ACTO/blob/main/CONTRIBUTING.md)
 - **Issues:** Open an issue on GitHub
 - **API Questions:** Use the hosted dashboard at `api.actobotics.net`

@@ -14,9 +14,9 @@ Generate deterministic, signed execution proofs from robot telemetry and logs. V
 
 | | |
 |---|---|
-| 🌍 **Website** | [actobotics.net](https://actobotics.net) |
-| 📊 **Dashboard** | [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard) |
-| 🐦 **X (Twitter)** | [@actoboticsnet](https://x.com/actoboticsnet) |
+| 🌍 **Website** | [actobotic.fun](actobotic.fun) |
+| 📊 **Dashboard** | [https://acto-production.up.railway.app/dashboard](https://acto-production.up.railway.app/dashboard) |
+| 🐦 **X (Twitter)** | [@actobotgg](https://x.com/actobotgg) |
 | 📖 **API Docs** | [docs/API.md](docs/API.md) |
 | 📦 **PyPI** | [pypi.org/project/actobotics](https://pypi.org/project/actobotics/) |
 
@@ -134,7 +134,7 @@ client.fleet.report_health(
 
 Use the hosted API at `https://api.actobotics.net`:
 
-1. **Get an API Key** at [api.actobotics.net/dashboard](https://api.actobotics.net/dashboard)
+1. **Get an API Key** at [https://acto-production.up.railway.app/dashboard](https://acto-production.up.railway.app/dashboard)
 2. **Connect your Solana wallet** (requires 50,000 ACTO tokens)
 3. **Use the SDK client** (recommended) or make direct API calls:
 
@@ -246,7 +246,7 @@ If you want to run your own ACTO server or contribute to development:
 ### Clone & Install
 
 ```bash
-git clone https://github.com/actobotics/ACTO.git
+git clone https://github.com/0xzonee/ACTO.git
 cd ACTO
 
 # Install with all dependencies including server

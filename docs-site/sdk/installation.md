@@ -53,7 +53,7 @@ For contributors who want to modify the SDK:
 
 ```bash
 # Clone the repository
-git clone https://github.com/actobotics/ACTO.git
+git clone https://github.com/0xzonee/ACTO.git
 cd ACTO
 
 # Install in development mode

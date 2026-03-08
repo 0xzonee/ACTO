@@ -85,7 +85,7 @@ export function OpenSource() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
                 <Github size={28} />
-                <span className="text-xl font-medium">actobotics/ACTO</span>
+                <span className="text-xl font-medium">0xzonee/ACTO</span>
               </div>
               <p className="text-gray-400 leading-relaxed max-w-lg mb-6 lg:mb-0">
                 Clone, fork, or contribute. The entire codebase – from Ed25519 signing to 

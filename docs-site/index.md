@@ -13,7 +13,7 @@ hero:
       link: /guide/quickstart
     - theme: alt
       text: View on GitHub
-      link: https://github.com/actobotics/ACTO
+      link: https://github.com/0xzonee/ACTO
     - theme: alt
       text: API Reference
       link: /api/overview
@@ -87,7 +87,7 @@ print(f"Valid: {result.valid}")
     <span class="title">PyPI</span>
     <span class="desc">pip install actobotics</span>
   </a>
-  <a href="https://github.com/actobotics/ACTO" class="link-card">
+  <a href="https://github.com/0xzonee/ACTO" class="link-card">
     <span class="title">GitHub</span>
     <span class="desc">Source code and issues</span>
   </a>

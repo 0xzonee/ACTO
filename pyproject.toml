@@ -43,8 +43,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://actobotics.net"
 Documentation = "https://api.actobotics.net/dashboard"
-Repository = "https://github.com/actobotics/ACTO"
-Issues = "https://github.com/actobotics/ACTO/issues"
+Repository = "https://github.com/0xzonee/ACTO"
+Issues = "https://github.com/0xzonee/ACTO/issues"
 
 [project.optional-dependencies]
 # Redis cache backend
