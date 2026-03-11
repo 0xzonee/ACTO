@@ -20,7 +20,7 @@ const footerLinks = {
     { label: 'GitHub', href: config.social.github },
     { label: 'X (Twitter)', href: config.social.x },
 
-    // hidden takeover
+    
     { label: 'Takeover', href: '', hidden: true },
   ],
 };
@@ -137,7 +137,7 @@ export function Footer() {
                 © {currentYear} ACTO. All rights reserved.
               </p>
 
-              {/* hidden CA */}
+              
               <p className="text-xs text-gray-400 font-mono hidden">
                 CA:
               </p>
